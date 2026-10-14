@@ -37,8 +37,7 @@ file disagree, report it. Do not "fix" either side.
 
 ## Repo layout
 
-- `JC6416/`, `JC4020/`, `JC6432/` — imported as-is from production 7.03 (source commit
-  hashes in `docs/baseline.md`). Each is a standalone PlatformIO project.
+- `JC6416/`, `JC4020/`, `JC6432/` — synced to production main (see docs/baseline.md). Each is a standalone PlatformIO project.
 - `docs/contracts/` — BLE, NVS, OTA, advertisement, metadata.
 - `docs/refactor-log.md` — one entry per approved step, plus a "Findings" section.
 - `baseline/` — reference outputs of the import commit (symbol lists, bin sizes) used to

@@ -3,6 +3,7 @@
 
 // https://tchapi.github.io/Adafruit-GFX-Font-Customiser/
 
+#include <stdint.h>
 #include "Colors.h"
 #include "gfxfont.h"
 #include "Fonts/font5.h"
