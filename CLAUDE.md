@@ -49,6 +49,7 @@ Current structure of each project: root (`main.cpp`, `Display`, `Area`, `Logic`,
 `Preferences/` (`UserPreferences`, NVS), `Screens/`, `States/`. Same skeleton in all three,
 but the content differs in many places.
 
+- `docs/environment.md` — background snapshot of the LED Haarets environment (exported 14/10/2026). Context only; the code is the source of truth.
 ## Stages
 
 **Current stage: 0**
