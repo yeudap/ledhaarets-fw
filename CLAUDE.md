@@ -4,7 +4,7 @@
 
 Refactor workspace for the ESP32 firmware of the LED Haarets clocks (JC6416, JC4020, JC6432).
 **This is not production.** Production firmware lives in separate, frozen projects at
-`C:\Users\yeuda\Dev\<model>_latest` (git tag `v7.03`) and is built and published only by
+`C:\Users\yeuda\Dev\<model>_latest`    (last field release: tag `v7.03`; `main` is 7.04, not yet released) and is built and published only by
 `ledhaarets-build/build_tool.py`. Nothing from this repo reaches the field until the user
 explicitly declares it the new production.
 
