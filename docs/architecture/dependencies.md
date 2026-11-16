@@ -8,6 +8,7 @@
 ## 1. בסיס ושיטה
 
 **בסיס:** פרויקט `JC6416`, commit `9c75812`. מספרי השורות במסמך נכונים ל-commit הזה. הבדלים ב-JC4020 וב-JC6432 מופיעים רק כהערות, בסעיף 10.
+השינויים בפרודקשן 7.06 ו-7.07 (commit `dcd2cdb`) מתועדים בנפרד בסעיף 11. סעיפים 2-10 והנספח נשארים תמונת מצב של `9c75812`.
 
 ### יחידה
 
@@ -56,7 +57,9 @@
 
 ### אימות
 
-הספירה נעשתה בסקריפט קריאה-בלבד, ונבדקה ידנית מול grep בחמישה תאים:
+הספירה נעשתה בסקריפט קריאה-בלבד. הסקריפט המקורי לא נשמר. הוא נכתב מחדש לפי הכללים שלמעלה, ונשמר ב-[tools/count_deps.py](../../tools/count_deps.py). הוראות שימוש בראש הקובץ. על `9c75812` הוא משחזר את כל 374 הקשתות בסעיף 4 עם אותו מספר הפניות בדיוק (6,747). מספר המזהים זהה ב-372 קשתות, ובשתיים (`MainStateInfoSets→DayInfo`, `MainState→DayInfo`) הוא שונה בגלל תוויות של שרשראות עמוקות.
+
+הספירה המקורית נבדקה ידנית מול grep בחמישה תאים, והסקריפט החדש נותן בהם את אותן תוצאות:
 
 - `ConfigState→Authmanager` = 1
 - `OtaProtocol→UpdateState` = 8
@@ -1122,6 +1125,81 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 - **MainStateInfoSets:** מפוצל ל-`MainStateInfoSets1.cpp` ול-`MainStateInfoSets2.cpp`.
 - **ההעדפה `screen`:** שולטת ב-`MainScreen::setScreen`, שנקרא מ-`Logic`, מ-`FontState` ומ-`SetClockState`.
 - **Fonts:** `Text.h` מכליל ארבעה פונטים נוספים.
+
+## 11. שינויים ב-7.06 וב-7.07
+
+השוואה בין `9c75812` (7.04) ל-`dcd2cdb` (פרודקשן 7.07), באותם כללי ספירה (סעיף 1), עם [tools/count_deps.py](../../tools/count_deps.py) ב-`--compare`. מספרי השורות בסעיף הזה נכונים ל-`dcd2cdb`.
+
+**סיכום:**
+
+- 378 קשתות ו-6,860 הפניות, לעומת 374 ו-6,747.
+- ארבע קשתות חדשות. כולן בכיוון הרצוי, ואין קשת חדשה נגד הכיוון.
+- אף קשת לא נעלמה.
+- הדלתא זהה בשלושת הדגמים. ב-JC4020 וב-JC6432 יש בדיוק אותן קשתות שהשתנו, באותם מספרים.
+
+### 11.1 קשתות חדשות
+
+| מ- | אל | רמה → רמה | הפניות | מזהים | מקור | גרסה |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Hardware` | `Metadata` | חומרה → תצורה | 4 | `Metadata::setHardwareVersion`, `Metadata::hwLH1022`, `Metadata::hwLH0826` | `Hardware.h:4` (include), `:62`, `:68` | 7.06: גרסת החומרה מזוהה בזמן ריצה |
+| `BLE/CoreService` | `DB/Place` | קלט → דומיין | 2 | `numOfOfeks` (`extern`) | `CoreService.cpp:19`, `:655` | 7.07: בדיקת טווח של `ofek` |
+| `BLE/CoreService` | `DB/Shita` | קלט → דומיין | 1 | `numOfShitot` | `CoreService.cpp:654` | 7.07: בדיקת טווח של `shita` |
+| `BLE/CoreService` | `States/ShitaState` | קלט → זרימה | 1 | `bl.shitaState.setShita` | `CoreService.cpp:684` | 7.07: הטמעת `shita` מ-BLE |
+
+`Metadata` היא תצורה, וכולם רשאים להשתמש בה (סעיף 2). שלוש הקשתות מ-`CoreService` יורדות מרמת הקלט.
+
+### 11.2 קשתות שהתחזקו
+
+| מ- | אל | לפני | אחרי | מה נוסף | גרסה |
+| --- | --- | --- | --- | --- | --- |
+| `DB/Shita` | `Preferences/UserPreferences` | 118 | 146 | `setDefault` של `myZmanim` ו-`pozen` (12 שיטות כל אחת), `nerot` ב-`calc`, ו-`nz_hul` ב-`myZmanim::setDefault` | 7.05 |
+| `DB/Shita` | `DB/Zman` | 323 | 348 | `myZmanim::calc`, `pozen::calc` | 7.05 |
+| `DB/Shita` | `DB/Sun` | 51 | 55 | אותו מקור | 7.05 |
+| `States/ConfigState` | `States/States.h` | 30 | 36 | `ResetAllState`, `SetResetAllState` | 7.06 |
+| `States/ConfigState` | `DB/Strings` | 35 | 40 | `strings.resetAll`, `strings.resetAllRequest` | 7.06 |
+| `States/ConfigState` | `Screens/Screens.h` | 27 | 32 | `menuScreen`, `messageScreen`, `resetScreen` | 7.06 |
+| `States/ConfigState` | `Preferences/UserPreferences` | 7 | 9 | `userPreferences.resetSimplePrefs`, `resetTextPrefs` | 7.06 |
+| `States/ConfigState` | `Screens/ResetScreen` | 6 | 8 | `resetScreen.SetScreen`, `resetScreen.focusArea` | 7.06 |
+| `States/ConfigState` | `Screens/MenuScreen` | 8 | 9 | `menuScreen.printMenu` | 7.06 |
+| `States/ConfigState` | `Screens/messageScreen` | 4 | 5 | `messageScreen.printMessages` | 7.06 |
+| `States/ConfigState` | `BLE/Authmanager` | 1 | 2 | `authManager.factoryReset` (`ConfigState.cpp:120`, `:140`) | 7.06 |
+| `Logic` | `States/States.h` | 169 | 171 | `ResetAllState`, `SetResetAllState` (`Logic.h:70-71`) | 7.06 |
+| `States/States.h` | `States/State` | 157 | 159 | שתי המחלקות החדשות | 7.06 |
+| `States/OfekState` | `Preferences/UserPreferences` | 35 | 41 | `userPreferences.ofek` +4, `userPreferences.nz_hul` +2 (`SetOfekState::printUpdateSucc`) | 7.05 |
+| `States/OfekState` | `States/States.h` | 70 | 71 | `SetOfekState` | 7.05 |
+| `BLE/CoreService` | `States/State` | 23 | 28 | `currentState`, `State` (בלוק ההטמעה של `shita`) | 7.07 |
+| `BLE/CoreService` | `Logic` | 10 | 13 | `bl.setOfekState`, `bl.shitaState`, `bl.updateState` | 7.05, 7.07 |
+| `BLE/CoreService` | `States/OfekState` | 1 | 2 | `bl.setOfekState.printUpdateSucc` (`CoreService.cpp:675`) | 7.05 |
+| `States/ShitaState` | `Preferences/UserPreferences` | 4 | 5 | `userPreferences.shita` (`setShita`) | 7.07 |
+| `States/ShitaState` | `States/States.h` | 6 | 7 | `ShitaState` (`setShita`) | 7.07 |
+| `DB/DayInfo` | `Preferences/UserPreferences` | 51 | 52 | `userPreferences.hul` (`setAfterShkiaa`, F14) | 7.07 |
+| `main` | `Hardware` | 2 | 4 | `detectHardwareModel`, `hardwareModel` ×2 (`main.cpp:22-23`). `HARDWARE_MODEL` הוסר | 7.06 |
+| `main` | `Metadata` | 4 | 4 | המאקרואים `DEVICE_MODEL`, `PROJECT_VER`, `HARDWARE_VERSION` הוחלפו ב-`Metadata::model`, `SWversion`, `HWversion` (`main.cpp:24`) | 7.06 |
+
+### 11.3 עדכונים לסעיפים הקודמים (תמונת המצב לא שונתה)
+
+- **סעיף 4, קשתות 233 ו-312:** מ-7.06 `main → Metadata` עובר דרך `Metadata::` ולא דרך המאקרואים. `HARDWARE_VERSION` כבר לא קיים (F13). `main → Hardware` עובר דרך `detectHardwareModel` ו-`hardwareModel`, ולא דרך `HARDWARE_MODEL`.
+- **סעיף 7.1:**
+  - קשת 6 (`ConfigState → Authmanager`): 2 הפניות, מ-`SetResetPassState` ומ-`SetResetAllState`.
+  - קשתות 12-14 (`Hardware.h → Button`, `→ Bluetooth`, `→ Clock`): אותן הפניות. ה-include זז בשורה אחת (`Hardware.h:5`, `:6`, `:7`), והקריאות ל-`selectButtonDriver`/`selectClock` נמצאות ב-`:63-64`, `:69-70`.
+- **סעיף 8, גלובליים:**
+  - `shitot[]` הוא `Shita*[10]` (`numOfShitot` = 10, מ-7.05).
+  - גלובלי חדש: `hardwareModel` (`HardwareModel`), מוגדר `inline` ב-`Hardware.h:14` (F12). נספר ב-`Hardware`.
+  - `Metadata::HWversion` הוא מערך בזמן ריצה (`metadata.cpp`), שנקבע ב-`Metadata::setHardwareVersion`. עד 7.04 היה `constexpr` מהמאקרו.
+- **סעיף 9:** אין include חדש בלי הפניה. ה-include החדש היחיד הוא `Hardware.h:4 → Metadata.h`, ויש מאחוריו הפניות. `Hardware.h:5 → BLE/Bluetooth.h` נמצא עכשיו ב-`Hardware.h:6`.
+
+### 11.4 איך לספור מחדש בסנכרון הבא
+
+**כלל:** בסנכרון הבא, או כשמתחיל שלב 2 (בידוד שכבות), המוקדם מביניהם, מייצרים מחדש את סעיפים 2-10 מ-[tools/count_deps.py](../../tools/count_deps.py) לבסיס החדש, ומוחקים את סעיף 11. לא מוסיפים סעיף 12.
+
+השוואה בין בסיס קודם לעץ הנוכחי:
+
+```
+git archive <commit-before> JC6416/src | tar -x -C <empty-folder>
+python -I tools/count_deps.py <empty-folder>/JC6416/src --compare JC6416/src
+```
+
+לספירת ההעדפות (סעיף 4 ב-[preferences.md](preferences.md)): [tools/count_prefs.py](../../tools/count_prefs.py).
 
 ## נספח א' — מטריצות
 

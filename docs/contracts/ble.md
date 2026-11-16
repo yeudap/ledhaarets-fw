@@ -1,6 +1,8 @@
 # BLE contract (Core service)
 
-Snapshot of the BLE protocol as implemented at commit `e9c7639`. OTA service is documented
+Snapshot of the BLE protocol as implemented in production **7.07** (repo commit `dcd2cdb`,
+see [../baseline.md](../baseline.md)). This is the contract in the field. First snapshot: commit
+`e9c7639` (7.03); the 7.05–7.07 changes are in §5.3 and §6.5. OTA service is documented
 in [ota.md](ota.md), the advertisement in [advertisement.md](advertisement.md).
 
 Line numbers refer to `JC6416/src/...` unless stated otherwise. Where a file is identical in
@@ -11,7 +13,7 @@ all three models (verified by md5), the same line numbers apply to JC4020 and JC
 | File | JC6416 | JC4020 | JC6432 |
 |---|---|---|---|
 | `BLE/CoreProtocol.h` | f2bfe8aa | same | same |
-| `BLE/CoreService.cpp` / `.h` | 6ca084cf / 67202d74 | same | same |
+| `BLE/CoreService.cpp` / `.h` | c565e9d1 / 67202d74 | same | same |
 | `BLE/Authmanager.cpp` / `.h` | b534df65 / b07d9c83 | same | same |
 | `BLE/Bluetooth.cpp` | 9f1f249e | same | same |
 | `BLE/Commands.h` | a8dccfc1 | same | same |
@@ -19,6 +21,13 @@ all three models (verified by md5), the same line numbers apply to JC4020 and JC
 | `BLE/TextCommandHandler.cpp` | 7b672581 | **a34f9a84 (differs)** | 7b672581 |
 | `Preferences/UserPreferences.h` | 1674adef | 1674adef | **b6fd22d0 (differs)** |
 | `States/States.h` (`numOfNameSets`) | 50 (`:29`) | **0 (`:28`)** | 50 (`:28`) |
+| `States/ShitaState.cpp` (called from PREF WRITE `shita`) | dd0d3011 | same | same |
+| `States/OfekState.cpp` / `ConfigState.cpp` | files differ per model | | |
+
+`OfekState.cpp` and `ConfigState.cpp` differ between models as files, but the functions the BLE
+contract depends on (`SetCustomState::printUpdateSucc`, `SetOfekState::printUpdateSucc`,
+`SetResetPassState::okAction`, `SetResetAllState::okAction`) are identical in all three
+(compared function by function). Their line numbers differ by 1–3 lines between models.
 
 **Model differences in the BLE contract** (details in §6.3 and §8):
 1. **JC6432:** preference indexes 72–76 differ (§8). See refactor-log F2.
@@ -31,12 +40,12 @@ Everything else in this document is identical in all three models.
 | Item | Value | Source |
 |---|---|---|
 | Core service UUID | `7b79e39b-488a-4f76-a60f-bd3a29da174f` | `BLE/CoreService.h:8` |
-| CMD characteristic UUID | `326109ee-bcea-4809-88b1-5e0da1289a8c`, property `WRITE` | `CoreService.h:9`, `CoreService.cpp:900-903` |
-| EVT characteristic UUID | `fbe9b56e-270b-4765-a3ec-b917bb0ad0e1`, property `NOTIFY` | `CoreService.h:10`, `CoreService.cpp:906-908` |
+| CMD characteristic UUID | `326109ee-bcea-4809-88b1-5e0da1289a8c`, property `WRITE` | `CoreService.h:9`, `CoreService.cpp:919-922` |
+| EVT characteristic UUID | `fbe9b56e-270b-4765-a3ec-b917bb0ad0e1`, property `NOTIFY` | `CoreService.h:10`, `CoreService.cpp:925-927` |
 | OTA service UUID (details in ota.md) | `85564e0a-542d-4967-9d09-892b864a1b46` | `BLE/FirmwareService.h:12` |
 | GAP init name | `"LedHaarets"` | `BLE/Bluetooth.cpp:63` |
 | Preferred MTU | 517 (firmware preference only, see note) | `Bluetooth.cpp:64` |
-| Device name (GAP + scan response) | NVS `sys`/`dev_name`, default `"LedHaarets"`, max 24 bytes | `CoreService.cpp:712-741`, `CoreProtocol.h:287-290` |
+| Device name (GAP + scan response) | NVS `sys`/`dev_name`, default `"LedHaarets"`, max 24 bytes | `CoreService.cpp:731-760`, `CoreProtocol.h:287-290` |
 
 **MTU note.** 517 is only what the firmware offers. The negotiated MTU is the minimum of both
 sides: the app requests **150** (`lib/services/ble_service/ble_connection.dart:64`, app source as
@@ -55,26 +64,26 @@ CMD (app → clock, written to CMD char) — `CoreProtocol.h:8-11`:
 [0] DOMAIN  [1] OPCODE  [2..N] PAYLOAD
 ```
 
-EVT (clock → app, Notify on EVT char) — `CoreProtocol.h:13-17`, built in `coreSendEvt` `CoreService.cpp:33-54`:
+EVT (clock → app, Notify on EVT char) — `CoreProtocol.h:13-17`, built in `coreSendEvt` `CoreService.cpp:34-55`:
 
 ```
 [0] DOMAIN (echo)  [1] OPCODE (echo)  [2] STATUS  [3..N] DATA
 ```
 
 - `CORE_HEADER_SIZE` = 2, `CORE_EVT_HEADER_SIZE` = 3 (`CoreProtocol.h:32-33`).
-- On error: `STATUS = 0x01`, `DATA[0]` = error code (`sendErr`, `CoreService.cpp:57-60`).
-- CMD shorter than 2 bytes is dropped silently, no EVT (`CoreService.cpp:851-855`).
-- An EVT is sent only if connected and the EVT char exists (`CoreService.cpp:36-37`).
+- On error: `STATUS = 0x01`, `DATA[0]` = error code (`sendErr`, `CoreService.cpp:58-61`).
+- CMD shorter than 2 bytes is dropped silently, no EVT (`CoreService.cpp:870-874`).
+- An EVT is sent only if connected and the EVT char exists (`CoreService.cpp:37-38`).
 
 ### Byte order
 
 | Field | Order | Source |
 |---|---|---|
-| PIN in `AUTH_OP_PIN` | **little-endian** u16 | `CoreService.cpp:129` |
-| PIN via `PREF_OP_WRITE "pin"` | **little-endian** u16 | `CoreService.cpp:628` |
+| PIN in `AUTH_OP_PIN` | **little-endian** u16 | `CoreService.cpp:130` |
+| PIN via `PREF_OP_WRITE "pin"` | **little-endian** u16 | `CoreService.cpp:629` |
 | Preference values I16/U16 (and I32/U32 in code, unused) | **little-endian** | `UserPreferences.h:231-258, 295-324` |
 | Preference BLOB (double) | raw 8 bytes, IEEE 754, little-endian (ESP32 native) | `UserPreferences.h:259-267, 325-331` |
-| **Year in TIME data** | **big-endian** (MSB first) | `CoreProtocol.h:182-183`, `CoreService.cpp:475, 510-511` |
+| **Year in TIME data** | **big-endian** (MSB first) | `CoreProtocol.h:182-183`, `CoreService.cpp:476, 511-512` |
 
 ## 3. Status and error codes
 
@@ -98,28 +107,28 @@ STATUS (`CoreProtocol.h:38-39`): `0x00` OK, `0x01` ERROR.
 | 0xFF | `CORE_ERR_INTERNAL` | internal | `:57` |
 
 SYS-specific: `SYS_ERR_NAME_TOO_LONG` = 0x01 (`CoreProtocol.h:284`) is defined but **not sent**;
-an over-long name returns `CORE_ERR_INVALID_VALUE` (`CoreService.cpp:795-798`). See refactor-log F7.
+an over-long name returns `CORE_ERR_INVALID_VALUE` (`CoreService.cpp:814-817`). See refactor-log F7.
 
 ## 4. Domains
 
 | Code | Domain | Handler | Source |
 |---|---|---|---|
-| 0x01 | NAV | `handleNav` | `CoreProtocol.h:62`, `CoreService.cpp:189` |
-| 0x02 | MENU | `handleMenu` | `:63`, `:224` |
-| 0x03 | TEXT | `handleText` | `:64`, `:259` |
-| 0x04 | TIME | `handleTime` | `:65`, `:451` |
-| 0x05 | PREF | `handlePref` | `:66`, `:532` |
-| 0x06 | AUTH | `handleAuth` | `:67`, `:76` |
-| 0x07 | SYS | `handleSys` | `:277`, `:767` |
+| 0x01 | NAV | `handleNav` | `CoreProtocol.h:62`, `CoreService.cpp:190` |
+| 0x02 | MENU | `handleMenu` | `:63`, `:225` |
+| 0x03 | TEXT | `handleText` | `:64`, `:260` |
+| 0x04 | TIME | `handleTime` | `:65`, `:452` |
+| 0x05 | PREF | `handlePref` | `:66`, `:533` |
+| 0x06 | AUTH | `handleAuth` | `:67`, `:77` |
+| 0x07 | SYS | `handleSys` | `:277`, `:786` |
 
-Dispatch: `CoreCallbacks::onWrite`, `CoreService.cpp:844-889`. Unknown domain →
-`UNKNOWN_DOMAIN`, echoing the received domain/opcode (`:884-887`).
+Dispatch: `CoreCallbacks::onWrite`, `CoreService.cpp:863-908`. Unknown domain →
+`UNKNOWN_DOMAIN`, echoing the received domain/opcode (`:903-906`).
 
 ## 5. Authentication
 
 ### 5.1 Gate
 
-Single gate in `onWrite` (`CoreService.cpp:867-873`): any domain other than AUTH (0x06) while
+Single gate in `onWrite` (`CoreService.cpp:886-892`): any domain other than AUTH (0x06) while
 the session is not authenticated → `ERROR + NOT_AUTHENTICATED`, echoing the received
 domain/opcode. Session flag is per-connection and reset on connect/disconnect
 (`Bluetooth.cpp:23, 37`).
@@ -127,13 +136,13 @@ domain/opcode. Session flag is per-connection and reset on connect/disconnect
 **Scope:** the gate covers the Core service only. The OTA service (`FirmwareService.cpp`,
 `OtaProtocol.cpp`) does not reference `authManager`. See refactor-log F5.
 
-### 5.2 Opcodes (`CoreProtocol.h:231-246`, handler `CoreService.cpp:76-183`)
+### 5.2 Opcodes (`CoreProtocol.h:231-246`, handler `CoreService.cpp:77-184`)
 
 | Op | Name | CMD | EVT | Behavior |
 |---|---|---|---|---|
-| 0x01 | `AUTH_OP_HELLO` | `[06][01][clientId 16B]` (≥18 B) | `[06][01][STATUS]` | Trusted clientId → OK, `grantSession`, info message on screen. Otherwise `ERROR + AUTH_REQUIRED`. Short → `INVALID_PAYLOAD`. (`:85-115`) |
-| 0x02 | `AUTH_OP_PIN` | `[06][02][pin u16 LE][clientId 16B]` (≥20 B) | `[06][02][STATUS]` | Correct → OK, `grantSession` (no NVS write). Wrong → `delay(1000)` then `ERROR + AUTH_FAILED`. (`:121-153`) |
-| 0x03 | `AUTH_OP_REGISTER` | `[06][03]` | `[06][03][STATUS]` | Requires authenticated session, else `NOT_AUTHENTICATED`. Stores session clientId as trusted (FIFO). Idempotent. (`:159-177`) |
+| 0x01 | `AUTH_OP_HELLO` | `[06][01][clientId 16B]` (≥18 B) | `[06][01][STATUS]` | Trusted clientId → OK, `grantSession`, info message on screen. Otherwise `ERROR + AUTH_REQUIRED`. Short → `INVALID_PAYLOAD`. (`:86-116`) |
+| 0x02 | `AUTH_OP_PIN` | `[06][02][pin u16 LE][clientId 16B]` (≥20 B) | `[06][02][STATUS]` | Correct → OK, `grantSession` (no NVS write). Wrong → `delay(1000)` then `ERROR + AUTH_FAILED`. (`:122-154`) |
+| 0x03 | `AUTH_OP_REGISTER` | `[06][03]` | `[06][03][STATUS]` | Requires authenticated session, else `NOT_AUTHENTICATED`. Stores session clientId as trusted (FIFO). Idempotent. (`:160-178`) |
 | 0x04 | — | reserved for future UNREGISTER, not implemented (`CoreProtocol.h:246`) → `UNKNOWN_OPCODE` | | |
 
 ### 5.3 PIN and trusted clients (`Authmanager.cpp`, `Authmanager.h`, `CoreProtocol.h:249-260`)
@@ -144,21 +153,31 @@ domain/opcode. Session flag is per-connection and reset on connect/disconnect
 | Trusted slots | 3, FIFO eviction (oldest = slot 0 dropped) | `CoreProtocol.h:254`, `Authmanager.cpp:102-120` |
 | All-zero clientId | never trusted, never stored | `Authmanager.cpp:70-71, 104-105` |
 | Default PIN / after factory reset | 1111 | `CoreProtocol.h:255`, `Authmanager.cpp:22, 141` |
-| PIN range | 0–9999 (> 9999 → `INVALID_VALUE`) | `CoreProtocol.h:256`, `CoreService.cpp:630-634` |
-| Wrong PIN delay | 1000 ms, blocking in NimBLE host task | `CoreProtocol.h:257`, `CoreService.cpp:149` |
-| PIN change | `PREF_OP_WRITE`, key `"pin"`, type must be U16 (0x03), value ≥ 2 B LE; routed to `authManager.setPin`; requires authenticated session | `CoreService.cpp:615-639` |
-| PIN readable? | No: `"pin"` is not in `simplePrefs`, so not readable via `PREF_OP_READ` and not in `PREF_OP_SYNC` | `CoreService.cpp:559-560`, `CoreProtocol.h:225-227` |
+| PIN range | 0–9999 (> 9999 → `INVALID_VALUE`) | `CoreProtocol.h:256`, `CoreService.cpp:631-635` |
+| Wrong PIN delay | 1000 ms, blocking in NimBLE host task | `CoreProtocol.h:257`, `CoreService.cpp:150` |
+| PIN change | `PREF_OP_WRITE`, key `"pin"`, type must be U16 (0x03), value ≥ 2 B LE; routed to `authManager.setPin`; requires authenticated session | `CoreService.cpp:616-640` |
+| PIN readable? | No: `"pin"` is not in `simplePrefs`, so not readable via `PREF_OP_READ` and not in `PREF_OP_SYNC` | `CoreService.cpp:560-561`, `CoreProtocol.h:225-227` |
 | NVS writes | PIN only on change; slots only when a *new* client registers | `Authmanager.cpp:127-131, 107-109` |
-| Factory reset | PIN = 1111, all slots cleared, session reset; triggered from the menu `SetResetPassState::okAction` | `Authmanager.cpp:139-149`, `States/ConfigState.cpp:115-124` (same in all three) |
+| Factory reset | PIN = 1111, all slots cleared, session reset. Two menu callers (below) | `Authmanager.cpp:139-149` |
+
+`factoryReset()` callers (`States/ConfigState.cpp`, same lines in all three models):
+
+| Caller | Since | What it does | Source |
+|---|---|---|---|
+| `SetResetPassState::okAction` | already in 7.03 | `factoryReset()`, then `ESP.restart()` | `:116-125` |
+| `SetResetAllState::okAction` (menu "שחזור הגדרות יצרן") | 7.06 | `factoryReset()`, `resetTextPrefs()`, `resetSimplePrefs()`, then `ESP.restart()`. Clears `sec` and resets all of `clk` to firmware defaults; `sys/dev_name` is not touched | `:136-147` |
+
+There is no BLE opcode for factory reset. Both are menu states, reachable from the buttons (or
+by simulating them over NAV/MENU).
 
 NVS keys (`sec` namespace) are listed in [nvs.md](nvs.md).
 
 Note: the comment in `Authmanager.h:23-24` / `Authmanager.cpp:137` describes the factory reset
-trigger as "BACK+OK for 10 seconds"; the caller in code is the reset menu state. See refactor-log F8.
+trigger as "BACK+OK for 10 seconds"; the callers in code are the two reset menu states. See refactor-log F8.
 
 ## 6. Domain details
 
-### 6.1 NAV (0x01) — `CoreProtocol.h:74-82`, `CoreService.cpp:189-218`
+### 6.1 NAV (0x01) — `CoreProtocol.h:74-82`, `CoreService.cpp:190-219`
 
 | Op | CMD | EVT |
 |---|---|---|
@@ -174,9 +193,9 @@ Key codes → internal `ButtonCommand` (`Commands.h:22-28`):
 | OK | 0x04 | `OK` = 4 |
 
 Other key → `INVALID_VALUE`. Short packet → `INVALID_PAYLOAD` with opcode `NAV_OP_PRESS`
-(not echoed). Wire codes and internal enum values differ; mapping is explicit (`:206-215`).
+(not echoed). Wire codes and internal enum values differ; mapping is explicit (`:207-216`).
 
-### 6.2 MENU (0x02) — `CoreProtocol.h:89-137`, `CoreService.cpp:224-254`
+### 6.2 MENU (0x02) — `CoreProtocol.h:89-137`, `CoreService.cpp:225-255`
 
 | Op | CMD | EVT |
 |---|---|---|
@@ -196,9 +215,9 @@ Other key → `INVALID_VALUE`. Short packet → `INVALID_PAYLOAD` with opcode `N
 | Customs | 80 DIASPORA |
 
 Validation: only `0` (NONE) is rejected (`INVALID_VALUE`). Undefined values (e.g. 12, 99) are
-accepted with OK (`CoreService.cpp:242-253`), despite the comment at `:244`. See refactor-log F6.
+accepted with OK (`CoreService.cpp:243-254`), despite the comment at `:245`. See refactor-log F6.
 
-### 6.3 TEXT (0x03) — `CoreProtocol.h:144-166`, `CoreService.cpp:259-446`, `TextCommandHandler.cpp`
+### 6.3 TEXT (0x03) — `CoreProtocol.h:144-166`, `CoreService.cpp:260-447`, `TextCommandHandler.cpp`
 
 | Op | CMD | EVT data on OK |
 |---|---|---|
@@ -214,7 +233,7 @@ Slots: `numOfNameSets` (index 0..N-1), backed by NVS keys `textInput1`..`textInp
 Text encoding: **not UTF-8**. Same single-byte keyboard-layout encoding as PREF STR, see
 "STR wire format" in §6.5.
 
-Internal text error → CORE error mapping (`CoreService.cpp:435-446`; internal codes in
+Internal text error → CORE error mapping (`CoreService.cpp:436-447`; internal codes in
 `TextCommandHandler.h:19-27`):
 
 | Internal | → CORE |
@@ -237,7 +256,7 @@ Internal text error → CORE error mapping (`CoreService.cpp:435-446`; internal 
 >   `ERR_INVALID_INDEX` unconditionally.
 > - JC6416 / JC6432: 50 slots, full behavior.
 
-### 6.4 TIME (0x04) — `CoreProtocol.h:173-189`, `CoreService.cpp:451-527`
+### 6.4 TIME (0x04) — `CoreProtocol.h:173-189`, `CoreService.cpp:452-528`
 
 | Op | CMD | EVT |
 |---|---|---|
@@ -258,18 +277,59 @@ Time data (7 B, `TIME_DATA_SIZE`):
 
 **Year is big-endian**, unlike every other multi-byte field in this protocol.
 
-### 6.5 PREF (0x05) — `CoreProtocol.h:196-214`, `CoreService.cpp:532-707`
+### 6.5 PREF (0x05) — `CoreProtocol.h:196-214`, `CoreService.cpp:533-726`
 
 | Op | CMD | EVT data on OK | Search scope |
 |---|---|---|---|
-| 0x01 `PREF_OP_READ` | `[05][01][key\0]` (≥4 B) | `[type][value bytes]` | `simplePrefs` only (`:561`) |
-| 0x02 `PREF_OP_WRITE` | `[05][02][type][key\0][value bytes]` (≥5 B) | — | `allPrefs` (= `textPrefs` + `simplePrefs`, `:642`) + special key `"pin"` |
-| 0x03 `PREF_OP_SYNC` | `[05][03]` | `[count][index…]` for every `simplePrefs` entry whose value ≠ default | `simplePrefs` (`:685`) |
+| 0x01 `PREF_OP_READ` | `[05][01][key\0]` (≥4 B) | `[type][value bytes]` | `simplePrefs` only (`:562`) |
+| 0x02 `PREF_OP_WRITE` | `[05][02][type][key\0][value bytes]` (≥5 B) | — | `allPrefs` (= `textPrefs` + `simplePrefs`, `:643`) + special key `"pin"` |
+| 0x03 `PREF_OP_SYNC` | `[05][03]` | `[count][index…]` for every `simplePrefs` entry whose value ≠ default | `simplePrefs` (`:704`) |
 
-WRITE errors: no `\0` after key → `INVALID_KEY`; type ≠ declared type → `TYPE_MISMATCH`;
-`fromBytes` failure (too short) → `INVALID_VALUE`; unknown key → `INVALID_KEY`. On success the
-value is saved to NVS immediately. Writing the key with index 6 (`ofek`) also shows an "update
-succeeded" screen (`:660-668`).
+WRITE checks, in order:
+
+1. No `\0` after key → `INVALID_KEY`.
+2. Type ≠ declared type → `TYPE_MISMATCH`.
+3. **Range check (since 7.07, `:653-659`)**, before `fromBytes`, on the first value byte:
+   - index 4 (`shita`): value ≥ `numOfShitot` (`DB/Shita.h:10`, 10 since 7.06) → `INVALID_VALUE`;
+   - index 6 (`ofek`): value ≥ `numOfOfeks` (size of `places[]`, set in `initPlace`,
+     `DB/Place.cpp:115`) → `INVALID_VALUE`;
+   - empty value for either key → `INVALID_VALUE`.
+
+   Nothing is written. The accepted range follows the firmware tables, so adding a shita or a
+   city widens it. Clocks before 7.07 accept any value (refactor-log F11).
+4. `fromBytes` failure (too short) → `INVALID_VALUE`.
+5. Unknown key → `INVALID_KEY`.
+
+On success the value is saved to NVS (`save()`), the OK EVT is sent, and then for two keys an
+apply step runs.
+
+#### Apply after WRITE
+
+Both apply steps run inside the write callback, after the OK EVT. Each one temporarily switches
+`currentState` to `bl.updateState`, calls the same function the menu uses, then restores
+`currentState` and redraws it. Every other key is saved only, with no apply step.
+
+| Idx | Key | Value | Function called | Since | Source |
+|---|---|---|---|---|---|
+| 6 | `ofek` | 0 | `SetCustomState::printUpdateSucc` | ≤ 7.03 | `CoreService.cpp:669-678`, `OfekState.cpp:501-509` |
+| 6 | `ofek` | ≠ 0 | `SetOfekState::printUpdateSucc` | 7.05 | `CoreService.cpp:669-678`, `OfekState.cpp:510-519` |
+| 4 | `shita` | any (after range check) | `ShitaState::setShita` | 7.07 | `CoreService.cpp:679-687`, `ShitaState.cpp:36-42` |
+
+- **`ofek` = 0 ("apply custom place"):** success message, `globalchangedOfek = false`,
+  `initPlace()`, `ofek = 0`, `bl.configStates()`, `updateDayValues = true`. This is the last
+  write of the app's custom-place sequence.
+- **`ofek` ≠ 0 (city from the list):** success message; writes `nerot` and `homa` from
+  `places[ofek]`; `initPlace()`; writes `nz_hul` and `hul` = `places[ofek].hul`;
+  `bl.configStates()`; `updateDayValues = true`. Same function as the menu
+  (`SetOfekState::okAction`). Intentional fix in 7.05 for city selection from the app (until
+  7.04 every `ofek` write went through `SetCustomState::printUpdateSucc`, which reset `ofek` to 0).
+  **Side effects on the wire:** a city write changes four more keys in NVS (`nerot`, `homa`,
+  `nz_hul`, `hul`), and they show up in the next `PREF_OP_SYNC`. `nz_hul` is the Israel/abroad
+  flag of the active place, so a city overwrites the value the custom place had (refactor-log F10).
+- **`shita`:** `shitot[shita]->setDefault()` (writes the calculation-method preferences of that
+  shita), `bl.configStates()`, `updateDayValues = true`, success message. Same function as the
+  menu (`ShitaState::okAction`). The app writes `shita` and then reads the method preferences
+  back; since 7.07 it reads the values set by `setDefault`.
 
 Note: textInput keys are writable through `PREF_OP_WRITE` (they are in `allPrefs`) but are not
 readable through `PREF_OP_READ` and all share index 0.
@@ -313,13 +373,13 @@ as reported by the user). Naming note only, not a Finding.
   (`lib/services/user_preferences_service.dart`). **The format with `\0` is what both sides
   expect.** See refactor-log F4.
 
-### 6.6 SYS (0x07) — `CoreProtocol.h:277-290`, `CoreService.cpp:767-837`
+### 6.6 SYS (0x07) — `CoreProtocol.h:277-290`, `CoreService.cpp:786-856`
 
 | Op | CMD | EVT | Behavior |
 |---|---|---|---|
-| 0x01 `SYS_OP_RESTART` | `[07][01]` | `[07][01][00]` | OK sent first; `esp_restart()` after 500 ms timer (`:751-762, 777-785`) |
-| 0x02 `SYS_OP_SET_NAME` | `[07][02][UTF-8 name]` | `[07][02][STATUS]` | > 24 bytes → `INVALID_VALUE`. Empty → delete NVS key, use default `"LedHaarets"`. Applies to GAP name + scan response immediately (`:791-818`) |
-| 0x03 `SYS_OP_GET_MAC` | `[07][03]` | `[07][03][00][MAC 6B]` | `esp_efuse_mac_get_default` (`:825-831`) |
+| 0x01 `SYS_OP_RESTART` | `[07][01]` | `[07][01][00]` | OK sent first; `esp_restart()` after 500 ms timer (`:770-781, 796-804`) |
+| 0x02 `SYS_OP_SET_NAME` | `[07][02][UTF-8 name]` | `[07][02][STATUS]` | > 24 bytes → `INVALID_VALUE`. Empty → delete NVS key, use default `"LedHaarets"`. Applies to GAP name + scan response immediately (`:810-837`) |
+| 0x03 `SYS_OP_GET_MAC` | `[07][03]` | `[07][03][00][MAC 6B]` | `esp_efuse_mac_get_default` (`:844-850`) |
 
 ## 7. Version gate
 
@@ -333,7 +393,7 @@ Indexes are returned by `PREF_OP_SYNC`, and the app maps them to keys. Keys and 
 also the NVS keys in namespace `clk` (see [nvs.md](nvs.md)).
 
 **Firmware defaults are part of the contract.** `PREF_OP_SYNC` returns only the indexes whose
-value differs from the *firmware* default (`CoreService.cpp:685-689`, `_hasChangedFromDefault`
+value differs from the *firmware* default (`CoreService.cpp:704-708`, `_hasChangedFromDefault`
 `UserPreferences.h:214-217`). For every index not returned, the app assumes its *own* default.
 Changing a firmware default therefore changes what the app displays for clocks still at
 default, and any mismatch between app and firmware defaults is visible to the user.

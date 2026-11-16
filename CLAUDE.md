@@ -26,7 +26,9 @@ even if it looks like a pure rename or move.
    checks, `START_OK` semantics.
 5. **Image metadata** — `esp_app_desc_t` fields written by `stamp_app_desc.py`
    (`project_name` = model, `version`), `Metadata.h` fixed lengths and `static_assert`s,
-   build flags `PROJECT_VER`, `PRODUCT_MANUFACTURER`, `HARDWARE_VERSION`, `DEVICE_MODEL`.
+   build flags `PROJECT_VER`, `PRODUCT_MANUFACTURER`, `DEVICE_MODEL`. The hardware version is
+   detected at runtime (`detectHardwareModel` → `Metadata::setHardwareVersion`), 6 chars; it is
+   not stamped into `esp_app_desc_t`.
 6. **Flash layout** — `default_16MB.csv` (6.25MB per OTA slot), flash `dio / 80m / 16MB`.
    The app image must fit one OTA slot.
 7. **Toolchain** — `espressif32 @ 6.12.0`, Arduino-ESP32 2.0.17, `gnu++17`, pinned
@@ -68,11 +70,16 @@ indexes, types or defaults. Behavior must stay identical.
   three projects, so later diffs between them show only real differences. (Postponed.)
 - **2a** — Per-layer preference structs (`DataPrefs` with place / shita / minhagim,
   `LogicPrefs`, `PresentationPrefs`, `DisplayPrefs`, `UserContent`, `SystemPrefs`) and a
-  central registry that owns the table (key, index, type, default, field), load/save and
-  `PREF_OP_*`. Classification: `docs/architecture/preferences.md`. Sub-steps:
-  1. Structs as views onto the existing `userPreferences` fields. No consumer changes.
-  2. Move consumers to their layer's struct, one layer per step.
-  3. Move field ownership into the structs; `UserPreferences` becomes the registry.
+  central registry that owns the table (key, index, type, default, field) and load/save only.
+  `PREF_OP_WRITE` range checks (`shita`, `ofek`, later the zeet keys of F11) and the immediate
+  apply (`ofek`, `shita`) stay in `CoreService`; registering limits and actions from above
+  belongs to the later "actions mechanism" stage, together with immediate apply of the other
+  preferences. Classification: `docs/architecture/preferences.md`; decisions:
+  `docs/architecture/notes.md`. Sub-steps:
+  1. Structs as views onto the existing `userPreferences` fields. No consumer changes. (Now.)
+  2. Move consumers to their layer's struct, one layer per step. (Now.)
+  3. Move field ownership into the structs; `UserPreferences` becomes the registry. Only after
+     the sync of the production release that includes F11.
 - **2** — Isolate the remaining layers behind interfaces and break couplings.
 - **Later, each approved separately** — applying preference changes from BLE immediately
   (shared apply functions with the menu); NVS namespace per layer with migration; one

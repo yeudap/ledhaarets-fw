@@ -3,7 +3,7 @@
 תשובות של בעל הפרויקט לשאלות שעלו במיפוי (שלב 0, משימה ב). הקובץ הזה הוא מקור האמת להיגיון ולאילוצים
 שלא נראים מהקוד. המיפוי עצמו נמצא ב-[dependencies.md](dependencies.md).
 
-בסיס: JC6416, commit `9c75812`.
+בסיס: JC6416, commit `9c75812`. התשובות שנוספו או עודכנו בעקבות פרודקשן 7.06 ו-7.07 (commit `dcd2cdb`) מסומנות בגרסה.
 
 ## מטרת המיפוי
 
@@ -45,10 +45,23 @@
 | `States/Digit` | תצוגה | |
 | `DB/Strings` | תצוגה | טקסטים של הממשק בלבד. השאיפה היא לתמוך בכמה שפות. הטקסטים של הדומיין (פרשות, חגים) נמצאים ב-`DB/Dict` ושייכים לדומיין. |
 | `Display` | חומרה | דרייבר הפאנל והחיבור לספריית HUB75. Render (`Area`, `Text`, `Colors`, `Fonts`) יושב מעליו. |
-| `Hardware.h` | חומרה | כותרת מאגדת לכל קבצי החומרה, בלי לוגיקה משלה. ה-include שלה ל-`BLE/Bluetooth.h` נכנס לרשימת הקשתות נגד הכיוון. |
+| `Hardware.h` | חומרה | כותרת החומרה. מ-7.06 כוללת זיהוי כרטיס בזמן ריצה (`detectHardwareModel`, מדידת מתח), שהוא לוגיקת חומרה. בעתיד אפשר לפצל: הזיהוי בחומרה, הזהות ב-`Metadata`. ה-include שלה ל-`BLE/Bluetooth.h` נכנס לרשימת הקשתות נגד הכיוון. |
 | `Metadata` | תצורה (בסיס) | מידע בסיסי על הפרויקט. כל השכבות רשאיות להשתמש בה. |
 | `Screens/RegsScreen` | תצוגה | מסך תמיכה שמציג את כל ההעדפות בצורה ויזואלית. היה חשוב לפני שהייתה אפליקציה. |
 | `States/UpdateState` | תצוגה | מסך התקדמות של OTA, שמצויר דרך `messageScreen`. לא נקרא דרך `main` או `Logic`, אלא ישירות מ-BLE בזמן OTA. זה מכוון. הקשת OTA → UpdateState מסומנת "מכוון: מסך התקדמות OTA". |
+
+## תשובות על העדפות (7.06–7.07)
+
+- **`nz_hul`** הוא ישראל/חו"ל של **המקום הפעיל**, לא רק של המקום המותאם. בחירת עיר קובעת אותו, גם על חשבון הערך של המקום המותאם. זה מכוון (refactor-log F10, סגור). פירוט: [preferences.md](preferences.md) 9.11.
+
+## החלטות לשלב 2a (אחרי 7.07)
+
+- **2a.3, גבולות האחריות של הרישום המרכזי:** הרישום מקבל את הטבלה (מפתח, אינדקס, טיפוס, ברירת מחדל, שדה), טעינה ושמירה בלבד.
+  - בדיקות הטווח ב-`PREF_OP_WRITE` (`shita`, `ofek`, ובהמשך מפתחות צאת הכוכבים, F11) וההטמעה המיידית (`ofek`, `shita`) נשארות ב-`CoreService`.
+  - רישום גבולות ופעולות מלמעלה ייבנה בשלב "מנגנון הפעולות", יחד עם ההטמעה המיידית של שאר ההעדפות.
+  - הסיבה: בדיקות הטווח תלויות ב-`DB/Shita` וב-`DB/Place`, וההטמעה תלויה ב-`bl` וב-States. העברה ל-`Preferences` (רמה 4) הייתה יוצרת קשתות נגד הכיוון.
+  - סדר הבדיקות ב-`PREF_OP_WRITE` הוא חלק מחוזה ה-BLE ונשמר: type, טווח, `fromBytes`, `save`, OK, הטמעה.
+- **תזמון:** 2a.1 ו-2a.2 עכשיו. 2a.3 אחרי הסנכרון של גרסת הפרודקשן שכוללת את F11 (בדיקת טווח לצאת הכוכבים).
 
 ## שאלות שנדחו לשלב 2
 
@@ -56,12 +69,16 @@
 
 - ריבוי משימות: callbacks של NimBLE וה-worker של ה-OTA מציירים ומחליפים את `currentState` במקביל ל-`loop()`.
 - ההחלפה הזמנית `currentState = &bl.updateState` סביב הודעות, והמעבר ל-`clockSetTime` ב-`TIME_OP_SET`.
-- כתיבת `ofek` (אינדקס 6) מ-BLE: מפעילה את `SetCustomState::printUpdateSucc` ומאפסת את `ofek` ל-0.
+- ~~כתיבת `ofek` (אינדקס 6) מ-BLE: מפעילה את `SetCustomState::printUpdateSucc` ומאפסת את `ofek` ל-0.~~ **נענתה בפרודקשן (7.05, 7.07):**
+  - `ofek` = 0 מפעיל את `SetCustomState::printUpdateSucc` ("החל מיקום מותאם").
+  - `ofek` ≠ 0 מפעיל את `SetOfekState::printUpdateSucc`, אותה פונקציה שהתפריט מפעיל. היא כותבת את `nerot`, `homa`, `nz_hul` ו-`hul` לפי העיר. זה תיקון מכוון מ-7.05 לבחירת עיר מהאפליקציה.
+  - מ-7.07 גם `shita` (אינדקס 4) נטמע מיד, דרך `ShitaState::setShita`, ו-`shita` ו-`ofek` מחוץ לטווח נדחים לפני הכתיבה.
+  - פירוט: [preferences.md](preferences.md) 6.4, [ble.md](../contracts/ble.md) §6.5. מה שנשאר לשלב 2 הוא ההחלפה הזמנית של `currentState` (הסעיף הקודם) והקשר הריצה של ההטמעה.
 - בדיקת אורך טקסט ב-BLE לפי רוחב בפיקסלים (`validateTextLen`).
 - `Zman` קורא את `clockFormat` ו-`timeFormat` מההעדפות.
 - `Shita::setDefault` כותב העדפות.
 - שעון קיץ: הזזת ה-RTC ושינוי `place->kaiz`.
 - אתחול יומי ב-03:01.
-- `HARDWARE_MODEL` הקבוע ב-`Hardware.h` מול `HARDWARE_VERSION` ב-build flags.
+- ~~`HARDWARE_MODEL` הקבוע ב-`Hardware.h` מול `HARDWARE_VERSION` ב-build flags.~~ **נסגרה ב-7.06:** שניהם הוסרו. דגם החומרה מזוהה בזמן ריצה: `detectHardwareModel` (מתח על GPIO35) → `configureHardware` → `Metadata::setHardwareVersion`. הערך נשמר ב-`hardwareModel` (`inline` ב-`Hardware.h` מ-7.07, F12), ו-`Metadata::HWversion` (6 תווים) נקבע בזמן ריצה. הוא לא נכתב ל-`esp_app_desc_t` (CLAUDE.md, חוזה 5).
 - מיקום הגלובליים: `strings`, `bl` ו-`currentState` ב-`main.cpp`, אובייקטי ה-Screen וה-`DayInfo` ב-`Logic.cpp`, ו-`display` ב-`Area.cpp`.
 - `DB.cpp:34-35`: הקריאה של `molad_shaa` ו-`molad_daka`.
