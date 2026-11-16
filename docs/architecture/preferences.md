@@ -1,0 +1,361 @@
+# העדפות לפי שכבה — JC6416
+
+סיווג של כל העדפות המשתמש לשכבות היעד, כבסיס להפרדה. בסוף ההפרדה לכל שכבה יהיה מבנה העדפות משלה, ורישום מרכזי אחד יטפל ב-NVS ובאינדקסי ה-BLE.
+**מפתחות NVS, ה-namespace ואינדקסי ה-BLE לא משתנים.** המסמך מתאר את המצב הקיים ואת הסיווג. אין בו הצעות מימוש או תיקונים.
+
+הסיווג סופי לפי תשובות בעל הפרויקט (סעיף 9). התשובות מתועדות גם ב-[notes.md](notes.md).
+
+קשור: [dependencies.md](dependencies.md) (שכבות הקוד), [notes.md](notes.md), [../contracts/ble.md](../contracts/ble.md) (חוזה ה-PREF).
+
+## 1. בסיס ושיטה
+
+- **בסיס:** `JC6416`, commit `9c75812`. הבדלים בדגמים האחרים מופיעים בסעיף 7.
+- **מקור ההגדרות:** בנאי `UserPreferences` ב-[Preferences/UserPreferences.h:487-846](../../JC6416/src/Preferences/UserPreferences.h#L487-L846).
+- **שכבות היעד:**
+  - **נתונים**: מיקום, שיטה, מנהגים
+  - **לוגיקה**: מה מוצג, מתי ולכמה זמן
+  - **הצגה**: שפה, פורמט שעה ותאריך
+  - **תצוגה**: צבעים, בהירות, גופן
+  - **אבטחה**
+  - **תוכן אישי**
+  - **מערכת**
+- **ספירה:** כל אזכור של `userPreferences.<שם>` בקוד, אחרי סינון הערות.
+  - **כתיבה:** השמה (`=`), או קריאה ל-`setValue`/`reset`.
+  - **קריאה:** כל שימוש אחר.
+  - הסקריפט קריאה-בלבד ונמצא מחוץ לריפו.
+- **צרכנים מול עורכים.** כמעט לכל העדפה יש מצב תפריט ב-`States/` שעורך אותה: קורא את הערך, מציג אותו, וכותב בחזרה ב-`okAction`. לכן הטבלה מפרידה בין שני סוגי משתמשים:
+  - **צרכנים**: יחידות שקוראות את הערך כדי להתנהג לפיו.
+  - **עורכים/כותבים**: מצבי תפריט שכותבים את ההעדפה, וכל כותב אחר. כותב שאינו תפריט (למשל `Shita`, `Place`) מופיע גם בעמודת הצרכנים אם הוא גם קורא.
+  - `Logic::configStates` ([Logic.cpp:38-97](../../JC6416/src/Logic.cpp#L38-L97)) קורא העדפות לשתי מטרות:
+    - הזנת אובייקט פעיל, למשל `mainScreen.colorUp` או `mainState.intervalTimeSet`. נספר כצרכן.
+    - אתחול ערך זמני של עורך, למשל `setColorUpLine.colorTemp`. מסומן `Logic (temp)`.
+- **לא נספרים כצרכנים:** `Screens/RegsScreen` ו-`BLE/CoreService` (`PREF_OP_*`). שניהם ניגשים לכל ההעדפות באופן כללי. פירוט בסעיף 6.
+
+## 2. איפה ההעדפות נשמרות היום
+
+| namespace | מי מנהל | תוכן | גישה מ-BLE |
+| --- | --- | --- | --- |
+| `clk` | `UserPreferences` ([UserPreferences.cpp:9](../../JC6416/src/Preferences/UserPreferences.cpp#L9)) | 123 העדפות: 73 ב-`simplePrefs` (אינדקסים 1-73) ו-50 טקסטים ב-`textPrefs` | `PREF_OP_*` לפי מפתח, ו-`TEXT_OP_*` לפי מיקום ב-`textPrefs` |
+| `sec` | `AuthManager` ([Authmanager.cpp:11-13](../../JC6416/src/BLE/Authmanager.cpp#L11-L13)) | `pin` (u16), `trusted` (blob של 48B) | `pin` דרך `PREF_OP_WRITE` בלבד, כ-special-case ([CoreService.cpp:615-639](../../JC6416/src/BLE/CoreService.cpp#L615-L639)). `trusted` רק דרך `AUTH_OP_REGISTER` |
+| `sys` | `CoreService` ([CoreService.cpp:712-730](../../JC6416/src/BLE/CoreService.cpp#L712-L730)) | `dev_name` (string) | `SYS_OP_SET_NAME` |
+
+עובדות על האינדקסים ב-`clk`:
+
+- לכל 50 ה-`textInputN` יש אינדקס 0. כלפי BLE הן ממוענות לפי המיקום שלהן ב-`textPrefs` (`TEXT_OP_*`, 0-49), ולא לפי האינדקס.
+- `textPrefs` לא נמצאים ב-`simplePrefs`, ולכן הם לא מופיעים ב-`PREF_OP_READ` וב-`PREF_OP_SYNC`.
+- `PREF_OP_WRITE` מחפש ב-`allPrefs`, ולכן הוא מקבל גם מפתחות `textInputN`.
+- `forceWrite` מחזיק את אינדקס 1, ונמצא ב-`simplePrefs`.
+
+## 3. סיכום לפי שכבת יעד
+
+| שכבה | כמות | העדפות |
+| --- | --- | --- |
+| נתונים | 26 | **רשומת מקום (8):** `ofek`, `textPlace`, `nz_lat`, `nz_long`, `nz_height`, `nz_hul`, `timezone`, `shaonKaiz` · **שיטה (14):** `shita`, 12 שיטות חישוב (`zriha` … `zeetZom`), `nerot` · **מנהגים (4):** `eda`, `homa`, `hul`, `shanim` |
+| לוגיקה | 29 | `middleLine`, `upLine`, `netzClk`, 4×`interval*`, 10 בחירות "מה מוצג" (`dafHayomi` … `showIsraeli`), 12 בחירות "מה ומתי" (`TAZ` … `IORT`) |
+| הצגה | 5 | `safa`, `dateFormat`, `clockFormat`, `timeFormat`, `leil` |
+| תצוגה | 10 | `brightness`, 7×`color*`, `clockFont`, `screen` (פריסה; בשימוש רק ב-JC6432). ב-JC6432 עוד 3 צבעים |
+| מערכת | 2 + 1 | `bt`, `dayIndex` (מצב שנשמר, לא העדפה); ב-`sys`: `dev_name` |
+| רישום מרכזי | 1 | `forceWrite` |
+| אבטחה | 2 | ב-`sec`: `pin`, `trusted` |
+| תוכן אישי | 50 | `textInput1` … `textInput50` |
+
+## 4. טבלה מלאה
+
+**עמודות:**
+
+- **אינדקס**: אינדקס ה-BLE (`getIndex()`).
+- **טיפוס**: `PreferenceType` בלי הקידומת `PT_`. `BLOB` הוא `double`.
+- **צרכנים**: יחידה ומספר קריאות.
+- **עורכים/כותבים**: `rN/wM` = קריאות/כתיבות. `Logic (temp)` = אתחול ערך זמני של עורך.
+- שורה עם "—" בשתי עמודות השימוש: ב-JC6416 ההעדפה נגישה רק דרך `RegsScreen` ו-`CoreService`, או בכלל לא.
+
+| אינדקס | מפתח | טיפוס | ברירת מחדל | צרכנים | עורכים / כותבים | שכבה מוצעת | נימוק |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `forceWrite` | U8 | `0` | — | — | **רישום מרכזי** | נועד לאיפוס מרחוק לברירות מחדל. לא בשימוש (9.1) |
+| 2 | `textPlace` | STR | `whaht otwun` | Place 1 | — | **נתונים · מקום** | שם המיקום המותאם, נטען ל-`places[0]` (9.8) |
+| 3 | `dayIndex` | U8 | `1` | — | MainState w1 | **מערכת** | מצב שנשמר: אינדקס היום ב-`common_db`, לשחזור תאריך אחרי נפילת חשמל. נכתב, לא נקרא (9.2) |
+| 4 | `shita` | U8 | `0` | DB 3, DayInfo 5, MinhagState 11 | EdotState r0/w1, Logic r1 (temp), ShitaState r1/w1 | **נתונים · שיטה** | שיטת החישוב. ראשית: בחירה דורסת 12 שיטות ו-`nerot` |
+| 5 | `eda` | U8 | `1` | DayInfo 18, MainStateInfoSets 4, MainStateTimeSets 2, Omer 6 | EdotState r6/w6 | **נתונים · מנהגים** | מנהג העדה |
+| 6 | `ofek` | U8 | `1` | DayInfo 1, MinhagState 1, Place 2 | Logic r1 (temp), OfekState r1/w2, Place w1 | **נתונים · מקום** | אינדקס העיר ברשימה; 0 = מקום מותאם. ראשית (9.10) |
+| 7 | `nz_lat` | BLOB | `32.07` | Place 2 | OfekState r1/w1 | **נתונים · מקום** | מיקום מותאם |
+| 8 | `nz_long` | BLOB | `34.78` | Place 2 | OfekState r1/w1 | **נתונים · מקום** | מיקום מותאם |
+| 9 | `nz_height` | I16 | `20` | Place 1 | Logic r1 (temp), OfekState r5/w1 | **נתונים · מקום** | מיקום מותאם |
+| 10 | `nz_hul` | U8 | `0` | DayInfo 2, Place 1 | OfekState r2/w2 | **נתונים · מקום** | ישראל או לא, של המיקום המותאם; קובע את כללי שעון הקיץ |
+| 11 | `timezone` | I8 | `2` | Place 1 | Logic r1 (temp), OfekState r5/w1 | **נתונים · מקום** | אזור זמן (UTC) של המיקום המותאם |
+| 12 | `brightness` | U8 | `200` | main 2 | BrightnessState r1/w1, Logic r1 (temp) | **תצוגה** | בהירות הפאנל |
+| 13 | `safa` | U8 | `1` | — | — | **הצגה** | שפה. לא בשימוש ב-JC, בשימוש בדגמי BA ואחרים (9.3) |
+| 14 | `colorUp` | U8 | `1` | Logic 1 | ColorState r1/w1, Logic r1 (temp) | **תצוגה** | צבע |
+| 15 | `colorMiddle` | U8 | `6` | Logic 1 | ColorState r1/w1, Logic r1 (temp) | **תצוגה** | צבע |
+| 16 | `colorBottomT` | U8 | `1` | Logic 1 | ColorState r1/w1, Logic r1 (temp) | **תצוגה** | צבע |
+| 17 | `colorBottomV` | U8 | `6` | Logic 1 | ColorState r1/w1, Logic r1 (temp) | **תצוגה** | צבע |
+| 18 | `colorYom` | U8 | `6` | Logic 1 | ColorState r1/w1, Logic r1 (temp) | **תצוגה** | צבע |
+| 19 | `colorParasha` | U8 | `6` | Logic 1 | ColorState r1/w1, Logic r1 (temp) | **תצוגה** | צבע |
+| 20 | `colorIluy` | U8 | `6` | Logic 1 | ColorState r1/w1, Logic r1 (temp) | **תצוגה** | צבע |
+| 21 | `clockFont` | U8 | `0` | Logic 1, MainState 1 | FontState r2/w1, Logic r1 (temp) | **תצוגה** | גופן השעון |
+| 22 | `dateFormat` | U8 | `1` | MainState 1, MainStateTimeSets 1 | Logic r1 (temp), SetClockState r6/w1 | **הצגה** | פורמט תאריך. ערך 8 = בלי תאריך לועזי (9.4) |
+| 23 | `clockFormat` | U8 | `24` | MainState 3, Zman 1 | Logic r1 (temp), SetClockState r4/w1 | **הצגה** | 12/24 שעות |
+| 24 | `timeFormat` | U8 | `0` | Zman 2 | SetClockState r4/w6 | **הצגה** | אפס מוביל בשעה |
+| 25 | `shaonKaiz` | U8 | `1` | DayInfo 3, MainState 1 | Logic r1 (temp), SetClockState r4/w1 | **נתונים · מקום** | שעון קיץ: ידני, או אוטומטי לפי ישראל / ארה"ב (9.5) |
+| 26 | `middleLine` | U8 | `1` | — | — | **לוגיקה** | מה מוצג בשורה האמצעית. בשימוש רק ב-JC4020 |
+| 27 | `upLine` | U8 | `1` | — | — | **לוגיקה** | מה מוצג בשורה העליונה. בשימוש רק ב-JC4020 |
+| 28 | `zriha` | U8 | `2` | DayInfo 4 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 29 | `shkiaa` | U8 | `3` | DayInfo 3 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 30 | `rabenuTam` | U8 | `20` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 31 | `zeetCochavim` | U8 | `8` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 32 | `zmanTalit` | U8 | `4` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 33 | `alotHashahar` | U8 | `4` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 34 | `minhaG` | U8 | `3` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 35 | `sozksMga` | U8 | `1` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 36 | `soztMga` | U8 | `1` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 37 | `plagMinha` | U8 | `1` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 38 | `zeetShabat` | U8 | `16` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 39 | `zeetZom` | U8 | `14` | Shita 1 | Logic r1 (temp), MinhagState r1/w1, Shita w8 | **נתונים · שיטה** | שיטת חישוב |
+| 40 | `nerot` | U8 | `22` | Place 1, Shita 8 | Logic r1 (temp), MinhagState r5/w1, OfekState r0/w1, Shita w2 | **נתונים · שיטה** | מנהג הדלקת נרות; ערך התחלתי מהשיטה ומהמיקום |
+| 41 | `homa` | U8 | `0` | DayInfo 1, MainStateInfoSets 2, Place 1 | OfekState r2/w3 | **נתונים · מנהגים** | עיר מוקפת חומה. נכתב מהמיקום שנבחר |
+| 42 | `hul` | U8 | `0` | DayInfo 1, MainStateInfoSets 1 | EdotState r2/w2, OfekState r0/w4 | **נתונים · מנהגים** | מנהג בני חו"ל. נכתב גם מהמיקום שנבחר, ומהאפליקציה מתוך `nz_hul` |
+| 43 | `leil` | U8 | `0` | DayInfo 2 | SetClockState r2/w2 | **הצגה** | אחרי השקיעה: היום הנוכחי או "ליל" של מחר. משפיע רק על התצוגה (9.6) |
+| 44 | `netzClk` | U8 | `0` | Logic 1, MainState 1 | Logic r1 (temp), SetTochenInfoState r5/w1 | **לוגיקה** | ספירה לאחור לנץ: מתי ולכמה זמן |
+| 45 | `shanim` | U8 | `0` | DayInfo 1 | Logic r1 (temp), MinhagState r5/w1 | **נתונים · מנהגים** | מנהג ספירת השנים לחורבן |
+| 46 | `interval` | U16 | `30` | — | — | **לוגיקה** | קצב החלפה. בשימוש רק ב-JC4020 |
+| 47 | `intervalIluy` | U16 | `30` | Logic 1 | Logic r1 (temp), SetInputText r3/w1 | **לוגיקה** | קצב החלפה |
+| 48 | `intervalTime` | U16 | `30` | Logic 1 | Logic r1 (temp), SetTochenTimeState r4/w1 | **לוגיקה** | קצב החלפה |
+| 49 | `intervalInfo` | U16 | `30` | Logic 1 | Logic r1 (temp), SetTochenInfoState r5/w1 | **לוגיקה** | קצב החלפה |
+| 50 | `dafHayomi` | U8 | `1` | MainStateInfoSets 3 | SetTochenInfoState r2/w2 | **לוגיקה** | מה מוצג |
+| 51 | `yerushalmi` | U8 | `0` | MainStateInfoSets 1 | SetTochenInfoState r2/w2 | **לוגיקה** | מה מוצג |
+| 52 | `yom` | U8 | `0` | — | — | **לוגיקה** | מה מוצג. בשימוש רק ב-JC4020 |
+| 53 | `parasha` | U8 | `0` | — | — | **לוגיקה** | מה מוצג. בשימוש רק ב-JC4020 |
+| 54 | `haftara` | U8 | `1` | MainStateInfoSets 1 | SetTochenInfoState r2/w2 | **לוגיקה** | מה מוצג |
+| 55 | `ivri` | U8 | `0` | MainStateInfoSets 1 | SetTochenInfoState r2/w2 | **לוגיקה** | מה מוצג |
+| 56 | `loazi` | U8 | `0` | MainStateTimeSets 1 | SetTochenTimeState r2/w2 | **לוגיקה** | מה מוצג |
+| 57 | `tfila` | U8 | `1` | MainStateInfoSets 20 | SetTochenInfoState r2/w2 | **לוגיקה** | מה מוצג |
+| 58 | `moadim` | U8 | `1` | MainStateInfoSets 9 | SetTochenInfoState r2/w2 | **לוגיקה** | מה מוצג |
+| 59 | `showIsraeli` | U8 | `1` | DayInfo 2, MainStateInfoSets 2 | SetTochenInfoState r2/w2 | **לוגיקה** | מה מוצג |
+| 60 | `TAZ` | U8 | `1` | MainStateTimeSets 3 | SetTochenTimeState r3/w3 | **לוגיקה** | מה מוצג ומתי |
+| 61 | `SOZT` | U8 | `1` | MainStateTimeSets 3 | SetTochenTimeState r3/w3 | **לוגיקה** | מה מוצג ומתי |
+| 62 | `SOZKS` | U8 | `1` | MainStateTimeSets 3 | SetTochenTimeState r3/w3 | **לוגיקה** | מה מוצג ומתי |
+| 63 | `HMM` | U8 | `1` | MainStateTimeSets 3 | SetTochenTimeState r3/w3 | **לוגיקה** | מה מוצג ומתי |
+| 64 | `PSZ` | U8 | `1` | MainStateTimeSets 3 | SetTochenTimeState r3/w3 | **לוגיקה** | מה מוצג ומתי |
+| 65 | `HAZ` | U8 | `1` | MainStateTimeSets 3 | SetTochenTimeState r3/w3 | **לוגיקה** | מה מוצג ומתי |
+| 66 | `ZSZ1` | U8 | `1` | MainStateTimeSets 3 | SetTochenTimeState r3/w3 | **לוגיקה** | מה מוצג ומתי |
+| 67 | `ZSZ` | U8 | `1` | — | — | **לוגיקה** | מה מוצג ומתי. בשימוש רק ב-JC4020 |
+| 68 | `ZYS` | U8 | `3` | — | — | **לוגיקה** | מה מוצג ומתי. בשימוש רק ב-JC4020 |
+| 69 | `ZPS` | U8 | `0` | — | — | **לוגיקה** | מה מוצג ומתי. בשימוש רק ב-JC4020 |
+| 70 | `IPO` | U8 | `2` | — | — | **לוגיקה** | מה מוצג ומתי. בשימוש רק ב-JC4020 |
+| 71 | `IORT` | U8 | `2` | MainStateInfoSets 4 | SetTochenInfoState r4/w2 | **לוגיקה** | מה מוצג ומתי |
+| 72 | `screen` | U8 | `1` | — | — | **תצוגה** | בשימוש רק ב-JC6432: חלוקת אזורים של המסך הראשי (9.7) |
+| 73 | `bt` | U8 | `1` | main 1 | ConfigState r4/w1 | **מערכת** | הפעלת BLE |
+
+**תוכן אישי (`textInput1` … `textInput50`):**
+
+| | |
+| --- | --- |
+| אינדקס | 0 לכולם |
+| טיפוס | `STR` |
+| ברירת מחדל | `""` |
+| צרכנים | `MainState`, דרך `getTextByIndex` ([MainState.cpp:142](../../JC6416/src/States/MainState.cpp#L142)) |
+| עורכים | `BLE/TextCommandHandler` (קריאה וכתיבה דרך `textPrefs[i]`); `SetInputText` (קריאה דרך `getTextByIndex`, מחיקה דרך `handleDeleteText`) |
+| שכבה מוצעת | **תוכן אישי** |
+
+**אבטחה ומערכת מחוץ ל-`clk`:**
+
+| העדפה | טיפוס | ברירת מחדל | משתמש | שכבה מוצעת |
+| --- | --- | --- | --- | --- |
+| `sec/pin` | u16 | 1111 | `AuthManager::init`, `checkPin`, `setPin`, `factoryReset`. `factoryReset` נקרא מ-`ConfigState.cpp:119` | **אבטחה** |
+| `sec/trusted` | blob 48B | ריק | `AuthManager` בלבד | **אבטחה** |
+| `sys/dev_name` | string | `LedHaarets` | `loadDeviceName` (ב-`Bluetooth.cpp:82`), `saveDeviceName` ו-`applyDeviceName` (ב-`CoreService.cpp`) | **מערכת** |
+
+## 5. העדפות שנצרכות ביותר משכבה אחת
+
+שכבות הקוד לפי [dependencies.md](dependencies.md):
+
+- `DB/*` = דומיין
+- `Logic` ו-`States/*` = זרימה
+- `Screens/*` = תצוגה
+- `main` = כניסה
+- `BLE/*` = קלט
+
+הטבלה סופרת רק צרכנים. עורכי תפריט לא נכללים.
+
+| העדפה | שכבת יעד | צרכנים לפי שכבת קוד |
+| --- | --- | --- |
+| `shita` | נתונים | דומיין: `DB` 3, `DayInfo` 5 · זרימה: `MinhagState` 11. תפריטי הזמנים מוצגים לפי השיטה |
+| `ofek` | נתונים | דומיין: `Place` 2, `DayInfo` 1 · זרימה: `MinhagState` 1 (`getZriha`, [MinhagState.cpp:149](../../JC6416/src/States/MinhagState.cpp#L149)) |
+| `eda` | נתונים | דומיין: `DayInfo` 18, `Omer` 6 · זרימה: `MainStateInfoSets` 4, `MainStateTimeSets` 2 |
+| `homa` | נתונים | דומיין: `DayInfo` 1, `Place` 1 · זרימה: `MainStateInfoSets` 2 |
+| `hul` | נתונים | דומיין: `DayInfo` 1 · זרימה: `MainStateInfoSets` 1 |
+| `shaonKaiz` | נתונים · מקום | דומיין: `DayInfo` 3 · זרימה: `MainState` 1. ב-02:00 מזיז את ה-RTC ([MainState.cpp:238-246](../../JC6416/src/States/MainState.cpp#L238-L246)). לבדיקה מול 9.5 |
+| `showIsraeli` | לוגיקה | דומיין: `DayInfo` 2 (`setHaftara`, `setTahanun`) · זרימה: `MainStateInfoSets` 2 |
+| `clockFormat` | הצגה | דומיין: `Zman` 1 (`getShaot`) · זרימה: `MainState` 3 |
+| `textInput*` | תוכן אישי | קלט: `TextCommandHandler` · זרימה: `MainState`, דרך `getTextByIndex` |
+
+**צרכנים משכבת קוד שלא תואמת את שכבת היעד** (מידע):
+
+- **`clockFormat` ו-`timeFormat` (הצגה)** נקראים בתוך `DB/Zman` ([Zman.cpp:14-44](../../JC6416/src/DB/Zman.cpp#L14-L44)). `Zman::toString` מחזיר טקסט מעוצב.
+- **`leil` (הצגה), `showIsraeli` (לוגיקה), `eda` (בחלקה) ו-`hul` (נתונים)** נקראים בתוך `DayInfo` בפונקציות שמחזירות טקסט להצגה: `getYomOrLeil`, `getDayInWeek`, `getBircatHashanim`.
+- **צבעים ו-`clockFont` (תצוגה)** נקראים ב-`Logic::configStates` ומועתקים ל-`mainScreen`. `Screens` לא קורא אותם ישירות.
+- **`brightness` (תצוגה)** נקרא ב-`main.cpp:27-38`.
+- **כתיבה מתוך הדומיין:**
+  - `Shita::setDefault` כותב 12 העדפות שיטה ואת `nerot` ([Shita.cpp:61-382](../../JC6416/src/DB/Shita.cpp#L61-L382)). נקרא מ-`ShitaState.cpp:35`.
+  - `initPlace` כותב את `ofek` כשהערך מחוץ לטווח ([Place.cpp:117-122](../../JC6416/src/DB/Place.cpp#L117-L122)).
+- **כתיבה מתוך הזרימה של המסך הראשי:** `MainState::setNewDay` כותב את `dayIndex` ([MainState.cpp:285](../../JC6416/src/States/MainState.cpp#L285)).
+- **כתיבה של שתי העדפות בפעולה אחת:**
+  - `OfekState` כותב גם את `nerot`, `homa` ו-`hul` מנתוני המיקום שנבחר ([OfekState.cpp:67-79](../../JC6416/src/States/OfekState.cpp#L67-L79)).
+  - `EdotChabad` כותב גם את `shita`=4 ([EdotState.cpp:113-114](../../JC6416/src/States/EdotState.cpp#L113-L114)).
+
+## 6. תגובה לשינוי העדפה
+
+### 6.1 מסלולי כתיבה
+
+| מסלול | מה כותב | מה קורה אחרי הכתיבה |
+| --- | --- | --- |
+| מצב תפריט, `okAction` | `UserPref::setValue` → `save()` | תלוי במצב. פירוט בסעיף 6.3 |
+| BLE `PREF_OP_WRITE` ([CoreService.cpp:587-675](../../JC6416/src/BLE/CoreService.cpp#L587-L675)) | `fromBytes()` → `save()`, ישירות, בלי `setValue` | רק אינדקס 6 (`ofek`) מפעיל תגובה. פירוט בסעיף 6.4 |
+| BLE `PREF_OP_WRITE` עם המפתח `pin` | `authManager.setPin` | שמירה ב-`sec` בלבד |
+| BLE `TEXT_OP_WRITE/DELETE/SWAP` ([TextCommandHandler.cpp](../../JC6416/src/BLE/TextCommandHandler.cpp)) | `textPrefs[i] = …` | WRITE: מעדכן את `bl.mainState.numOfValidTexts`, `stateIndexNameSet` ו-`flagNameSetChanged`, כך שהטקסט מוצג מיד. DELETE: מעדכן את `numOfValidTexts`. SWAP: אין תגובה |
+| BLE `SYS_OP_SET_NAME` | `sys/dev_name` | `applyDeviceName`: שם ה-GAP וה-scan response מתעדכנים מיד |
+| `Shita::setDefault` | 12 שיטות ו-`nerot` | `ShitaState::okAction` ממשיך ל-`configStates` ול-`updateDayValues` |
+| `initPlace` | `ofek` (fallback) | — |
+| `MainState::setNewDay` | `dayIndex` | — (אף אחד לא קורא אותו) |
+| `SetResetPrefState` / `SetResetTextState` ([ConfigState.cpp:75-104](../../JC6416/src/States/ConfigState.cpp#L75-L104)) | `resetSimplePrefs` / `resetTextPrefs` | `ESP.restart()` |
+| `SetResetPassState` | `authManager.factoryReset` | `ESP.restart()` |
+
+### 6.2 איפה ערכים מוחזקים בזיכרון, ומה מרענן אותם
+
+| מנגנון | מה נשמר | העדפות | מה מרענן |
+| --- | --- | --- | --- |
+| `Logic::configStates` ([Logic.cpp:38-97](../../JC6416/src/Logic.cpp#L38-L97)) | `mainScreen.color*`, `mainScreen.clockFont`, `mainState.intervalTimeSet/InfoSet/NameSet`, `mainState.showTimeToNetz`, `numOfValidTexts`, וערכי temp של העורכים | 7 צבעים, `clockFont`, `intervalTime`, `intervalInfo`, `intervalIluy`, `netzClk` | `Logic::init` באתחול; `okAction` של `ColorState`, `MinhagState`, `OfekState`, `ShitaState`, `SetTochen*`, `SetInputText`; `printUpdateSucc` |
+| `initPlace` ([Place.cpp:112-147](../../JC6416/src/DB/Place.cpp#L112-L147)) | `places[0]` (המיקום המותאם), המצביע `place`, והגלובליים `lonPre/Int/Frac` ו-`latPre/Int/Frac` | `textPlace`, `nz_lat`, `nz_long`, `nz_height`, `timezone`, `nerot`, `homa`, `nz_hul`, `ofek` | `main.cpp:42`; `okAction` של `OfekState`; `printUpdateSucc` |
+| חישוב יום: `MainState::setNewDay` → `DayInfo::initDay` ×5 ([MainState.cpp:257-286](../../JC6416/src/States/MainState.cpp#L257-L286), [DayInfo.cpp:7-25](../../JC6416/src/DB/DayInfo.cpp#L7-L25)) | זמני היום (כל הווריאנטים), ערכי `DB`, שעון קיץ (`place->kaiz`), הפטרה, `startTimeToNetz` | `shita`, 12 שיטות, `nerot` (דרך `Shita::calc`), `shanim`, `shaonKaiz`, `nz_hul`, `eda` (הפטרה), `hul`, `netzClk` | חילוף יום (`isNewDay`), או `bl.mainState.updateDayValues = true`, שנבדק ב-`MainState::stateLoop` ([MainState.cpp:44](../../JC6416/src/States/MainState.cpp#L44)) |
+| אתחול בלבד | בהירות הפאנל; הפעלת BLE | `brightness` ([main.cpp:27-38](../../JC6416/src/main.cpp#L27-L38)), `bt` ([main.cpp:59](../../JC6416/src/main.cpp#L59)) | אתחול. בתפריט: `SetBrightnessState` קובע את `display` ישירות, ו-`SetBTState::okAction` קורא ל-`bleApplyState` |
+| קריאה בזמן שימוש | — | `clockFormat`, `timeFormat`, `dateFormat`, `leil`, כל בחירות "מה מוצג" ו"מה ומתי" (`dafHayomi` … `IORT`), `eda`, `homa` ו-`hul` ב-`MainStateInfoSets`, `zriha`/`shkiaa` (הבחירה בין הווריאנטים, ב-`DayInfo::getZriha/getShkiaa`) | — |
+
+### 6.3 תגובות בתפריט (`okAction`)
+
+| מצב | תגובה |
+| --- | --- |
+| `ColorState` (7 צבעים) | `bl.configStates()` |
+| `MinhagState` (שיטות, `nerot`) | `bl.configStates()` ו-`updateDayValues = true` |
+| `MinhagShanimSetState` (`shanim`) | `dayInfo.setShanimLahurban()` ו-`updateDayValues = true` ([MinhagState.cpp:292-297](../../JC6416/src/States/MinhagState.cpp#L292-L297)) |
+| `ShitaState` | `shitot[i]->setDefault()`, `bl.configStates()`, `updateDayValues = true` |
+| `EdotState` (`eda`, `hul`) | `updateDayValues = true` רק ב-`EdotBneiHul` ([EdotState.cpp:131](../../JC6416/src/States/EdotState.cpp#L131)). בשאר: כתיבה בלבד |
+| `OfekState` (`ofek`, מיקום מותאם) | `initPlace()`, `bl.configStates()`, `updateDayValues = true` |
+| `SetShaonKaiz` | `setShaonKaitz()` או `setShaonHoref()` (מזיז את ה-RTC), ו-`updateDayValues = true` ([SetClockState.cpp:173-180](../../JC6416/src/States/SetClockState.cpp#L173-L180)) |
+| `SetClkFormat`, `SetDateFormat`, `SetTimeFormat`, `MinhagLeilState` | כתיבה בלבד (הערך נקרא בזמן שימוש) |
+| `FontState` | `mainScreen.clockFont` ו-`bl.mainState.morphing` נקבעים ישירות |
+| `SetTohenInfoStateKezevSet`, `SetTohenTimeStateKezevSet`, `SetTohenIluyStateKezevSet`, `SetTohenBottomLineNetzSet`, `SetTohenIluyStateDelete` | `bl.configStates()` |
+| שאר `SetTochen*` (`TAZ` … `IORT`, `dafHayomi` …) | כתיבה בלבד |
+| `SetBrightnessState` | `display->setBrightness8` (כבר בזמן הדפדוף) |
+| `SetBTState` | `bleApplyState(on/off)` |
+
+### 6.4 אחרי כתיבה מ-BLE (`PREF_OP_WRITE`)
+
+- **כל מפתח:** `pref->fromBytes()` ואז `pref->save()`. הערך בזיכרון וב-NVS מתעדכן, ואין קריאה ל-`configStates`, ל-`initPlace` או ל-`updateDayValues`. מתי השינוי משפיע תלוי במנגנון שמחזיק את ההעדפה (6.2):
+  - נקראת בזמן שימוש: בציור הבא.
+  - מוחזקת ב-`configStates`: בקריאה הבאה ל-`configStates`.
+  - מוחזקת בחישוב היום: בחילוף היום הבא, או בפעם הבאה ש-`updateDayValues` נדלק.
+  - `initPlace`, `brightness` ו-`bt`: באתחול הבא.
+- **אינדקס 6 (`ofek`)** ([CoreService.cpp:660-668](../../JC6416/src/BLE/CoreService.cpp#L660-L668)): מחליף זמנית את `currentState` ל-`bl.updateState` וקורא ל-`SetCustomState::printUpdateSucc` ([OfekState.cpp:510-518](../../JC6416/src/States/OfekState.cpp#L510-L518)). הפונקציה מבצעת לפי הסדר:
+  1. הודעת הצלחה
+  2. `globalchangedOfek = false`
+  3. `initPlace()`
+  4. `userPreferences.ofek = 0`
+  5. `bl.configStates()`
+  6. `updateDayValues = true`
+
+  אחר כך המסך הקודם מצויר מחדש. אותה פונקציה משמשת גם בתפריט, אחרי עריכת קו אורך או קו רוחב.
+
+### 6.5 מנגנוני רענון לפי שכבת יעד
+
+| מנגנון רענון | ההעדפות שהוא מחזיק | שכבת יעד |
+| --- | --- | --- |
+| `Logic::configStates` | 7 צבעים, `clockFont` | תצוגה |
+| `Logic::configStates` | `intervalTime`, `intervalInfo`, `intervalIluy`, `netzClk` | לוגיקה |
+| `initPlace` | רשומת המקום (`ofek`, `textPlace`, `nz_*`, `timezone`), וגם `nerot`, `homa` | נתונים · מקום |
+| חישוב יום (`updateDayValues`) | `shita`, 12 שיטות, `nerot`, `shanim`, `shaonKaiz`, `nz_hul`, `eda`, `hul` | נתונים |
+| חישוב יום (`updateDayValues`) | `netzClk` (`startTimeToNetz`) | לוגיקה |
+| אתחול בלבד | `brightness` | תצוגה |
+| אתחול בלבד | `bt` | מערכת |
+| קריאה בזמן שימוש | `clockFormat`, `timeFormat`, `dateFormat`, `leil` | הצגה |
+| קריאה בזמן שימוש | בחירות "מה מוצג" ו"מה ומתי" | לוגיקה |
+
+### 6.6 הפער מול הדרישה (9.9)
+
+**הדרישה:** כל שינוי העדפה, מהתפריט או מ-BLE, נטמע מיד בלי `restart` ומציג מסך הצלחה, דרך אותה פונקציית הטמעה שהתפריט כבר משתמש בה. היום זה קורה מ-BLE רק ב-`ofek`.
+
+**ההעדפות שלא נטמעות מיד אחרי `PREF_OP_WRITE`** (לפי 6.2 ו-6.4):
+
+- **עד הקריאה הבאה ל-`configStates`:** 7 צבעים, `clockFont`, `intervalTime`, `intervalInfo`, `intervalIluy`, `netzClk`.
+- **עד חילוף היום או `updateDayValues`:** `shita` (ובלי `setDefault`), 12 שיטות, `nerot`, `shanim`, `shaonKaiz`, `eda`, `hul`, `nz_hul`.
+- **עד האתחול הבא:** `brightness`, `bt`, ושדות רשומת המקום כשלא נכתב אחריהם `ofek`.
+- **נטמעות מיד, כי הן נקראות בזמן שימוש:** `clockFormat`, `timeFormat`, `dateFormat`, `leil`, ובחירות "מה מוצג" ו"מה ומתי".
+
+**`shita` מהאפליקציה.** לפי קוד האפליקציה (`lib/ui/.../settings_times_tab.dart:299-330`, מחוץ לריפו, כפי שדווח), האפליקציה כותבת `shita`, ממתינה 500ms וקוראת בחזרה 12 שיטות ו-`nerot`, בהנחה שהקושחה הריצה `Shita::setDefault`. הקושחה לא מריצה אותו אחרי `PREF_OP_WRITE`, ולכן האפליקציה קוראת בחזרה את הערכים הקודמים.
+
+**העדפות ראשיות ותלויות.** האפליקציה כותבת את ההעדפה הראשית אחרונה:
+
+- **מקום:** `nz_lat`, `nz_long`, `nz_height`, `timezone`, `shaonKaiz`, `nz_hul`, `hul`, `textPlace`, ובסוף `ofek` = 0 בתור "החל מיקום מותאם" (`lib/providers/ble/ble_location_mixin.dart:79-131`).
+- **שיטה:** רק `shita`.
+
+כלומר, הפעלת ההטמעה על ההעדפה הראשית בלבד מספיקה כדי שכתיבות ברצף לא יציגו מסך הצלחה כמה פעמים.
+
+## 7. גישה כללית לכל ההעדפות (לא נספרו)
+
+- **`Screens/RegsScreen`** ([RegsScreen.cpp](../../JC6416/src/Screens/RegsScreen.cpp)): מציג 58 העדפות לפי שם, בדרך כלל 2 אזכורים לכל אחת, וגם את `lonPre` … `latFrac` מ-`Place`.
+  - **לא מוצגות בו:** `textPlace`, `dayIndex`, `nz_hul`, `brightness`, `safa`, `timeFormat`, `sozksMga`, `soztMga`, `plagMinha`, `haftara`, `ivri`, `loazi`, `screen`, `bt`, והטקסטים.
+- **`BLE/CoreService`:**
+  - `PREF_OP_READ`: חיפוש ב-`simplePrefs` ([CoreService.cpp:548-582](../../JC6416/src/BLE/CoreService.cpp#L548-L582)).
+  - `PREF_OP_WRITE`: חיפוש ב-`allPrefs` ([:587-675](../../JC6416/src/BLE/CoreService.cpp#L587-L675)).
+  - `PREF_OP_SYNC`: מעבר על `simplePrefs` ודיווח האינדקסים שערכם שונה מברירת המחדל ([:681-701](../../JC6416/src/BLE/CoreService.cpp#L681-L701)).
+  - התלות היחידה בהעדפה ספציפית היא `getIndex() == 6`.
+- **`States/ConfigState`:** `resetSimplePrefs` ו-`resetTextPrefs`.
+- **`BLE/TextCommandHandler`:** `textPrefs[i]` (7 מקומות).
+- **`Preferences/UserPreferences`:** `loadAll`, `saveAll`, `resetAll`, `printAll`, `getValueByKey`, `setValueByKey` ו-`getPref`. מתוכן רק `loadAll` נקרא (מתוך `setupPreferences`). השאר לא נקראות בשום מקום.
+
+## 8. הבדלים בין דגמים
+
+### JC4020
+
+- **הגדרות:** 73 ההגדרות זהות ל-JC6416: מפתח, אינדקס, טיפוס וברירת מחדל.
+- **שימוש:**
+  - `middleLine` ו-`upLine` בשימוש. עורכים: `SetTochenState` ו-`Logic (temp)`. ל-`middleLine` יש צרכן, `MainState` (4). ל-`upLine` אין צרכן.
+  - `interval` מחליף את `intervalIluy`, `intervalTime` ו-`intervalInfo`. צרכן: `Logic`, שמזין את `mainState.intervalTimeSet`. עורך: `SetTochenState`. שלוש ההעדפות האחרות לא בשימוש.
+  - `yom`, `parasha`, `ZSZ`, `ZYS`, `ZPS` ו-`IPO` בשימוש. צרכנים: `MainStateInfoSets`/`MainStateTimeSets`. עורך: `SetTochenState`.
+  - `colorYom`, `colorParasha`, `colorIluy` ו-`loazi` לא בשימוש. אין עורך ואין צרכן.
+  - `leil`: גם `MainStateTimeSets` קורא אותו.
+  - `dateFormat`: `MainState` 2, ואין קריאה ב-`MainStateTimeSets`.
+  - `dayIndex` לא נכתב.
+- **עורכי התוכן:** כל עורכי בחירות התוכן נמצאים בקובץ אחד, `States/SetTochenState.cpp`. אין `SetTochenInfoState`, `SetTochenTimeState` ו-`SetInputText`.
+- **טקסטים:** `numOfNameSets = 0`, ולכן `textInput*` לא נגישים דרך `TEXT_OP_*` (F3). הם עדיין ב-`allPrefs`: נטענים, מאופסים, ואפשר לכתוב אותם לפי מפתח דרך `PREF_OP_WRITE`.
+
+### JC6432
+
+- **ברירות מחדל שונות:** `colorYom` = 1, `colorParasha` = 1, `leil` = 1 (F9).
+- **3 העדפות נוספות:**
+  - `colorIvri` (72, ברירת מחדל 6)
+  - `colorLoazi` (73, ברירת מחדל 1)
+  - `colorParashaV` (74, ברירת מחדל 6)
+  - צרכן: `Logic` → `mainScreen`. עורך: `ColorState`. שכבה מוצעת: **תצוגה**.
+- **אינדקסים שזזו:** `screen` = 75 (ברירת מחדל 2), `bt` = 76 (F2).
+- **`screen` בשימוש** (שכבה: תצוגה, פריסה):
+  - צרכנים: `Logic` (`mainScreen.setScreen`), `FontState`, `SetClockState` (`setScreen`), `MainState`.
+  - `MainState` גם כותב אותו ב-`upAction`/`downAction` של המסך הראשי. כלומר, לחיצה למעלה או למטה במסך הראשי מחליפה את המסך ושומרת את הבחירה.
+- **`dateFormat`:** נקרא גם ב-`Screens/MainScreen.cpp:91`, כלומר שכבת התצוגה קוראת העדפה ישירות. הפריסה משתנה כשאין תאריך לועזי.
+- **`loazi`:** יש לו עורך ואין לו צרכן.
+- **`dayIndex`:** לא נכתב.
+- **`MainStateInfoSets`:** מפוצל ל-`…1.cpp` ול-`…2.cpp`. הצרכנים של `tfila`, `moadim`, `IORT` ושאר בחירות התוכן מתחלקים בין שני הקבצים.
+
+## 9. תשובות והחלטות
+
+1. **`forceWrite`** → **רישום מרכזי.** נועד לאיפוס מרחוק: אם הערך שונה מ-0, `setup` מאפס את ההעדפות לברירות מחדל ומאפס גם את `forceWrite`. בפועל לא בשימוש. נשאר בטבלה לתאימות (`PREF_OP_READ`/`SYNC`).
+2. **`dayIndex`** → **מערכת, מצב שנשמר, לא העדפה.** נועד לשמור את אינדקס היום בטבלה, כדי לשחזר את התאריך האחרון אחרי נפילת חשמל וסוללה. בפועל לא בשימוש. נשאר בטבלה לתאימות, ולא נכנס למבנה של שכבה.
+3. **`safa`** → **הצגה.** לשימוש עתידי כשיתווספו שפות. לא בשימוש ב-JC, אבל בשימוש בדגמי BA ובדגמים אחרים.
+4. **`dateFormat`** → **הצגה.** הערך 8 (טקסט ריק) נוסף לבקשת לקוח שלא רצה תאריך לועזי. אחר כך הפריסה הותאמה להופעת התאריך הלועזי, ונבדקת מול הערך 8. כוונה עתידית: להפריד ל"הצג תאריך לועזי" ולפורמט התאריך. שיפור עתידי, לא לביצוע עכשיו.
+5. **`shaonKaiz`** → **נתונים, חלק מרשומת המקום.** לא חלק משירות הזמן. ידני: מוסיף שעה לזמנים המחושבים, לא לשעון. אוטומטי: לפי האלגוריתם של ישראל או של ארה"ב.
+   - **לבדיקה:** לפי הקוד, `SetShaonKaiz` מזיז את ה-RTC ([SetClockState.cpp:173-180](../../JC6416/src/States/SetClockState.cpp#L173-L180)), וב-02:00 `MainState` מזיז אותו ([MainState.cpp:238-246](../../JC6416/src/States/MainState.cpp#L238-L246)). צריך לתעד מה בדיוק קורה ל-RTC ולזמנים בכל מצב.
+6. **`leil`** → **הצגה.** אחרי השקיעה אפשר להציג את היום כיום הנוכחי או כ"ליל" של מחר. משפיע רק על התצוגה. שינויים אחרים שקורים אחרי השקיעה הם נושא נפרד.
+7. **`screen`** (JC6432) → **תצוגה, פריסה.** שתי חלוקות שונות של האזורים במסך הראשי. התוכן מותאם לחלוקה, ולא להפך.
+8. **`textPlace`** → **נתונים, חלק מרשומת המקום.** לערים ברשימה יש שמות מובנים. מקום מותאם (`ofek` = 0) מקבל כברירת מחדל את השם "מותאם אישית", ואפשר לשנות אותו מהאפליקציה.
+9. **תגובה לכתיבה מ-BLE.** האפליקציה לא שולחת `restart` אחרי כתיבת העדפות; `SYS_OP_RESTART` נשלח רק מכפתור ידני (`home_tab.dart:203`). **דרישה:** כל שינוי נטמע מיד ומציג מסך הצלחה, דרך אותה פונקציה שהתפריט מפעיל. ראה 6.6.
+   - **כיוון לתכנון:** BLE לא מכיר את `Logic`. `Preferences` מגדיר לכל העדפה ראשית את הפעולה הלוגית שקורית בשינוי, והפונקציות הקיימות של התפריט מבצעות אותה.
+   - **נדחה:** איך `Logic` מקבל את ההודעה, ובאיזה הקשר ריצה ההטמעה מתבצעת.
+10. **`ofek`** → **נתונים, רשומת מקום, העדפה ראשית.** `ofek` הוא אינדקס העיר ברשימת הערים השמורה. 0 = מקום שהלקוח מגדיר ידנית או מהאפליקציה. מקום מוגדר על ידי קואורדינטות, גובה, ישראל או לא, אזור זמן UTC, והאם שעון קיץ פעיל. האפליקציה כותבת את השדות ובסוף `ofek` = 0 בתור "החל מיקום מותאם" (6.6).

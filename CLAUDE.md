@@ -3,10 +3,10 @@
 ## What this repo is
 
 Refactor workspace for the ESP32 firmware of the LED Haarets clocks (JC6416, JC4020, JC6432).
-**This is not production.** Production firmware lives in separate, frozen projects at
-`C:\Users\yeuda\Dev\<model>_latest`    (last field release: tag `v7.03`; `main` is 7.04, not yet released) and is built and published only by
-`ledhaarets-build/build_tool.py`. Nothing from this repo reaches the field until the user
-explicitly declares it the new production.
+**This is not production.** Production firmware lives in separate projects at
+`C:\Users\yeuda\Dev\<model>_latest` (last field release: tag `v7.03`; `main` is 7.04, not yet
+released) and is built and published only by `ledhaarets-build/build_tool.py`. Nothing from
+this repo reaches the field until the user explicitly declares it the new production.
 
 Talk to the user in Hebrew. Code, identifiers and commit messages in English; keep the
 existing comment language of each file.
@@ -17,7 +17,8 @@ If a change touches any of these, stop, explain the impact, and wait for explici
 even if it looks like a pure rename or move.
 
 1. **BLE protocol** — service/characteristic UUIDs, command and response codes, payload byte
-   layout and byte order, auth flow (`Authmanager`), PIN behavior, preference indexes.
+   layout and byte order, auth flow (`Authmanager`), PIN behavior, preference indexes and
+   preference defaults (`PREF_OP_SYNC` reports values that differ from the firmware default).
 2. **Advertisement** — `LEDHAARETS` + version(4) + hardware(6) + model(6), exact lengths.
 3. **NVS** — namespace names, key names, value types and units (e.g. `rabenuTam` is minutes
    in 7.x). Stages 1–2 must not change NVS in any way. The per-layer namespace split is a
@@ -37,11 +38,17 @@ file disagree, report it. Do not "fix" either side.
 
 ## Repo layout
 
-- `JC6416/`, `JC4020/`, `JC6432/` — synced to production main (see docs/baseline.md). Each is a standalone PlatformIO project.
+- `JC6416/`, `JC4020/`, `JC6432/` — synced to production main (see `docs/baseline.md`).
+  Each is a standalone PlatformIO project.
 - `docs/contracts/` — BLE, NVS, OTA, advertisement, metadata.
+- `docs/architecture/` — `dependencies.md` (unit map and layers), `preferences.md`
+  (preference classification by layer), `notes.md` (the owner's answers on intent and
+  constraints — the source of truth for "why", read it before proposing structure).
 - `docs/refactor-log.md` — one entry per approved step, plus a "Findings" section.
-- `baseline/` — reference outputs of the import commit (symbol lists, bin sizes) used to
-  verify no-logic-change steps.
+- `docs/environment.md` — background snapshot of the LED Haarets environment (exported
+  14/10/2026). Context only; the code is the source of truth.
+- `baseline/` — reference outputs used to verify no-logic-change steps.
+- `tools/compare_bins.py` — compares two firmware images and labels where they differ.
 
 Current structure of each project: root (`main.cpp`, `Display`, `Area`, `Logic`, `Text`,
 `Colors.h`, `Hardware.h`, `Metadata`), `BLE/`, `BTN/` (`ButtonDriver`: LH1022, LH0826),
@@ -49,18 +56,27 @@ Current structure of each project: root (`main.cpp`, `Display`, `Area`, `Logic`,
 `Preferences/` (`UserPreferences`, NVS), `Screens/`, `States/`. Same skeleton in all three,
 but the content differs in many places.
 
-- `docs/environment.md` — background snapshot of the LED Haarets environment (exported 14/10/2026). Context only; the code is the source of truth.
 ## Stages
 
-**Current stage: 0**
+**Current stage: 2a** — split `userPreferences` into per-layer structs. JC6416 first; JC4020
+and JC6432 only after the user approves replicating. No change to NVS keys or namespace, BLE
+indexes, types or defaults. Behavior must stay identical.
 
-- **0** — Baseline: contracts extraction, baseline builds, per-file comparison of the three
-  projects. Read-only except for files under `docs/` and `baseline/`.
+- **0** — Baseline: contracts extraction, dependency map, preference classification.
+  Read-only except for files under `docs/` and `baseline/`.
 - **1** — Reorganize into layer folders. File moves, file renames and include/path updates
   only. No logic changes, no signature changes, no reformatting. Same target layout in all
-  three projects, so later diffs between them show only real differences.
-- **2** — Isolate layers behind interfaces and break couplings.
-- **Later, each approved separately** — NVS namespace per layer with migration; one
+  three projects, so later diffs between them show only real differences. (Postponed.)
+- **2a** — Per-layer preference structs (`DataPrefs` with place / shita / minhagim,
+  `LogicPrefs`, `PresentationPrefs`, `DisplayPrefs`, `UserContent`, `SystemPrefs`) and a
+  central registry that owns the table (key, index, type, default, field), load/save and
+  `PREF_OP_*`. Classification: `docs/architecture/preferences.md`. Sub-steps:
+  1. Structs as views onto the existing `userPreferences` fields. No consumer changes.
+  2. Move consumers to their layer's struct, one layer per step.
+  3. Move field ownership into the structs; `UserPreferences` becomes the registry.
+- **2** — Isolate the remaining layers behind interfaces and break couplings.
+- **Later, each approved separately** — applying preference changes from BLE immediately
+  (shared apply functions with the menu); NVS namespace per layer with migration; one
   project with `[env:<model>]` per model; per-module versioning.
 
 Only the user changes the current stage.
@@ -88,7 +104,11 @@ Only the user changes the current stage.
    (`xtensa-esp32-elf-nm -C --size-sort .pio/build/<env>/firmware.elf`, from PlatformIO's
    `toolchain-xtensa-esp32` package). Function symbols and sizes must match. Small
    `.rodata` differences from `__FILE__` strings are expected; report them.
-3. Report the bin size delta per env.
-4. Confirm that contract strings are unchanged (UUIDs, NVS namespaces and keys,
+3. Stage 2a steps: confirm that the registry still lists every preference with the same key,
+   index, type and default, in the same load order (compare against
+   `docs/architecture/preferences.md`). For sub-step 1, `git diff` shows only additions under
+   `Preferences/`.
+4. Report the bin size delta per env.
+5. Confirm that contract strings are unchanged (UUIDs, NVS namespaces and keys,
    advertisement prefix).
-5. Summarize what changed and what needs testing on a real clock.
+6. Summarize what changed and what needs testing on a real clock.
