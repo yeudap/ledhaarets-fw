@@ -16,6 +16,7 @@ extern bool            deviceConnected;
 extern UserPreferences userPreferences;
 extern Logic           bl;
 extern State*          currentState;
+extern int numOfOfeks;
 
 // globals — כאן הגדרתם הרשמית (extern ב-Commands.h)
 ButtonCommand currentButtonCommand = ButtonCommand::NONE;
@@ -638,7 +639,7 @@ static void handlePref(const uint8_t* payload, size_t len)
                 return;
             }
 
-            // חיפוש וכתיבה ב-allPrefs
+                       // חיפוש וכתיבה ב-allPrefs
             for (auto pref : userPreferences.allPrefs)
             {
                 if (strcmp(pref->getKey(), keyStart) == 0)
@@ -646,6 +647,14 @@ static void handlePref(const uint8_t* payload, size_t len)
                     if (pref->getType() != type)
                     {
                         sendErr(DOMAIN_PREF, PREF_OP_WRITE, CORE_ERR_TYPE_MISMATCH);
+                        return;
+                    }
+
+                    // בדיקת טווח לפני שהערך נכנס להעדפה: ערך מחוץ לטווח היה גורם לקריאה מחוץ למערך
+                    if ((pref->getIndex() == 4 && (valueLen < 1 || valueStart[0] >= numOfShitot)) ||
+                        (pref->getIndex() == 6 && (valueLen < 1 || valueStart[0] >= numOfOfeks)))
+                    {
+                        sendErr(DOMAIN_PREF, PREF_OP_WRITE, CORE_ERR_INVALID_VALUE);
                         return;
                     }
 
@@ -664,6 +673,15 @@ static void handlePref(const uint8_t* payload, size_t len)
                         currentState = &bl.updateState;
                         if (valueStart[0] == 0) bl.setCustomState.printUpdateSucc();
                         else bl.setOfekState.printUpdateSucc();
+                        currentState = lastState;
+                        currentState->showStateScreen();
+                    }
+                    // טיפול מיוחד: עדכון shita (index 4) מצריך פעולה נוספת
+                    if (pref->getIndex() == 4)
+                    {
+                        State* lastState = currentState;
+                        currentState = &bl.updateState;
+                        bl.shitaState.setShita();
                         currentState = lastState;
                         currentState->showStateScreen();
                     }

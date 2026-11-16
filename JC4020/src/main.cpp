@@ -21,7 +21,8 @@ void setup()
   delay(100);
   hardwareModel = detectHardwareModel();
   configureHardware(hardwareModel);
-  Serial.printf("LEDHAARETS %s v%s HW:%s\n", Metadata::model, Metadata::SWversion, Metadata::HWversion);  initDisplay();  
+  Serial.printf("LEDHAARETS %s v%s HW:%s\n", Metadata::model, Metadata::SWversion, Metadata::HWversion);  
+  initDisplay();  
   strings.setStringsHeb();
   logoScreen.printScreen();
   setupPreferences();

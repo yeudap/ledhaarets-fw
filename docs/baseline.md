@@ -42,3 +42,22 @@ Changed in all three models (same 22 files):
 `Preferences/` unchanged: keys, indexes, types and defaults are the same as in Sync 1.
 
 From now on, a production release is ported by patch (`git diff vX..vY`), since refactor work will exist in the models.
+
+## Sync 3: production 7.07
+
+| Model  | Tag     | Commit    |
+|--------|---------|-----------|
+| JC6416 | `v7.07` | `592c606` |
+| JC4020 | `v7.07` | `101dd95` |
+| JC6432 | `v7.07` | `644c0c1` |
+
+Method: full copy (no refactor work existed yet in any model).
+
+Changes in 7.07:
+- `PREF_OP_WRITE shita` applies immediately (`ShitaState::setShita`: setDefault, configStates, recalculation, success message).
+- `PREF_OP_WRITE` range checks before `fromBytes`: `shita` ≥ `numOfShitot` and `ofek` out of range return `CORE_ERR_INVALID_VALUE`.
+- `DayInfo` `setHul` / after-shkiaa changes from JC6432 ported to JC6416 and JC4020; the three models are aligned.
+- `hardwareModel` defined `inline` in JC6416 and JC4020 (JC6432 already was).
+- JC4020 `main.cpp`: formatting aligned with the other models.
+
+`Preferences/` unchanged. `stamp_app_desc.py` docstring fix (F13) not yet in production.

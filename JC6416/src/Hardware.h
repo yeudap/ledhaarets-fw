@@ -11,7 +11,7 @@ enum class HardwareModel
     LH1022,
     LH0826
 };
-HardwareModel hardwareModel;
+inline HardwareModel hardwareModel;
 
 static void dumpMem(const char* tag)
 {

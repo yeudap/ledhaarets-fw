@@ -30,9 +30,14 @@ void ShitaState::downAction()
 }
 void ShitaState::okAction() 
 {
-    messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
     userPreferences.shita= this->shitaTemp;
-    shitot[this->shitaTemp]->setDefault();
+    setShita();
+}
+void ShitaState::setShita() 
+{
+    shitot[userPreferences.shita]->setDefault();
     bl.configStates();
     bl.mainState.updateDayValues = true;
+    messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
 }
+

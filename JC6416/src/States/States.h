@@ -799,6 +799,7 @@ class ShitaState : public State
     void upAction();
     void downAction();
     void okAction();
+    void setShita();
 };
 
 // Edot

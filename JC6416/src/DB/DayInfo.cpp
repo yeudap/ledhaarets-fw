@@ -739,7 +739,7 @@ uint8_t _tfilaPlus1, uint8_t _tfilaPlus2, uint8_t _shaonKaiz)
     this->isYomKipur = holiday==4;
     this->isErevRoshHashana = holiday==40;
     this->isPesachSheni = holiday==45;
-    this->isShaonKaiz = _shaonKaiz;
+    // this->isShaonKaiz = _shaonKaiz;
     this->isYomChabad = this->yom_chabad != 0;
 }
 void DayInfo::setHul()
@@ -945,7 +945,6 @@ bool DayInfo::isZmanMinha(DateTime* _now)
 }
 void DayInfo::setAfterShkiaa()
 {
-    afterShkiaa = true;
     hebrewDate.yom = hebrewDateTomorrow.yom;
     hebrewDate.hodesh = hebrewDateTomorrow.hodesh;
     hebrewDate.shana = hebrewDateTomorrow.shana;
@@ -1002,9 +1001,11 @@ void DayInfo::setAfterShkiaa()
     if(tomorrow->isPesach) { halelShalem=true; }
     parasha = tomorrow->parasha;
     parasha_baladi = tomorrow->parasha_baladi;
-    parasha_hul = tomorrow->parasha_hul;
+    // parasha_hul = tomorrow->parasha_hul;
+    if(userPreferences.hul) { setHul(); }
     setHaftara();
     setZom();
+    afterShkiaa = true;
 }
 void DayInfo::setZmanMinha()
 {
