@@ -1,6 +1,6 @@
 #include "ButtonLH1022.h"
 
-ButtonLH1022::ButtonLH1022()
+void ButtonLH1022::begin()
 {
     pinMode(MENU_PIN, INPUT);
     pinMode(UP_PIN, INPUT);

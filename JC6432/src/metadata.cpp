@@ -1,8 +1,18 @@
-#include "metadata.h"
+
+#include "Metadata.h"
 
 #include <cstring>
 
 namespace Metadata {
+
+// Initial value until hardware detection completes
+char HWversion[HWversion_len + 1] = "??????";
+
+void setHardwareVersion(
+    const char (&version)[HWversion_len + 1])
+{
+    memcpy(HWversion, version, sizeof(HWversion));
+}
 
 void combineManufacturerData(
     char (&combinedData)[combinedData_len])

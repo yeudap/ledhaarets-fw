@@ -337,6 +337,7 @@ void Logic::initStates()
     resetPrefState.setMenu(&menuConfgState);
     resetTextState.setMenu(&menuConfgState);
     resetPassState.setMenu(&menuConfgState);
+    resetAllState.setMenu(&menuConfgState);
     aboutUsState.setMenu(&menuConfgState);
     aboutDeviceState.setMenu(&menuConfgState);
     memoryMapState.setMenu(&menuConfgState);
@@ -345,14 +346,16 @@ void Logic::initStates()
     resetPrefState.setUp(&bTState);
     resetTextState.setUp(&resetPrefState);
     resetPassState.setUp(&resetTextState);
-    aboutUsState.setUp(&resetPassState);
+    resetAllState.setUp(&resetPassState);
+    aboutUsState.setUp(&resetAllState);
     aboutDeviceState.setUp(&aboutUsState);
     memoryMapState.setUp(&aboutDeviceState);
 
     bTState.setDown(&resetPrefState);
     resetPrefState.setDown(&resetTextState);
     resetTextState.setDown(&resetPassState);
-    resetPassState.setDown(&aboutUsState);
+    resetPassState.setDown(&resetAllState);
+    resetAllState.setDown(&aboutUsState);
     aboutUsState.setDown(&aboutDeviceState);
     aboutDeviceState.setDown(&memoryMapState);
     memoryMapState.setDown(&bTState);
@@ -361,6 +364,7 @@ void Logic::initStates()
     resetPrefState.setOk(&setResetPrefState);
     resetTextState.setOk(&setResetTextState);
     resetPassState.setOk(&setResetPassState);
+    resetAllState.setOk(&setResetAllState);
     aboutUsState.setOk(&viewAboutUsState);
     aboutDeviceState.setOk(&viewDeviceState);
     memoryMapState.setOk(&viewMemoryMapState);
@@ -399,6 +403,11 @@ void Logic::initStates()
     setResetPassState.setUp(&setResetPassState);
     setResetPassState.setDown(&setResetPassState);
     setResetPassState.setOk(&resetPassState);
+        
+    setResetAllState.setMenu(&resetAllState);
+    setResetAllState.setUp(&setResetAllState);
+    setResetAllState.setDown(&setResetAllState);
+    setResetAllState.setOk(&resetAllState);
 
     ofekState.setMenu(&menuOffekState);
     customAreaState.setMenu(&menuOffekState);
@@ -419,7 +428,7 @@ void Logic::initStates()
     setOfekState.setMenu(&ofekState);
     setOfekState.setUp(&setOfekState);
     setOfekState.setDown(&setOfekState);
-    setOfekState.setOk(&ofekState);
+    setOfekState.setOk(&mainState);
 
     lonCustomState.setMenu(&customAreaState);
     latCustomState.setMenu(&customAreaState);

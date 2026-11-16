@@ -192,17 +192,36 @@ void usaTimeStateToday(const LoaziDate& date, LoaziDate& dstStart, LoaziDate& ds
 
 void DayInfo::setShaonKaitzHoref(LoaziDate& date, Place* place)
 {
+    // Serial.println("======================");
+    // Serial.print("userPreferences.nz_hul: ");
+    // Serial.println(userPreferences.nz_hul);
     LoaziDate dstStart;
     LoaziDate dstEnd;
+    // char loaziStr[30];
+    // Serial.print("date: ");
+    // date.toString(loaziStr, 1);
+    // Serial.println(loaziStr);
 
     if(userPreferences.nz_hul==0) israelTimeStateToday(date, dstStart, dstEnd);
     if(userPreferences.nz_hul==1) usaTimeStateToday(date, dstStart,  dstEnd);
 
+    // Serial.print("dstStart: ");
+    // dstStart.toString(loaziStr, 1);
+    // Serial.println(loaziStr);
+    // Serial.print("dstEnd: ");
+    // dstEnd.toString(loaziStr, 1);
+    // Serial.println(loaziStr);
+
+    shaon = 0;
     if (date == dstStart) shaon=1;  // יום תחילת שעון קיץ
     if (date == dstEnd)   shaon=2;  // יום תחילת שעון חורף
     if (date >=  dstStart && date <  dstEnd) isShaonKaiz = true;
     else isShaonKaiz = false;
 
+    // Serial.print("shaon: ");
+    // Serial.println(shaon);
+    // Serial.print("isShaonKaiz: ");
+    // Serial.println(isShaonKaiz);
 
     if(userPreferences.shaonKaiz ==1)
     {
@@ -738,7 +757,7 @@ uint8_t _tfilaPlus1, uint8_t _tfilaPlus2, uint8_t _shaonKaiz)
     this->isYomKipur = holiday==4;
     this->isErevRoshHashana = holiday==40;
     this->isPesachSheni = holiday==45;
-    this->isShaonKaiz = _shaonKaiz;
+    // this->isShaonKaiz = _shaonKaiz;
     this->isYomChabad = this->yom_chabad != 0;
 }
 void DayInfo::setHul()
@@ -944,7 +963,6 @@ bool DayInfo::isZmanMinha(DateTime* _now)
 }
 void DayInfo::setAfterShkiaa()
 {
-    afterShkiaa = true;
     hebrewDate.yom = hebrewDateTomorrow.yom;
     hebrewDate.hodesh = hebrewDateTomorrow.hodesh;
     hebrewDate.shana = hebrewDateTomorrow.shana;
@@ -1001,12 +1019,15 @@ void DayInfo::setAfterShkiaa()
     if(tomorrow->isPesach) { halelShalem=true; }
     parasha = tomorrow->parasha;
     parasha_baladi = tomorrow->parasha_baladi;
-    parasha_hul = tomorrow->parasha_hul;
+    // parasha_hul = tomorrow->parasha_hul;
+    if(userPreferences.hul) { setHul(); }
     setHaftara();
     setZom();
+    afterShkiaa = true;
 }
 void DayInfo::setZmanMinha()
 {
+    // Serial.println("setZmanMinha");
     zmanMinha = true;
     if(tomorrow->holiday==33) // lag baomer
     {

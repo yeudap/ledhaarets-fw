@@ -7,9 +7,9 @@
 
 enum Minhag {EDOT_MIZRAH=1, SFARAD, ASHKENAZ, TEIMAN_BALADI, TEIMAN_SHAMI, CHABAD};
 
-const int numOfShitot = 8;
+const int numOfShitot = 10;
 
-const int numOfZeetCochavin = 27;
+const int numOfZeetCochavin = 28;
 const char zeetMethod[numOfZeetCochavin+1][18] = 
 { " ",
     "wuguce wues 13.5",     //1- דקות קבועות 13.5
@@ -39,6 +39,7 @@ const char zeetMethod[numOfZeetCochavin+1][18] =
     "wuguce wues 90",       //25- 90 דקות קבועות
     "wuhbnz wues 90",       //26- 90 דקות זמניות
     "(19.75@) wues 90",     //27- 90 דקות במעלות
+    "wukgn 7.08@",          //28- 7.08 מעלות
 };
 
 const int numOfAlot = 7;
@@ -230,5 +231,18 @@ public:
     void setDefault();
     benIshHai(const char* s, int i) : Shita(s,i) {}
 };
-
+class myZmanim : public Shita
+{
+public:
+    void calc(Sun*, Zman, Zman, Zman, Zman, Zman, Zman);
+    void setDefault();
+    myZmanim(const char* s, int i) : Shita(s,i) {}
+};
+class pozen : public Shita
+{
+public:
+    void calc(Sun*, Zman, Zman, Zman, Zman, Zman, Zman);
+    void setDefault();
+    pozen(const char* s, int i) : Shita(s,i) {}
+};
 #endif

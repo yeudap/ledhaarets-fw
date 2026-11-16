@@ -32,10 +32,12 @@ void selectButtonDriver(ButtonDriverType type)
     switch (type)
     {
         case ButtonDriverType::LH1022:
+            lh1022Driver.begin();
             activeButtonDriver = &lh1022Driver;
             break;
 
         case ButtonDriverType::LH0826:
+            lh0826Driver.begin();
             activeButtonDriver = &lh0826Driver;
             break;
     }

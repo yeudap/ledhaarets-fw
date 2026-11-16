@@ -19,8 +19,9 @@ void setup()
   delay(1000);
   Serial.begin(115200);
   delay(100);
-  Serial.printf("\nLEDHAARETS %s v%s %s\n", DEVICE_MODEL, PROJECT_VER, HARDWARE_VERSION);
-  initDisplay();  
+  hardwareModel = detectHardwareModel();
+  configureHardware(hardwareModel);
+  Serial.printf("LEDHAARETS %s v%s HW:%s\n", Metadata::model, Metadata::SWversion, Metadata::HWversion);  initDisplay();  
   strings.setStringsHeb();
   logoScreen.printScreen();
   setupPreferences();
@@ -36,7 +37,6 @@ void setup()
     delay(5);
   }
   display->setBrightness8(userPreferences.brightness);
-  configureHardware(HARDWARE_MODEL);
   validate_rtc();
   validate_time();
   initPlace();

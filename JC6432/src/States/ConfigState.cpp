@@ -22,8 +22,9 @@ void ResetPrefState::showStateScreen()
     menuScreen.printMenu(strings.menuConfg, btStr, strings.resetPref, strings.resetText); 
 }
 void ResetTextState::showStateScreen()   { menuScreen.printMenu(strings.menuConfg, strings.resetPref, strings.resetText, strings.resetPass); }
-void ResetPassState::showStateScreen()   { menuScreen.printMenu(strings.menuConfg, strings.resetText, strings.resetPass, strings.aboutUs); }
-void AboutUsState::showStateScreen()     { menuScreen.printMenu(strings.menuConfg, strings.resetPass, strings.aboutUs, strings.aboutDevice); }
+void ResetPassState::showStateScreen()   { menuScreen.printMenu(strings.menuConfg, strings.resetText, strings.resetPass, strings.resetAll); }
+void ResetAllState::showStateScreen()    { menuScreen.printMenu(strings.menuConfg, strings.resetPass, strings.resetAll, strings.aboutUs); }
+void AboutUsState::showStateScreen()     { menuScreen.printMenu(strings.menuConfg, strings.resetAll, strings.aboutUs, strings.aboutDevice); }
 void AboutDeviceState::showStateScreen() { menuScreen.printMenu(strings.menuConfg, strings.aboutUs, strings.aboutDevice, strings.MemoryMap); }
 void MemoryMapState::showStateScreen()   
 { 
@@ -117,6 +118,28 @@ void SetResetPassState::okAction()
     if (reset)
     {
         authManager.factoryReset();
+        messageScreen.printMessages(messageScreen.INFO, "! ck oha", "kujwt  gmch  iugav", 3000);
+        ESP.restart();
+    }
+    reset = false;
+}
+
+// reset all
+void SetResetAllState::showStateScreen() 
+{ 
+    resetScreen.SetScreen(strings.resetAllRequest); 
+    resetScreen.focusArea(reset);
+}
+void SetResetAllState::menuAction() {  reset = false; }
+void SetResetAllState::upAction() { reset = !reset; }
+void SetResetAllState::downAction() { reset = !reset; }
+void SetResetAllState::okAction() 
+{
+    if (reset)
+    {
+        authManager.factoryReset();
+        userPreferences.resetTextPrefs();
+        userPreferences.resetSimplePrefs();
         messageScreen.printMessages(messageScreen.INFO, "! ck oha", "kujwt  gmch  iugav", 3000);
         ESP.restart();
     }

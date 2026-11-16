@@ -104,7 +104,7 @@ Place places[] = {
 	Place("vhpkskhp", 40.14, -75.11, -5, 14, 18, false, true, nullptr, nullptr, chai_philadelphia_db),
 	Place("udeha", 42.0, -87.7, -6, 0, 18, false, true, nullptr, nullptr, chai_chicago_db),
 	Place("iusbuk", 51.5, 0.1, 0, 45, 15, false, true, nullptr, nullptr, chai_london_db),
-	Place("zhrp", 48.86, 2.34, 1, 423, 20, false, true, nullptr, nullptr, chai_paris_db),
+	Place("zhrp", 48.856, 2.35, 1, 423, 20, false, true, nullptr, nullptr, chai_paris_db),
 };
 
 

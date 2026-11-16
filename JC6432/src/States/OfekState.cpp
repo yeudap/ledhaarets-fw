@@ -66,17 +66,10 @@ void SetOfekState::downAction()
 }
 void SetOfekState::okAction() 
 {
-    messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
     userPreferences.ofek= this->ofekTemp;
-    userPreferences.nerot= places[this->ofekTemp].nerot;
-    userPreferences.homa= places[this->ofekTemp].homa;
-
-    initPlace();
-    if(places[this->ofekTemp].hul) { userPreferences.hul= 1; }
-    if(!places[this->ofekTemp].hul) { userPreferences.hul= 0; }
-    bl.configStates();
-    bl.mainState.updateDayValues = true;
+    printUpdateSucc();
 }
+
 
 void lonStr(char* buffer)
 {
@@ -513,6 +506,18 @@ void SetCustomState::printUpdateSucc()
     globalchangedOfek = false;
     initPlace();
     userPreferences.ofek= 0;
+    bl.configStates();
+    bl.mainState.updateDayValues = true;
+}
+
+void SetOfekState::printUpdateSucc()
+{
+    messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
+    userPreferences.nerot= places[userPreferences.ofek].nerot;
+    userPreferences.homa= places[userPreferences.ofek].homa;
+    initPlace();
+    if(places[userPreferences.ofek].hul) { userPreferences.nz_hul= 1; userPreferences.hul = 1; }
+    if(!places[userPreferences.ofek].hul) { userPreferences.nz_hul= 0;  userPreferences.hul = 0; }
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }

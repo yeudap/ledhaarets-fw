@@ -1,6 +1,6 @@
 #include "ButtonLH0826.h"
 
-ButtonLH0826::ButtonLH0826()
+void ButtonLH0826::begin()
 {
     analogReadResolution(12);
     analogSetPinAttenuation(ADC_PIN, ADC_11db);

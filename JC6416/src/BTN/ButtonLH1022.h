@@ -7,7 +7,7 @@
 class ButtonLH1022 : public IButtonDriver
 {
 public:
-    ButtonLH1022();
+    void begin();
     bool isPushed(ButtonCommand command) override;
 
 private:

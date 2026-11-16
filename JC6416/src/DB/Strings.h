@@ -194,6 +194,7 @@ public:
     const char* resetPref;
     const char* resetText;
     const char* resetPass;
+    const char* resetAll;
     const char* aboutUs;
     const char* aboutDevice;
     const char* MemoryMap;
@@ -215,6 +216,7 @@ public:
     const char* resetPrefRequest;
     const char* resetTextRequest;
     const char* resetPassRequest;
+    const char* resetAllRequest;
     const char* yes;
     const char* no;
 

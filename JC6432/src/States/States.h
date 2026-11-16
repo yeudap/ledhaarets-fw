@@ -684,6 +684,22 @@ class SetResetPassState : public State
     void downAction();
     void okAction();
 };
+class ResetAllState : public State
+{
+    public:
+    void showStateScreen();
+};
+class SetResetAllState : public State
+{
+    public:
+    bool reset = false;
+    void showStateScreen();
+    void focusArea();
+    void menuAction();
+    void upAction();
+    void downAction();
+    void okAction();
+};
 class AboutUsState : public State
 {
     public:
@@ -741,6 +757,7 @@ class SetOfekState : public State
     void upAction();
     void downAction();
     void okAction();
+    void printUpdateSucc();
 };
 class CustomAreaState : public State
 {

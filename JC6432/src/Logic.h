@@ -73,6 +73,8 @@ class Logic
     SetResetTextState setResetTextState;
     ResetPassState resetPassState;
     SetResetPassState setResetPassState;
+    ResetAllState resetAllState;
+    SetResetAllState setResetAllState;
     AboutUsState aboutUsState;
     ViewAboutUsState viewAboutUsState;
     AboutDeviceState aboutDeviceState;

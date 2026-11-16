@@ -198,6 +198,7 @@ void DayInfo::setShaonKaitzHoref(LoaziDate& date, Place* place)
     if(userPreferences.nz_hul==0) israelTimeStateToday(date, dstStart, dstEnd);
     if(userPreferences.nz_hul==1) usaTimeStateToday(date, dstStart,  dstEnd);
 
+    shaon = 0;
     if (date == dstStart) shaon=1;  // יום תחילת שעון קיץ
     if (date == dstEnd)   shaon=2;  // יום תחילת שעון חורף
     if (date >=  dstStart && date <  dstEnd) isShaonKaiz = true;

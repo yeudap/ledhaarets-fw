@@ -662,7 +662,8 @@ static void handlePref(const uint8_t* payload, size_t len)
                     {
                         State* lastState = currentState;
                         currentState = &bl.updateState;
-                        bl.setCustomState.printUpdateSucc();
+                        if (valueStart[0] == 0) bl.setCustomState.printUpdateSucc();
+                        else bl.setOfekState.printUpdateSucc();
                         currentState = lastState;
                         currentState->showStateScreen();
                     }

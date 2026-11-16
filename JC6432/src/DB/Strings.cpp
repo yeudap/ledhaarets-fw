@@ -201,6 +201,7 @@ void Strings::setStringsHeb()
     resetPref = "wupsgv xupht";
     resetText = "ohyxey xupht";
     resetPass = "vnxhx xupht";
+    resetAll = "irmh wursdv ruzja";
     aboutUs = "ubhwusut";
     aboutDevice = "rmunv hyrp";
     MemoryMap = "iurfz wpn";
@@ -222,6 +223,7 @@ void Strings::setStringsHeb()
     resetPrefRequest = "?wupsgv xptk";  // ?לאפס העדפות
     resetTextRequest = "?ohyxey xptk";  // ?לאפס טקסטים
     resetPassRequest = "?vnxhx xptk";  // ?לאפס סיסמה
+    resetAllRequest = "?wursdv rzjak";  // ?לשחזר הגדרות
     yes = "if";                     // כן
     no = "tk";                      // לא
 
