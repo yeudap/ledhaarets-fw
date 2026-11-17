@@ -2,7 +2,11 @@ r"""
 count_prefs.py — reads / writes of every user preference, per unit. Read-only.
 
 Implements the counting rule of docs/architecture/preferences.md §1:
-  * every mention of `userPreferences.<name>` in code, after removing comments;
+  * every mention of `userPreferences.<name>` in code, after removing comments, or of the same
+    preference through its layer view (stage 2a): `systemPrefs.<name>`, `userContent.<name>`,
+    `presentationPrefs.<name>`, `presentationPrefs.layout.<name>`, `displayPrefs.<name>`,
+    `logicPrefs.<name>`, `dataPrefs.place|zmanim|minhagim.<name>`;
+  * the units that define the views (VIEW_UNITS) are skipped: they bind, they do not use;
   * write = assignment (`=`, `+=`, ..., `++`, `--`) or a call to `.setValue(` / `.reset(`;
   * read  = any other mention;
   * unit  = file name without extension (`Shita.cpp` and `Shita.h` -> `Shita`).
@@ -12,6 +16,8 @@ output (see preferences.md §1).
 
 Validation: on JC6416 at commit dcd2cdb (7.07) every count in the 73 rows of preferences.md §4
 matches this output (RegsScreen and CoreService are left out of the table by rule).
+After 2a.2 (views): the output on JC6416 at commit 73cb81c is identical to the output on
+JC6416 at commit e76aaea (before the views), and unchanged on trees without views.
 
 Usage (Python 3.8+, no packages needed):
 
@@ -36,7 +42,11 @@ import sys
 import json
 from collections import defaultdict
 
-REF = re.compile(r'userPreferences\s*\.\s*(\w+)')
+REF = re.compile(r'\b(?:userPreferences|systemPrefs|userContent|displayPrefs|logicPrefs'
+                 r'|presentationPrefs(?:\s*\.\s*layout)?'
+                 r'|dataPrefs\s*\.\s*(?:place|zmanim|minhagim))\s*\.\s*(\w+)')
+VIEW_UNITS = {'SystemPrefs', 'UserContent', 'PresentationPrefs', 'DisplayPrefs', 'LogicPrefs',
+              'DataPrefs', 'PrefsViews'}
 WRITE_AFTER = re.compile(r'\s*(?:[-+*/%&|^]|<<|>>)?=(?!=)|\s*\.\s*(?:setValue|reset)\s*\(|\s*(?:\+\+|--)')
 WRITE_BEFORE = re.compile(r'(?:\+\+|--)\s*$')
 
@@ -74,6 +84,8 @@ def count(src):
             if not f.endswith(('.cpp', '.h')):
                 continue
             unit = os.path.splitext(f)[0]
+            if unit in VIEW_UNITS:
+                continue
             with open(os.path.join(root, f), encoding='utf-8-sig', errors='replace') as fh:
                 text = strip_comments(fh.read())
             for m in REF.finditer(text):

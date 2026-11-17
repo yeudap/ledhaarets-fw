@@ -199,6 +199,32 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       includes). Nothing under `Preferences/` changed; contract strings untouched.
     - `git ls-files --eol`: all 15 files `w/crlf`, as before.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.6** — `tools/count_prefs.py` counts access through the layer views:
+  - `REF` also matches `systemPrefs.`, `userContent.`, `presentationPrefs.` (with or without
+    `layout.`), `displayPrefs.`, `logicPrefs.`, `dataPrefs.place|zmanim|minhagim.`; the captured
+    name is still the preference name. A leading `\b` was added.
+  - The units that define the views (`SystemPrefs`, `UserContent`, `PresentationPrefs`,
+    `DisplayPrefs`, `LogicPrefs`, `DataPrefs`, `PrefsViews`) are skipped: they bind, they do not
+    use. Write detection and output format unchanged. Docstring updated.
+  - `docs/architecture/preferences.md` §1: the counting rule now includes access through the views.
+  - No firmware source changed; no build.
+  - **Verification** (output has no line numbers: `<pref>: <unit> r<reads>/w<writes>`, so a
+    byte comparison is a comparison of the counts; text and `--json` both checked):
+    - New tool vs old tool, on trees without views: identical on JC6416 at `e76aaea` and at
+      `dcd2cdb`, and on JC4020 and JC6432 at HEAD.
+    - New tool on JC6416 at `73cb81c` vs old tool on JC6416 at `e76aaea` (before the views):
+      identical. Same consumers, units, reads and writes for every preference.
+  - **End of 2a.2 (JC6416):** `grep "userPreferences\s*\."` outside `Preferences/` finds only:
+    - `dayIndex` — `src/States/MainState.cpp:289` (write; F16, removal planned).
+    - Registry members:
+      - `resetSimplePrefs` — `src/States/ConfigState.cpp:81`, `:143`.
+      - `resetTextPrefs` — `src/States/ConfigState.cpp:101`, `:142`.
+      - `simplePrefs` — `src/BLE/CoreService.cpp:562`, `:704`.
+      - `allPrefs` — `src/BLE/CoreService.cpp:643`.
+      - `printAllValues` — `src/main.cpp:63`, commented out.
+    - A Hebrew comment that ends with the word: `src/BLE/CoreService.cpp:613`
+      ("ולא ל-userPreferences."). Not an access.
+    - All other preference accesses go through the layer views.
 
 ## Planned for next production release
 
