@@ -103,6 +103,8 @@ Only the user changes the current stage.
 - No reformatting, no fixing unrelated warnings or typos, no "improving" code being moved.
   Anything that looks like a bug goes to `docs/refactor-log.md` → Findings, not into the code.
 - A production hotfix reported by the user is ported as its own step, labeled "hotfix port".
+- Edit files only with the editor tools, not `sed` or scripts. Keep the existing line endings
+  (source files are CRLF in the working copy); check with `git ls-files --eol` after every step.
 
 ## Verification after every step
 
@@ -110,15 +112,21 @@ Only the user changes the current stage.
 2. Stage 1 steps: compare the symbol table with the reference built at the start of the step
    (`xtensa-esp32-elf-nm -C --size-sort .pio/build/<env>/firmware.elf`, from PlatformIO's
    `toolchain-xtensa-esp32` package). Function symbols and sizes must match. Small
-   `.rodata` differences from `__FILE__` strings are expected; report them.
+   `.rodata` differences from `__FILE__` strings are expected; report them. File moves change
+   debug info, so the expectation in item 4 applies, except for those `__FILE__` differences,
+   which also show as code/data in `compare_bins.py` and in the stripped ELF.
 3. Stage 2a steps: confirm that the registry still lists every preference with the same key,
    index, type and default, in the same load order (compare against
    `docs/architecture/preferences.md`). For sub-step 1, `git diff` shows only additions under
    `Preferences/`.
 4. Report the bin size delta per env. For comparison builds (the reference and the candidate),
    set `SOURCE_DATE_EPOCH` to the same fixed value in both, so `__DATE__` / `__TIME__` are
-   identical and a no-logic-change step is expected to compare `identical` with
-   `tools/compare_bins.py`. Never set it for a production build.
+   identical. Never set it for a production build. The image embeds the SHA-256 of the full
+   ELF, debug info included, so a step that adds or moves source lines changes it even when
+   the code is identical. Expected result of a no-logic-change step (e.g. 2a.2):
+   `tools/compare_bins.py` reports "Only metadata differs" (ELF SHA-256 and trailer only), the
+   two ELFs after `xtensa-esp32-elf-objcopy --strip-debug` are byte-identical, and
+   `nm -C --size-sort` is identical.
 5. Confirm that contract strings are unchanged (UUIDs, NVS namespaces and keys,
    advertisement prefix).
 6. Summarize what changed and what needs testing on a real clock.
