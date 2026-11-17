@@ -1,6 +1,7 @@
 #include "States.h"
 #include "DB/DB.h"
 #include "Logic.h"
+#include "Preferences/PresentationPrefs.h"
 
 extern Logic bl;
 extern DayInfo dayInfo;
@@ -37,7 +38,7 @@ void setTimeFormatStr(char* buffer)
 void leilAhreiShkiaaStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.leilAhreiShkiaa, ">");
-    if(userPreferences.leil==1) { sprintf(buffer, "%s %s", strings.leilAhreiShkiaa, "<"); }
+    if(presentationPrefs.leil==1) { sprintf(buffer, "%s %s", strings.leilAhreiShkiaa, "<"); }
 }
 void shaonKaizStr(char* buffer, uint8_t kaiz)
 {
@@ -64,8 +65,8 @@ void MinhagLeilState::showStateScreen()
 }
 void MinhagLeilState::okAction()
 {
-    if(userPreferences.leil==0) { userPreferences.leil= 1; }
-    else { userPreferences.leil= 0; } 
+    if(presentationPrefs.leil==0) { presentationPrefs.leil= 1; }
+    else { presentationPrefs.leil= 0; } 
 }
 void ShaonKaiz::showStateScreen() 
 { 
@@ -78,7 +79,7 @@ void ShaonKaiz::showStateScreen()
 void ClockSetTime::showStateScreen() 
 { 
     char clkFormatStr[50];
-    setClkFormatStr(clkFormatStr, userPreferences.clockFormat);
+    setClkFormatStr(clkFormatStr, presentationPrefs.clockFormat);
     char shaonKaiz[50];
     shaonKaizStr(shaonKaiz, userPreferences.shaonKaiz);
     menuScreen.printMenu(strings.menuClock, shaonKaiz, strings.kivunShaon, clkFormatStr); 
@@ -87,17 +88,17 @@ void ClockSetTime::showStateScreen()
 void ClkFormat::showStateScreen() 
 { 
     char setFormat[50];
-    setFormatStr(setFormat, userPreferences.dateFormat);
+    setFormatStr(setFormat, presentationPrefs.dateFormat);
     char clkFormatStr[50];
-    setClkFormatStr(clkFormatStr, userPreferences.clockFormat);
+    setClkFormatStr(clkFormatStr, presentationPrefs.clockFormat);
     menuScreen.printMenu(strings.menuClock, strings.kivunShaon, clkFormatStr, setFormat); 
 }
 void DateFormat::showStateScreen() 
 { 
     char setFormat[50];
-    setFormatStr(setFormat, userPreferences.dateFormat);
+    setFormatStr(setFormat, presentationPrefs.dateFormat);
     char clkFormatStr[50];
-    setClkFormatStr(clkFormatStr, userPreferences.clockFormat);
+    setClkFormatStr(clkFormatStr, presentationPrefs.clockFormat);
     char setTimeFormat[50];
     setTimeFormatStr(setTimeFormat);
     menuScreen.printMenu(strings.menuClock, clkFormatStr, setFormat, setTimeFormat); 
@@ -105,7 +106,7 @@ void DateFormat::showStateScreen()
 void TimeFormat::showStateScreen() 
 { 
     char setFormat[50];
-    setFormatStr(setFormat, userPreferences.dateFormat);
+    setFormatStr(setFormat, presentationPrefs.dateFormat);
     char setTimeFormat[50];
     setTimeFormatStr(setTimeFormat);
     char leilAhreiShkiaa[50];
@@ -117,7 +118,7 @@ void TimeFormat::showStateScreen()
 void SetClkFormat::showStateScreen() 
 { 
     char setFormat[50];
-    setFormatStr(setFormat, userPreferences.dateFormat);
+    setFormatStr(setFormat, presentationPrefs.dateFormat);
     char clkFormatStr[50];
     setClkFormatStr(clkFormatStr, this->formatTemp);
     menuScreen.printMenu(strings.menuClock, strings.kivunShaon, clkFormatStr, setFormat); 
@@ -126,7 +127,7 @@ void SetClkFormat::showStateScreen()
 }
 void SetClkFormat::menuAction() 
 { 
-    this->formatTemp = userPreferences.clockFormat;
+    this->formatTemp = presentationPrefs.clockFormat;
 }
 void SetClkFormat::upAction() 
 {
@@ -140,7 +141,7 @@ void SetClkFormat::downAction()
 }
 void SetClkFormat::okAction() 
 {
-    userPreferences.clockFormat= this->formatTemp;
+    presentationPrefs.clockFormat= this->formatTemp;
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbuwb  ifsgn");
 }
 
@@ -192,7 +193,7 @@ void SetDateFormat::showStateScreen()
 }
 void SetDateFormat::menuAction() 
 { 
-    this->formatTemp = userPreferences.dateFormat;
+    this->formatTemp = presentationPrefs.dateFormat;
 }
 void SetDateFormat::upAction() 
 {
@@ -207,7 +208,7 @@ void SetDateFormat::downAction()
 }
 void SetDateFormat::okAction() 
 {
-    userPreferences.dateFormat= this->formatTemp;
+    presentationPrefs.dateFormat= this->formatTemp;
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbuwb  ifsgn");
 }
 
@@ -215,7 +216,7 @@ void SetDateFormat::okAction()
 void SetTimeFormat::showStateScreen() 
 { 
     char setFormat[50];
-    setFormatStr(setFormat, userPreferences.dateFormat);
+    setFormatStr(setFormat, presentationPrefs.dateFormat);
     char setTimeFormat[50];
     setTimeFormatStr(setTimeFormat);
     char leilAhreiShkiaa[50];
@@ -226,21 +227,21 @@ void SetTimeFormat::showStateScreen()
 }
 void SetTimeFormat::menuAction()
 {
-    userPreferences.timeFormat = userPreferences.timeFormat;
+    presentationPrefs.timeFormat = presentationPrefs.timeFormat;
 }
 void SetTimeFormat::upAction()
 {
-    if (userPreferences.timeFormat == 0) { userPreferences.timeFormat = 1; }
-    else{ userPreferences.timeFormat = 0; }
+    if (presentationPrefs.timeFormat == 0) { presentationPrefs.timeFormat = 1; }
+    else{ presentationPrefs.timeFormat = 0; }
 }
 void SetTimeFormat::downAction()
 {
-    if (userPreferences.timeFormat == 0) { userPreferences.timeFormat = 1; }
-    else{ userPreferences.timeFormat = 0; }
+    if (presentationPrefs.timeFormat == 0) { presentationPrefs.timeFormat = 1; }
+    else{ presentationPrefs.timeFormat = 0; }
 }
 void SetTimeFormat::okAction()
 {
-    userPreferences.timeFormat= userPreferences.timeFormat;
+    presentationPrefs.timeFormat= presentationPrefs.timeFormat;
 }
 
 // General

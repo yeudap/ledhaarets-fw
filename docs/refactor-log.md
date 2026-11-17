@@ -80,6 +80,33 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       indexes, types, defaults and load order are unchanged; contract strings untouched.
     - Line endings of the edited files kept as CRLF in the working copy.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.2** (JC6416) — UserContent and Presentation:
+  - `userPreferences.textPrefs` → `userContent.textPrefs`, 7 places in
+    `src/BLE/TextCommandHandler.cpp`, plus `#include "Preferences/UserContent.h"`.
+  - `userPreferences.<field>` → `presentationPrefs.<field>` for `leil`, `dateFormat`,
+    `clockFormat`, `timeFormat`, and → `presentationPrefs.layout.<field>` for `middleLine`,
+    `upLine`: 50 occurrences on 39 lines in `src/DB/DayInfo.cpp`, `src/DB/Zman.cpp`,
+    `src/Logic.cpp`, `src/Screens/RegsScreen.cpp`, `src/States/MainState.cpp`,
+    `src/States/MainStateTimeSets.cpp`, `src/States/SetClockState.cpp`, plus
+    `#include "Preferences/PresentationPrefs.h"` in each. `safa` and `layout.screen` have no
+    consumers in JC6416. No commented-out lines in these two layers.
+  - Edits made with the editor tool only.
+  - **Verification** (reference: clean build of `05834a2`, built before editing; both builds
+    clean, with `SOURCE_DATE_EPOCH=1763337600`):
+    - `pio run -d JC6416` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,060,912 bytes before and after (delta 0). RAM 61,124 and Flash
+      2,054,341 bytes, unchanged.
+    - `nm -C --size-sort`: identical.
+    - `objcopy --strip-debug`: the two ELFs are byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256)
+      and 33 in the trailer. As expected.
+    - `grep`: none of the 9 fields remains as `userPreferences.<field>` outside `Preferences/`;
+      `userContent.textPrefs` 7 times, `presentationPrefs.` 50 times (4 of them `.layout.`).
+    - `git diff --stat`: 8 files, 54 insertions, 46 deletions (46 replaced lines + 8 includes).
+      Nothing under `Preferences/` changed; contract strings untouched.
+    - `git ls-files --eol`: all 8 files `w/crlf`, as before.
+  - **Recorded:** F17, F18 (documentation only, no code change).
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 
@@ -333,3 +360,26 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 - **Models:** only JC6416 writes it. JC6432 has the write commented out
   (`src/States/MainState.cpp:310`); JC4020 does not write it. The definition (index 3) is the
   same in all three.
+
+### F17 — Diagnostics screen shows `leil` twice
+
+- **Where:** `src/Screens/RegsScreen.cpp:242-243` (`dcd2cdb`; `:243-244` after 2a.2.2).
+- **What:** areas `d1` and `d2` both print `leil` and its default. Probably a copy-paste error;
+  `d2` was likely meant for another preference.
+- **Impact:** diagnostics screen only. No effect on preferences, NVS or BLE.
+- **Status:** documentation only (owner's decision). No code change.
+- **Models:** same in all three (JC6416 / JC4020 `:242-243`, JC6432 `:242-243`).
+
+### F18 — `SetTimeFormat`: self-assignment in `menuAction` and `okAction`
+
+- **Where:** `src/States/SetClockState.cpp:229` (`menuAction`) and `:243` (`okAction`)
+  (`dcd2cdb`; `:230` / `:244` after 2a.2.2).
+- **What:** both assign `timeFormat` to itself. Both sides are `UserPref<uint8_t>`, so overload
+  resolution picks the implicit copy assignment, not `UserPref::operator=(T)`
+  (`src/Preferences/UserPreferences.h:86`): a memberwise self-copy, no write to NVS. The actual
+  write happens immediately in `upAction` / `downAction` (`:233-234`, `:238-239`), unlike the
+  other menu states, which edit a temp value and write it in `okAction`.
+- **Impact:** none on behavior. The two lines are no-ops; the menu writes `timeFormat` to NVS on
+  every up/down press.
+- **Status:** documentation only (owner's decision). No code change.
+- **Models:** same in all three (JC6416 / JC4020 `:229`, `:243`; JC6432 `:230`, `:244`).

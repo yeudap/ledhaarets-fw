@@ -1,6 +1,7 @@
 #include "States.h"
 #include "DB/DB.h"
 #include "BLE/TextCommandHandler.h"
+#include "Preferences/PresentationPrefs.h"
 
 extern Place* place;
 extern DayInfo dayInfo;
@@ -171,7 +172,7 @@ void MainState::updateClockOnScreen()
     if(morphing) 
     { 
         uint8_t _hour = now.hour();
-        if (userPreferences.clockFormat == 12)
+        if (presentationPrefs.clockFormat == 12)
         {
             if (_hour == 0 || _hour == 12) { _hour = 12; }
             else  { _hour %= 12; }
@@ -204,7 +205,7 @@ void MainState::checkTimeChanged()
         if(morphing) 
         { 
             uint8_t _hour = now.hour();
-            if (userPreferences.clockFormat == 12)
+            if (presentationPrefs.clockFormat == 12)
             {
                 if (_hour == 0 || _hour == 12) { _hour = 12; }
                 else  { _hour %= 12; }
@@ -287,7 +288,7 @@ void MainState::setNewDay()
 void MainState::updateHour()
 {
     uint8_t _hour = now.hour();
-    if (userPreferences.clockFormat == 12)
+    if (presentationPrefs.clockFormat == 12)
     {
         if (_hour == 0 || _hour == 12) { _hour = 12; }
         else  { _hour %= 12; }
@@ -336,7 +337,7 @@ void MainState::updateHebDate()
 void MainState::updateLoaziDate()
 {
     char loaziStr[30];
-    dayInfo.loaziDate.toString(loaziStr, userPreferences.dateFormat);
+    dayInfo.loaziDate.toString(loaziStr, presentationPrefs.dateFormat);
     mainScreen.updateLoaziDate(loaziStr);
 }
 void MainState::updateYom()

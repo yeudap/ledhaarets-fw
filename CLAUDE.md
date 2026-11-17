@@ -7,8 +7,9 @@ Refactor workspace for the ESP32 firmware of the LED Haarets clocks (JC6416, JC4
 `C:\Users\yeuda\Dev\<model>_latest` (last field release: tag `v7.07`) and is built and published only by `ledhaarets-build/build_tool.py`. Nothing from
 this repo reaches the field until the user explicitly declares it the new production.
 
-Talk to the user in Hebrew. Code, identifiers and commit messages in English; keep the
-existing comment language of each file.
+Always reply to the user in Hebrew, even when the code, tool output or recent messages are
+in English. Code, identifiers and commit messages stay in English; keep the existing
+comment language of each file.
 
 ## Hard contracts — must stay compatible with clocks in the field
 

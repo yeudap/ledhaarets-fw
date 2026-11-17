@@ -1,4 +1,5 @@
 #include "States.h"
+#include "Preferences/PresentationPrefs.h"
 extern DayInfo dayInfo;
 
 
@@ -172,7 +173,7 @@ bool MainState::flagTimeSetHazotAlotZriha()
 void MainState::infoSetLoazi()
 {
     char date[50];
-    dayInfo.loaziDate.toString(date, userPreferences.dateFormat);
+    dayInfo.loaziDate.toString(date, presentationPrefs.dateFormat);
     Text txt = Text(mainScreen.colorBottomT, &FreeSansBold9pt7b, 1, 19, CENTER);
     mainScreen.update(mainScreen.zmanAll, date, txt);
 }
