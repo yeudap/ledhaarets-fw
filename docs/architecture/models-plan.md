@@ -1,3 +1,5 @@
+**Pending.** Based on commit `0e48b1a` (production 7.07). Re-run the comparison before writing models.md if a newer production version was synced.
+
 # תוכנית: `docs/architecture/models.md` — מפת הבדלים בין הדגמים
 
 ## הקשר
