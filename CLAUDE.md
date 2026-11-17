@@ -48,7 +48,8 @@ file disagree, report it. Do not "fix" either side.
 - `docs/refactor-log.md` — one entry per approved step, plus a "Findings" section.
 - `docs/environment.md` — background snapshot of the LED Haarets environment (exported
   14/10/2026). Context only; the code is the source of truth.
-- `baseline/` — reference outputs used to verify no-logic-change steps.
+- No `baseline/` folder. The reference for each step is built at the start of that step
+  (`pio run` before editing; `firmware.bin`, build log and `nm` output saved in the scratchpad).
 - `tools/compare_bins.py` — compares two firmware images and labels where they differ.
 
 Current structure of each project: root (`main.cpp`, `Display`, `Area`, `Logic`, `Text`,
@@ -64,12 +65,12 @@ and JC6432 only after the user approves replicating. No change to NVS keys or na
 indexes, types or defaults. Behavior must stay identical.
 
 - **0** — Baseline: contracts extraction, dependency map, preference classification.
-  Read-only except for files under `docs/` and `baseline/`.
+  Read-only except for files under `docs/`.
 - **1** — Reorganize into layer folders. File moves, file renames and include/path updates
   only. No logic changes, no signature changes, no reformatting. Same target layout in all
   three projects, so later diffs between them show only real differences. (Postponed.)
-- **2a** — Per-layer preference structs (`DataPrefs` with place / shita / minhagim,
-  `LogicPrefs`, `PresentationPrefs`, `DisplayPrefs`, `UserContent`, `SystemPrefs`) and a
+- **2a** — Per-layer preference structs (`DataPrefs` with place / zmanim / minhagim,
+  `LogicPrefs`, `PresentationPrefs` with layout, `DisplayPrefs`, `UserContent`, `SystemPrefs`) and a
   central registry that owns the table (key, index, type, default, field) and load/save only.
   `PREF_OP_WRITE` range checks (`shita`, `ofek`, later the zeet keys of F11) and the immediate
   apply (`ofek`, `shita`) stay in `CoreService`; registering limits and actions from above
@@ -106,7 +107,7 @@ Only the user changes the current stage.
 ## Verification after every step
 
 1. `pio run` succeeds for every env of every affected project, with no new warnings.
-2. Stage 1 steps: compare the symbol table with `baseline/`
+2. Stage 1 steps: compare the symbol table with the reference built at the start of the step
    (`xtensa-esp32-elf-nm -C --size-sort .pio/build/<env>/firmware.elf`, from PlatformIO's
    `toolchain-xtensa-esp32` package). Function symbols and sizes must match. Small
    `.rodata` differences from `__FILE__` strings are expected; report them.

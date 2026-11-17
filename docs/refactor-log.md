@@ -30,6 +30,7 @@ Decided by the owner. To be done in the production projects, then ported here wi
 | F11 | `PREF_OP_WRITE`: range check of `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom` against `numOfZeetCochavin`, like the 7.07 check of `shita` / `ofek` |
 | F8 | Fix the factory-reset trigger comment in `Authmanager.h` / `Authmanager.cpp` |
 | F13 | Fix the `stamp_app_desc.py` docstring (no `HARDWARE_VERSION` build flag) |
+| F16 | Remove `dayIndex`: stop the write in `MainState::setNewDay` (JC6416), and remove the preference from `UserPreferences` in all three models, since indexes are explicit (index 3 stays a gap). Had indexes been positional, only the write would be stopped and the definition kept, to preserve index 3 |
 
 ## Findings
 
@@ -243,3 +244,32 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   `nz_hul`. No effect when `ofek` ≠ 0, because `place` points to `places[ofek]`, not `places[0]`.
 - **Status:** won't fix (owner's decision: keep as is). Closed.
 - **Models:** same in all three.
+
+### F16 — `dayIndex` is written every day and never read
+
+- **Where:** `src/States/MainState.cpp:285` (`MainState::setNewDay`): `userPreferences.dayIndex= idx;`.
+  Definition: `src/Preferences/UserPreferences.h:542` (key `dayIndex`, U8, default 1, index 3).
+- **What:** the preference was meant to keep the day index, to restore the date after a power
+  and battery loss. No code reads it. On JC6416 it is written at every day calculation, so its
+  value almost always differs from the default.
+- **Indexes are explicit:** every `UserPref` gets its BLE index as a constructor argument, and
+  `getIndex()` returns that value. Nothing derives an index from the position in `allPrefs` or
+  `simplePrefs`. The only uses of the index are in `src/BLE/CoreService.cpp`: `PREF_OP_SYNC`
+  (`:707`) and `getIndex() == 4` / `== 6` (`:654-655`, `:670`, `:680`). `PREF_OP_READ` and
+  `PREF_OP_WRITE` look up by key. Removing the definition does not move any other index; index 3
+  becomes a gap.
+- **Effect of removal on the firmware:**
+  - `PREF_OP_SYNC` no longer reports index 3. Today it reports it almost always on JC6416.
+  - `PREF_OP_READ` / `PREF_OP_WRITE` with key `dayIndex` return `CORE_ERR_INVALID_KEY`.
+  - The NVS key `dayIndex` stays in `clk` as an orphan entry (no active erase). No behavior
+    effect.
+  - Stopping the write alone would freeze the last value, and `SYNC` would keep reporting
+    index 3 on existing clocks until a reset.
+- **Effect on the app** (per the app source, as reported by the user:
+  `lib/config/preference_constants.dart`, `lib/models/app_preferences.dart:13`): `dayIndex` is
+  defined at index 3 and not used beyond the definition. After the removal `SYNC` does not
+  return 3, and the app does not request it. Safe with existing app versions.
+- **Status:** removal planned for the next production release. Open, planned.
+- **Models:** only JC6416 writes it. JC6432 has the write commented out
+  (`src/States/MainState.cpp:310`); JC4020 does not write it. The definition (index 3) is the
+  same in all three.
