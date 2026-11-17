@@ -49,6 +49,37 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     - `git status`: only the 7 new files. Keys, indexes, types, defaults, load order and
       contract strings (UUIDs, `clk` / `sec` / `sys`, `LEDHAARETS`) unchanged.
   - **Clock test:** not needed; compiled code identical except the build time.
+- **2a.2** (JC6416) — move consumers to their layer's struct, one layer per sub-step:
+  `userPreferences.X` → `<view>.X` and one `#include "Preferences/<Layer>.h"` after the last
+  existing include; no other change on the line. Order: System, UserContent, Presentation,
+  Display, Logic, Data. Commented-out lines that mention a field are replaced in their layer's
+  sub-step too, so that at the end of 2a.2 no `userPreferences.<field>` remains outside
+  `Preferences/`. Registry members (`allPrefs`, `simplePrefs`, `resetSimplePrefs`,
+  `resetTextPrefs`, `printAllValues`) and `dayIndex` stay on `userPreferences`. After the last
+  layer, a separate sub-step updates `tools/count_prefs.py` to count access through the structs
+  (until then it does not see moved accesses).
+- **2a.2.1** (JC6416) — System: `userPreferences.bt` → `systemPrefs.bt`, 6 places:
+  `src/States/ConfigState.cpp` (5) and `src/main.cpp` (1), plus `#include "Preferences/SystemPrefs.h"`
+  in both files.
+  - **Verification** (reference: clean build of `c6882d6`, built before editing; both builds
+    clean, with `SOURCE_DATE_EPOCH=1763337600`):
+    - `SOURCE_DATE_EPOCH` reaches the compiler: the `__DATE__` / `__TIME__` immediates in
+      `getDate` (`src/Screens/VersionScreen.cpp`) are `Nov 17 2025 00:00:00`, the fixed value.
+    - `pio run -d JC6416` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,060,912 bytes before and after (delta 0). RAM 61,124 and Flash
+      2,054,341 bytes, unchanged.
+    - `nm -C --size-sort`: identical.
+    - `tools/compare_bins.py`: not `identical`; "Only metadata differs": 31 bytes in `app_desc`
+      (ELF SHA-256) and 33 in the trailer. Code and data identical.
+    - Cause: the ELF differs only in debug sections (`.debug_info`, `.debug_abbrev`,
+      `.debug_line`, `.debug_str`), from the line shift of the new include and the new header's
+      type info. After `objcopy --strip-debug` the two ELFs are byte-identical. The image embeds
+      the SHA-256 of the full ELF, so any step that adds or moves a source line changes it.
+    - `grep`: no `userPreferences.bt` outside `Preferences/`; `systemPrefs.bt` 6 times.
+    - `git status`: only the two source files. Nothing under `Preferences/` changed, so keys,
+      indexes, types, defaults and load order are unchanged; contract strings untouched.
+    - Line endings of the edited files kept as CRLF in the working copy.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 
