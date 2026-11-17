@@ -61,9 +61,11 @@ but the content differs in many places.
 
 ## Stages
 
-**Current stage: 2a** — split `userPreferences` into per-layer structs. JC6416 first; JC4020
-and JC6432 only after the user approves replicating. No change to NVS keys or namespace, BLE
-indexes, types or defaults. Behavior must stay identical.
+**Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
+in JC6416 (through 2a.2.6). Next, in order: production release 7.08 (done by hand, outside this
+repo); sync 7.08 into this repo; replicate 2a.1–2a.2 to JC4020 and JC6432; then 2a.3 in all
+three models. No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
+stay identical.
 
 - **0** — Baseline: contracts extraction, dependency map, preference classification.
   Read-only except for files under `docs/`.
