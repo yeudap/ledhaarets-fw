@@ -1,5 +1,6 @@
 #include "Screens.h"
 #include "Preferences/PresentationPrefs.h"
+#include "Preferences/DisplayPrefs.h"
 extern UserPreferences userPreferences;
 
 RegsScreen::RegsScreen()
@@ -223,7 +224,7 @@ void RegsScreen::printValues()
     printValue(a2, (int)userPreferences.eda, (int)userPreferences.eda.getDefault());
     printValue(a3, (int)userPreferences.ofek, (int)userPreferences.ofek.getDefault());
     printValue(a4, (int)userPreferences.timezone, (int)userPreferences.timezone.getDefault());
-    printValue(a5, (int)userPreferences.clockFont, (int)userPreferences.clockFont.getDefault());
+    printValue(a5, (int)displayPrefs.clockFont, (int)displayPrefs.clockFont.getDefault());
     printValue(a6, (int)presentationPrefs.dateFormat, (int)presentationPrefs.dateFormat.getDefault());
     printValue(a7, (int)presentationPrefs.clockFormat, (int)presentationPrefs.clockFormat.getDefault());
     printValue(b1, (int)userPreferences.shaonKaiz, (int)userPreferences.shaonKaiz.getDefault());
@@ -261,13 +262,13 @@ void RegsScreen::printValues()
     printValue(f5, (int)userPreferences.ZPS, (int)userPreferences.ZPS.getDefault());
     printValue(f6, (int)userPreferences.IPO, (int)userPreferences.IPO.getDefault());
     printValue(f7, (int)userPreferences.IORT, (int)userPreferences.IORT.getDefault());
-    printValue(g1, (int)userPreferences.colorUp, (int)userPreferences.colorUp.getDefault());
-    printValue(g2, (int)userPreferences.colorMiddle, (int)userPreferences.colorMiddle.getDefault());
-    printValue(g3, (int)userPreferences.colorBottomT, (int)userPreferences.colorBottomT.getDefault());
-    printValue(g4, (int)userPreferences.colorBottomV, (int)userPreferences.colorBottomV.getDefault());
-    printValue(g5, (int)userPreferences.colorYom, (int)userPreferences.colorYom.getDefault());
-    printValue(g6, (int)userPreferences.colorParasha, (int)userPreferences.colorParasha.getDefault());
-    printValue(g7, (int)userPreferences.colorIluy, (int)userPreferences.colorIluy.getDefault());
+    printValue(g1, (int)displayPrefs.colorUp, (int)displayPrefs.colorUp.getDefault());
+    printValue(g2, (int)displayPrefs.colorMiddle, (int)displayPrefs.colorMiddle.getDefault());
+    printValue(g3, (int)displayPrefs.colorBottomT, (int)displayPrefs.colorBottomT.getDefault());
+    printValue(g4, (int)displayPrefs.colorBottomV, (int)displayPrefs.colorBottomV.getDefault());
+    printValue(g5, (int)displayPrefs.colorYom, (int)displayPrefs.colorYom.getDefault());
+    printValue(g6, (int)displayPrefs.colorParasha, (int)displayPrefs.colorParasha.getDefault());
+    printValue(g7, (int)displayPrefs.colorIluy, (int)displayPrefs.colorIluy.getDefault());
     printValue(h1, (int)userPreferences.homa, (int)userPreferences.homa.getDefault());
     printValue(h2, (int)userPreferences.netzClk, (int)userPreferences.netzClk.getDefault());
     printValue(h3, (int)userPreferences.shanim, (int)userPreferences.shanim.getDefault());

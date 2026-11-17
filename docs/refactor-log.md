@@ -107,6 +107,31 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     - `git ls-files --eol`: all 8 files `w/crlf`, as before.
   - **Recorded:** F17, F18 (documentation only, no code change).
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.3** (JC6416) — Display:
+  - `userPreferences.<field>` → `displayPrefs.<field>` for `brightness`, `colorUp`, `colorMiddle`,
+    `colorBottomT`, `colorBottomV`, `colorYom`, `colorParasha`, `colorIluy`, `clockFont`:
+    55 occurrences on 47 lines in `src/Logic.cpp` (17), `src/main.cpp` (2),
+    `src/States/ColorState.cpp` (14), `src/States/BrightnessState.cpp` (2),
+    `src/States/FontState.cpp` (3), `src/States/MainState.cpp` (1), `src/Screens/RegsScreen.cpp`
+    (16), plus `#include "Preferences/DisplayPrefs.h"` in each. All 9 fields have consumers in
+    JC6416. No commented-out lines in this layer. `mainScreen.colorUp` etc. are screen members,
+    not preferences, and are unchanged.
+  - Edits made with the editor tool only.
+  - **Verification** (reference: clean build of `935fb04`, built before editing; both builds
+    clean, with `SOURCE_DATE_EPOCH=1763337600`):
+    - `pio run -d JC6416` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,060,912 bytes before and after (delta 0). RAM 61,124 and Flash
+      2,054,341 bytes, unchanged.
+    - `nm -C --size-sort`: identical.
+    - `objcopy --strip-debug`: the two ELFs are byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256)
+      and 33 in the trailer. As expected.
+    - `grep`: none of the 9 fields remains as `userPreferences.<field>` outside `Preferences/`;
+      `displayPrefs.` 55 times.
+    - `git diff --stat`: 7 files, 54 insertions, 47 deletions (47 replaced lines + 7 includes).
+      Nothing under `Preferences/` changed; contract strings untouched.
+    - `git ls-files --eol`: all 7 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 
