@@ -1,5 +1,6 @@
 #include "States.h"
 #include "Preferences/PresentationPrefs.h"
+#include "Preferences/LogicPrefs.h"
 extern DayInfo dayInfo;
 
 
@@ -26,13 +27,13 @@ void MainState::timeSetZrihaShkiaaCochavim()
 }
 bool MainState::flagTimeSetZrihaShkiaaCochavim()
 {
-    if(userPreferences.ZSZ1==1) 
+    if(logicPrefs.ZSZ1==1) 
     {
         if(isTimeInRange(zmanPlusDakot(dayInfo.getZeetCochavim(), 31), Zman(23,59))||isTimeInRange(Zman(0,0), Zman(3,0)))            
         return true; 
     }
-    if(userPreferences.ZSZ1==2) { return true; }
-    if(userPreferences.ZSZ1==0) { return false; }
+    if(logicPrefs.ZSZ1==2) { return true; }
+    if(logicPrefs.ZSZ1==0) { return false; }
     return false;
 }
 void MainState::timeSetTalitAlotZriha()
@@ -48,13 +49,13 @@ void MainState::timeSetTalitAlotZriha()
 bool MainState::flagTimeSetTalitAlotZriha()
 {
     // שלוש לפנות בוקר עד חצי שעה אחרי זריחה
-    if(userPreferences.TAZ==1) 
+    if(logicPrefs.TAZ==1) 
     {
         if(isTimeInRange(Zman(3,1), zmanPlusDakot(dayInfo.getZriha(), 30)))
         return true; 
     }
-    if(userPreferences.TAZ==2) { return true; }
-    if(userPreferences.TAZ==0) { return false; }
+    if(logicPrefs.TAZ==2) { return true; }
+    if(logicPrefs.TAZ==0) { return false; }
     return false;
 }
 void MainState::timeSetSozShma()
@@ -71,13 +72,13 @@ void MainState::timeSetSozShma()
 bool MainState::flagTimeSetSozShma()
 {
     // חצי שעה אחרי זריחה עד 5 דקות אחרי סו"ז שמע גר"א
-    if(userPreferences.SOZKS==1) 
+    if(logicPrefs.SOZKS==1) 
     {
         if(isTimeInRange(zmanPlusDakot(dayInfo.getZriha(), 31), zmanPlusDakot(dayInfo.sofZmanShmaGra, 5)))
         return true; 
     }
-    if(userPreferences.SOZKS==2) { return true; }
-    if(userPreferences.SOZKS==0) { return false; }
+    if(logicPrefs.SOZKS==2) { return true; }
+    if(logicPrefs.SOZKS==0) { return false; }
     return false;
 }
 void MainState::timeSetSozTfila()
@@ -94,13 +95,13 @@ void MainState::timeSetSozTfila()
 bool MainState::flagTimeSetSozTfila()
 {
     // חמש דקות אחרי סו"ז שמע מג"א עד רבע שעה אחרי סו"ז תפילה גר"א
-    if(userPreferences.SOZT==1) 
+    if(logicPrefs.SOZT==1) 
     {
         if(isTimeInRange(zmanPlusDakot(dayInfo.sofZmanShmaGra, 6), zmanPlusDakot(dayInfo.sofZmanTfilaGra, 15)))
         return true; 
     }
-    if(userPreferences.SOZT==2) { return true; }
-    if(userPreferences.SOZT==0) { return false; }
+    if(logicPrefs.SOZT==2) { return true; }
+    if(logicPrefs.SOZT==0) { return false; }
     return false;
 }
 void MainState::timeSetHazotMinhaGMinhaK()
@@ -116,13 +117,13 @@ void MainState::timeSetHazotMinhaGMinhaK()
 bool MainState::flagTimeSetHazotMinhaGMinhaK()
 {
     // רבע שעה אחרי סו"ז תפילה גר"א עד רבע שעה אחרי מנחה קטנה
-    if(userPreferences.HMM==1) 
+    if(logicPrefs.HMM==1) 
     {
         if(isTimeInRange(zmanPlusDakot(dayInfo.sofZmanTfilaGra, 16), zmanPlusDakot(dayInfo.minhaKtana, 15)))
         return true; 
     }
-    if(userPreferences.HMM==2) { return true; }
-    if(userPreferences.HMM==0) { return false; }
+    if(logicPrefs.HMM==2) { return true; }
+    if(logicPrefs.HMM==0) { return false; }
     return false;
 }
 void MainState::timeSetPlagShkiaaCochavim()
@@ -138,13 +139,13 @@ void MainState::timeSetPlagShkiaaCochavim()
 bool MainState::flagTimeSetPlagShkiaaCochavim()
 {
     // רבע שעה אחרי מנחה קטנה עד חצי שעה אחרי צאת הכוכבים
-    if(userPreferences.PSZ==1) 
+    if(logicPrefs.PSZ==1) 
     {
         if(isTimeInRange(zmanPlusDakot(dayInfo.minhaKtana, 16), zmanPlusDakot(dayInfo.getZeetCochavim(), 30)))
         return true; 
     }
-    if(userPreferences.PSZ==2) { return true; }
-    if(userPreferences.PSZ==0) { return false; }
+    if(logicPrefs.PSZ==2) { return true; }
+    if(logicPrefs.PSZ==0) { return false; }
     return false;
 }
 void MainState::timeSetHazotAlotZriha()
@@ -160,13 +161,13 @@ void MainState::timeSetHazotAlotZriha()
 bool MainState::flagTimeSetHazotAlotZriha()
 {
     // חצי שעה אחרי צאת הכוכבים עד שלוש בבוקר
-    if(userPreferences.HAZ==1) 
+    if(logicPrefs.HAZ==1) 
     {
         if(isTimeInRange(zmanPlusDakot(dayInfo.getZeetCochavim(), 30), Zman(23,59)) || isTimeInRange(Zman(0,0), Zman(3,0)))
         return true; 
     }
-    if(userPreferences.HAZ==2) { return true; }
-    if(userPreferences.HAZ==0) { return false; }
+    if(logicPrefs.HAZ==2) { return true; }
+    if(logicPrefs.HAZ==0) { return false; }
     return false;
 }
 // תאריך לועזי
@@ -179,6 +180,6 @@ void MainState::infoSetLoazi()
 }
 bool MainState::flagInfoSetLoazi()
 {
-    if(userPreferences.loazi==1) { return true; }
+    if(logicPrefs.loazi==1) { return true; }
     return false;
 }

@@ -1,6 +1,7 @@
 #include "Screens.h"
 #include "Preferences/PresentationPrefs.h"
 #include "Preferences/DisplayPrefs.h"
+#include "Preferences/LogicPrefs.h"
 extern UserPreferences userPreferences;
 
 RegsScreen::RegsScreen()
@@ -243,25 +244,25 @@ void RegsScreen::printValues()
     printValue(c7, (int)userPreferences.hul, (int)userPreferences.hul.getDefault());
     printValue(d1, (int)presentationPrefs.leil, (int)presentationPrefs.leil.getDefault());
     printValue(d2, (int)presentationPrefs.leil, (int)presentationPrefs.leil.getDefault());
-    printValue(d3, (int)userPreferences.dafHayomi, (int)userPreferences.dafHayomi.getDefault());
-    printValue(d4, (int)userPreferences.yerushalmi, (int)userPreferences.yerushalmi.getDefault());
-    printValue(d5, (int)userPreferences.yom, (int)userPreferences.yom.getDefault());
-    printValue(d6, (int)userPreferences.parasha, (int)userPreferences.parasha.getDefault());
-    printValue(d7, (int)userPreferences.tfila, (int)userPreferences.tfila.getDefault());
-    printValue(e1, (int)userPreferences.moadim, (int)userPreferences.moadim.getDefault());
-    printValue(e2, (int)userPreferences.showIsraeli, (int)userPreferences.showIsraeli.getDefault());
-    printValue(e3, (int)userPreferences.TAZ, (int)userPreferences.TAZ.getDefault());
-    printValue(e4, (int)userPreferences.SOZT, (int)userPreferences.SOZT.getDefault());
-    printValue(e5, (int)userPreferences.SOZKS, (int)userPreferences.SOZKS.getDefault());
-    printValue(e6, (int)userPreferences.HMM, (int)userPreferences.HMM.getDefault());
-    printValue(e7, (int)userPreferences.PSZ, (int)userPreferences.PSZ.getDefault());
-    printValue(f1, (int)userPreferences.HAZ, (int)userPreferences.HAZ.getDefault());
-    printValue(f2, (int)userPreferences.ZSZ1, (int)userPreferences.ZSZ1.getDefault());
-    printValue(f3, (int)userPreferences.ZSZ, (int)userPreferences.ZSZ.getDefault());
-    printValue(f4, (int)userPreferences.ZYS, (int)userPreferences.ZYS.getDefault());
-    printValue(f5, (int)userPreferences.ZPS, (int)userPreferences.ZPS.getDefault());
-    printValue(f6, (int)userPreferences.IPO, (int)userPreferences.IPO.getDefault());
-    printValue(f7, (int)userPreferences.IORT, (int)userPreferences.IORT.getDefault());
+    printValue(d3, (int)logicPrefs.dafHayomi, (int)logicPrefs.dafHayomi.getDefault());
+    printValue(d4, (int)logicPrefs.yerushalmi, (int)logicPrefs.yerushalmi.getDefault());
+    printValue(d5, (int)logicPrefs.yom, (int)logicPrefs.yom.getDefault());
+    printValue(d6, (int)logicPrefs.parasha, (int)logicPrefs.parasha.getDefault());
+    printValue(d7, (int)logicPrefs.tfila, (int)logicPrefs.tfila.getDefault());
+    printValue(e1, (int)logicPrefs.moadim, (int)logicPrefs.moadim.getDefault());
+    printValue(e2, (int)logicPrefs.showIsraeli, (int)logicPrefs.showIsraeli.getDefault());
+    printValue(e3, (int)logicPrefs.TAZ, (int)logicPrefs.TAZ.getDefault());
+    printValue(e4, (int)logicPrefs.SOZT, (int)logicPrefs.SOZT.getDefault());
+    printValue(e5, (int)logicPrefs.SOZKS, (int)logicPrefs.SOZKS.getDefault());
+    printValue(e6, (int)logicPrefs.HMM, (int)logicPrefs.HMM.getDefault());
+    printValue(e7, (int)logicPrefs.PSZ, (int)logicPrefs.PSZ.getDefault());
+    printValue(f1, (int)logicPrefs.HAZ, (int)logicPrefs.HAZ.getDefault());
+    printValue(f2, (int)logicPrefs.ZSZ1, (int)logicPrefs.ZSZ1.getDefault());
+    printValue(f3, (int)logicPrefs.ZSZ, (int)logicPrefs.ZSZ.getDefault());
+    printValue(f4, (int)logicPrefs.ZYS, (int)logicPrefs.ZYS.getDefault());
+    printValue(f5, (int)logicPrefs.ZPS, (int)logicPrefs.ZPS.getDefault());
+    printValue(f6, (int)logicPrefs.IPO, (int)logicPrefs.IPO.getDefault());
+    printValue(f7, (int)logicPrefs.IORT, (int)logicPrefs.IORT.getDefault());
     printValue(g1, (int)displayPrefs.colorUp, (int)displayPrefs.colorUp.getDefault());
     printValue(g2, (int)displayPrefs.colorMiddle, (int)displayPrefs.colorMiddle.getDefault());
     printValue(g3, (int)displayPrefs.colorBottomT, (int)displayPrefs.colorBottomT.getDefault());
@@ -270,12 +271,12 @@ void RegsScreen::printValues()
     printValue(g6, (int)displayPrefs.colorParasha, (int)displayPrefs.colorParasha.getDefault());
     printValue(g7, (int)displayPrefs.colorIluy, (int)displayPrefs.colorIluy.getDefault());
     printValue(h1, (int)userPreferences.homa, (int)userPreferences.homa.getDefault());
-    printValue(h2, (int)userPreferences.netzClk, (int)userPreferences.netzClk.getDefault());
+    printValue(h2, (int)logicPrefs.netzClk, (int)logicPrefs.netzClk.getDefault());
     printValue(h3, (int)userPreferences.shanim, (int)userPreferences.shanim.getDefault());
-    printValue(h4, (int)userPreferences.interval, (int)userPreferences.interval.getDefault());
-    printValue(h5, (int)userPreferences.intervalIluy, (int)userPreferences.intervalIluy.getDefault());
-    printValue(h6, (int)userPreferences.intervalTime, (int)userPreferences.intervalTime.getDefault());
-    printValue(h7, (int)userPreferences.intervalInfo, (int)userPreferences.intervalInfo.getDefault());
+    printValue(h4, (int)logicPrefs.interval, (int)logicPrefs.interval.getDefault());
+    printValue(h5, (int)logicPrefs.intervalIluy, (int)logicPrefs.intervalIluy.getDefault());
+    printValue(h6, (int)logicPrefs.intervalTime, (int)logicPrefs.intervalTime.getDefault());
+    printValue(h7, (int)logicPrefs.intervalInfo, (int)logicPrefs.intervalInfo.getDefault());
         
     double_t val;
     val = userPreferences.nz_long;

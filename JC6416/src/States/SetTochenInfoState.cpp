@@ -1,5 +1,6 @@
 #include "States.h"
 #include "Logic.h"
+#include "Preferences/LogicPrefs.h"
 
 extern UserPreferences userPreferences;
 extern Logic bl;
@@ -24,37 +25,37 @@ void netzStr(char* buffer, int dakot)
 void meidaLamitpalelStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.meidaLamitpalel, ">");
-    if(userPreferences.tfila==1) { sprintf(buffer, "%s %s", strings.meidaLamitpalel, "<"); }
+    if(logicPrefs.tfila==1) { sprintf(buffer, "%s %s", strings.meidaLamitpalel, "<"); }
 }
 void hagimUmoadimStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.hagimUmoadim, ">");
-    if(userPreferences.moadim==1) { sprintf(buffer, "%s %s", strings.hagimUmoadim, "<"); }
+    if(logicPrefs.moadim==1) { sprintf(buffer, "%s %s", strings.hagimUmoadim, "<"); }
 }
 void hagimIsraelimStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.hagimIsraelim, ">");
-    if(userPreferences.showIsraeli==1) { sprintf(buffer, "%s %s", strings.hagimIsraelim, "<"); }
+    if(logicPrefs.showIsraeli==1) { sprintf(buffer, "%s %s", strings.hagimIsraelim, "<"); }
 }
 void dafHayomiBavliStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.dafHayomiBavli, ">");
-    if(userPreferences.dafHayomi==1) { sprintf(buffer, "%s %s", strings.dafHayomiBavli, "<"); }
+    if(logicPrefs.dafHayomi==1) { sprintf(buffer, "%s %s", strings.dafHayomiBavli, "<"); }
 }
 void dafHayomiYerushalmiStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.dafHayomiYerushalmi, ">");
-    if(userPreferences.yerushalmi==1) { sprintf(buffer, "%s %s", strings.dafHayomiYerushalmi, "<"); }
+    if(logicPrefs.yerushalmi==1) { sprintf(buffer, "%s %s", strings.dafHayomiYerushalmi, "<"); }
 }
 void haftaraStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.haftara, ">");
-    if(userPreferences.haftara==1) { sprintf(buffer, "%s %s", strings.haftara, "<"); }
+    if(logicPrefs.haftara==1) { sprintf(buffer, "%s %s", strings.haftara, "<"); }
 }
 void ivriStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.taarichIvri, ">");
-    if(userPreferences.ivri==1) { sprintf(buffer, "%s %s", strings.taarichIvri, "<"); }
+    if(logicPrefs.ivri==1) { sprintf(buffer, "%s %s", strings.taarichIvri, "<"); }
 }
 
 // kazev
@@ -65,9 +66,9 @@ void kezevStrInfo(char* buffer, uint16_t dakot)
 void SetTohenInfoStateKezev::showStateScreen()
 {
     char kezev[50];
-    kezevStrInfo(kezev, userPreferences.intervalInfo);
+    kezevStrInfo(kezev, logicPrefs.intervalInfo);
     char netz[50];
-    netzStr(netz, userPreferences.netzClk);
+    netzStr(netz, logicPrefs.netzClk);
     menuScreen.printMenu(strings.meidaHayom, strings.cShabatZShabatRT, kezev, netz); 
 };
 void SetTohenInfoStateKezevSet::showStateScreen() 
@@ -75,14 +76,14 @@ void SetTohenInfoStateKezevSet::showStateScreen()
     char kezev[50];
     kezevStrInfo(kezev, this->kezevTemp);
     char netz[50];
-    netzStr(netz, userPreferences.netzClk);
+    netzStr(netz, logicPrefs.netzClk);
     menuScreen.printMenu(strings.meidaHayom, strings.cShabatZShabatRT, kezev, netz); 
     menuScreen.kezev->addRoundRect(false, menuScreen.kezev->x, menuScreen.kezev->y+1, menuScreen.kezev->width, menuScreen.kezev->high-1, 3, YELLOW);
     menuScreen.kezev->addArrows();
 }
 void SetTohenInfoStateKezevSet::menuAction() 
 { 
-    this->kezevTemp = userPreferences.intervalInfo;
+    this->kezevTemp = logicPrefs.intervalInfo;
 }
 void SetTohenInfoStateKezevSet::upAction() 
 {
@@ -96,7 +97,7 @@ void SetTohenInfoStateKezevSet::downAction()
 }
 void SetTohenInfoStateKezevSet::okAction() 
 {
-    userPreferences.intervalInfo= this->kezevTemp;
+    logicPrefs.intervalInfo= this->kezevTemp;
     bl.configStates();
 }
 
@@ -104,9 +105,9 @@ void SetTohenInfoStateKezevSet::okAction()
 void SetTohenBottomLineNetz::showStateScreen()
 { 
     char kezev[50];
-    kezevStrInfo(kezev, userPreferences.intervalInfo);
+    kezevStrInfo(kezev, logicPrefs.intervalInfo);
     char netz[50];
-    netzStr(netz, userPreferences.netzClk);
+    netzStr(netz, logicPrefs.netzClk);
     char meidaLamitpalel[50];
     meidaLamitpalelStr(meidaLamitpalel);
     menuScreen.printMenu(strings.meidaHayom, kezev, netz, meidaLamitpalel); 
@@ -114,7 +115,7 @@ void SetTohenBottomLineNetz::showStateScreen()
 void SetTohenBottomLineNetzSet::showStateScreen() 
 {
     char kezev[50];
-    kezevStrInfo(kezev, userPreferences.intervalInfo);
+    kezevStrInfo(kezev, logicPrefs.intervalInfo);
     char netz[50];
     netzStr(netz, this->netzTemp);
     char meidaLamitpalel[50];
@@ -125,7 +126,7 @@ void SetTohenBottomLineNetzSet::showStateScreen()
 }
 void SetTohenBottomLineNetzSet::menuAction() 
 { 
-    this->netzTemp = userPreferences.netzClk;
+    this->netzTemp = logicPrefs.netzClk;
 }
 void SetTohenBottomLineNetzSet::upAction() 
 {
@@ -139,14 +140,14 @@ void SetTohenBottomLineNetzSet::downAction()
 }
 void SetTohenBottomLineNetzSet::okAction() 
 {
-    userPreferences.netzClk= this->netzTemp;
+    logicPrefs.netzClk= this->netzTemp;
     bl.configStates();
 }
 
 void SetTohenBottomLineTfila::showStateScreen()
 {
     char netz[50];
-    netzStr(netz, userPreferences.netzClk);
+    netzStr(netz, logicPrefs.netzClk);
     char meidaLamitpalel[50];
     meidaLamitpalelStr(meidaLamitpalel);
     char hagimUmoadim[50];
@@ -216,43 +217,43 @@ void SetTohenBottomLineIORT::showStateScreen()
     char ivri[50];
     ivriStr(ivri);
     char kezev[50];
-    kezevStrInfo(kezev, userPreferences.intervalInfo);
+    kezevStrInfo(kezev, logicPrefs.intervalInfo);
     menuScreen.printMenu(strings.meidaHayom, ivri, strings.cShabatZShabatRT, kezev);
 }
 void SetTohenBottomLineTfila::okAction()
 {     
-    if(userPreferences.tfila==0) { userPreferences.tfila= 1; }
-    else { userPreferences.tfila= 0; } 
+    if(logicPrefs.tfila==0) { logicPrefs.tfila= 1; }
+    else { logicPrefs.tfila= 0; } 
 }
 void SetTohenBottomLineHagim::okAction()
 {     
-    if(userPreferences.moadim==0) { userPreferences.moadim= 1; }
-    else { userPreferences.moadim= 0; } 
+    if(logicPrefs.moadim==0) { logicPrefs.moadim= 1; }
+    else { logicPrefs.moadim= 0; } 
 }
 void SetTohenBottomLineIsraeli::okAction()
 {     
-    if(userPreferences.showIsraeli==0) { userPreferences.showIsraeli= 1; }
-    else { userPreferences.showIsraeli= 0; } 
+    if(logicPrefs.showIsraeli==0) { logicPrefs.showIsraeli= 1; }
+    else { logicPrefs.showIsraeli= 0; } 
 }
 void SetTohenBottomLineDafYomi::okAction()
 {     
-    if(userPreferences.dafHayomi==0) { userPreferences.dafHayomi= 1; }
-    else { userPreferences.dafHayomi= 0; } 
+    if(logicPrefs.dafHayomi==0) { logicPrefs.dafHayomi= 1; }
+    else { logicPrefs.dafHayomi= 0; } 
 }
 void SetTohenBottomLineYerushalmi::okAction()
 {     
-    if(userPreferences.yerushalmi==0) { userPreferences.yerushalmi= 1; }
-    else { userPreferences.yerushalmi= 0; } 
+    if(logicPrefs.yerushalmi==0) { logicPrefs.yerushalmi= 1; }
+    else { logicPrefs.yerushalmi= 0; } 
 }
 void SetTohenBottomLineHaftara::okAction()
 {     
-    if(userPreferences.haftara==0) { userPreferences.haftara= 1; }
-    else { userPreferences.haftara= 0; } 
+    if(logicPrefs.haftara==0) { logicPrefs.haftara= 1; }
+    else { logicPrefs.haftara= 0; } 
 }
 void SetTohenBottomLineIvri::okAction()
 {     
-    if(userPreferences.ivri==0) { userPreferences.ivri= 1; }
-    else { userPreferences.ivri= 0; } 
+    if(logicPrefs.ivri==0) { logicPrefs.ivri= 1; }
+    else { logicPrefs.ivri= 0; } 
 }
 
 void yemeHolStr(char* buffer, int userPreferencesZman)
@@ -274,17 +275,17 @@ void meidaHayomMenu(const char* title, int userPreferencesZman, uint8_t select)
     if(select==0) { menuScreen.printMenu(title, shishiShabat, yemeHol, strings.empty); }
     if(select==1) { menuScreen.printMenu(title, yemeHol, shishiShabat, strings.empty); }
 }
-void SetTohenBottomLineIORT0::showStateScreen() { meidaHayomMenu(strings.cShabatZShabatRT, userPreferences.IORT, 0); }
+void SetTohenBottomLineIORT0::showStateScreen() { meidaHayomMenu(strings.cShabatZShabatRT, logicPrefs.IORT, 0); }
 void SetTohenBottomLineIORT0::okAction() 
 {
-    int x = userPreferences.IORT +1;
+    int x = logicPrefs.IORT +1;
     if(x%2==0) x-=2;
-    userPreferences.IORT= x;
+    logicPrefs.IORT= x;
 }
-void SetTohenBottomLineIORT1::showStateScreen() { meidaHayomMenu(strings.cShabatZShabatRT, userPreferences.IORT, 1); }
+void SetTohenBottomLineIORT1::showStateScreen() { meidaHayomMenu(strings.cShabatZShabatRT, logicPrefs.IORT, 1); }
 void SetTohenBottomLineIORT1::okAction() 
 {
-    int x = userPreferences.IORT +2;
+    int x = logicPrefs.IORT +2;
     if(x>3) x-=4;
-    userPreferences.IORT= x;
+    logicPrefs.IORT= x;
 }

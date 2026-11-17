@@ -3,6 +3,7 @@
 #include "BLE/TextCommandHandler.h"
 #include "Preferences/PresentationPrefs.h"
 #include "Preferences/DisplayPrefs.h"
+#include "Preferences/LogicPrefs.h"
 
 MainScreen mainScreen;
 MenuScreen menuScreen;
@@ -55,12 +56,12 @@ void Logic::configStates()
     this->setColorYomLine.colorTemp = displayPrefs.colorYom;
     this->setColorParashaLine.colorTemp = displayPrefs.colorParasha;
     this->setColorIluyLine.colorTemp = displayPrefs.colorIluy;
-    mainState.intervalTimeSet = userPreferences.intervalTime;
-    mainState.intervalInfoSet = userPreferences.intervalInfo;
-    mainState.intervalNameSet = userPreferences.intervalIluy;
+    mainState.intervalTimeSet = logicPrefs.intervalTime;
+    mainState.intervalInfoSet = logicPrefs.intervalInfo;
+    mainState.intervalNameSet = logicPrefs.intervalIluy;
     mainState.initTimeSetFuncList();
     mainState.initInfoSetFuncList();
-    mainState.showTimeToNetz = userPreferences.netzClk != 0;
+    mainState.showTimeToNetz = logicPrefs.netzClk != 0;
     mainState.numOfValidTexts = handleGetTextCount().data1;
     this->setBrightnessState.brightTemp = displayPrefs.brightness;
     this->setOfekState.ofekTemp = userPreferences.ofek;
@@ -78,12 +79,12 @@ void Logic::configStates()
     this->setZeetShabatState.zeetTemp = userPreferences.zeetShabat;
     this->setZeetZomState.zeetTemp = userPreferences.zeetZom;
     this->shitaState.shitaTemp = userPreferences.shita;
-    this->setTohenInfoStateKezevSet.kezevTemp = userPreferences.intervalInfo;
-    this->setTohenIluyStateKezevSet.kezevTemp = userPreferences.intervalIluy;
-    this->setTohenTimeStateKezevSet.kezevTemp = userPreferences.intervalTime;
+    this->setTohenInfoStateKezevSet.kezevTemp = logicPrefs.intervalInfo;
+    this->setTohenIluyStateKezevSet.kezevTemp = logicPrefs.intervalIluy;
+    this->setTohenTimeStateKezevSet.kezevTemp = logicPrefs.intervalTime;
     this->minhagNerotSetState.nerotTemp = userPreferences.nerot;
     this->setFontState.fontTemp = displayPrefs.clockFont;
-    this->setTohenBottomLineNetzSet.netzTemp = userPreferences.netzClk;
+    this->setTohenBottomLineNetzSet.netzTemp = logicPrefs.netzClk;
     this->minhagShanimSetState.shanimTemp = userPreferences.shanim;
     this->setShaonKaiz.kaizTemp = userPreferences.shaonKaiz;
     this->setClkFormat.formatTemp = presentationPrefs.clockFormat;

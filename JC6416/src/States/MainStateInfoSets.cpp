@@ -1,4 +1,5 @@
 #include "States.h"
+#include "Preferences/LogicPrefs.h"
 extern DayInfo dayInfo;
 extern DayInfo dayInfoTomorrow;
 
@@ -38,7 +39,7 @@ void MainState::infoSetRegularDay()
     dayInfo.dafYomiBavli.toString(dafStr, true);
     if(dayInfo.enZidkatcha || dayInfo.enTahanun) // small screen
     {
-        if(userPreferences.tfila==1)
+        if(logicPrefs.tfila==1)
         {
             if(dayInfo.getBircatHashanim() != "")
             {
@@ -56,22 +57,22 @@ void MainState::infoSetRegularDay()
                 }
             }
         }
-        if(userPreferences.dafHayomi==1)
+        if(logicPrefs.dafHayomi==1)
         {
-            if(userPreferences.tfila==1) { mainScreen.update(mainScreen.infoDownS, dafStr, txtValue6); }
+            if(logicPrefs.tfila==1) { mainScreen.update(mainScreen.infoDownS, dafStr, txtValue6); }
             else { 
                 Text txt = Text(mainScreen.colorBottomV, &font6, 1, 12, CENTER);
                 mainScreen.update(mainScreen.infoAllS, dafStr, txt);
             }
         } 
 
-        if(dayInfo.enTahanun && userPreferences.tfila==1)
+        if(dayInfo.enTahanun && logicPrefs.tfila==1)
         {
             mainScreen.update(mainScreen.infoShortUpLeft, strings.enOmrim, txtTitle6);
             Text txt = Text(mainScreen.colorBottomT, &font6, 0, 8, CENTER);
             mainScreen.update(mainScreen.infoShortDownLeft, strings.tahanun, txt);
         }
-        else if(dayInfo.enZidkatcha && userPreferences.tfila==1)
+        else if(dayInfo.enZidkatcha && logicPrefs.tfila==1)
         {
             mainScreen.update(mainScreen.infoShortUpLeft, strings.enOmrim, txtTitle6);
             Text txt = Text(mainScreen.colorBottomT, &font6, 0, 8, CENTER);
@@ -80,7 +81,7 @@ void MainState::infoSetRegularDay()
     }
     else
     {
-        if(userPreferences.tfila==1)
+        if(logicPrefs.tfila==1)
         {
             if(dayInfo.getBircatHashanim() != "")
             {
@@ -105,9 +106,9 @@ void MainState::infoSetRegularDay()
                 mainScreen.update(mainScreen.infoUp, str, txtTitle6);
             }
         }
-        if(userPreferences.dafHayomi==1)
+        if(logicPrefs.dafHayomi==1)
         {
-            if(userPreferences.tfila==1) { mainScreen.update(mainScreen.infoDown, dafStr, txtValue6); }
+            if(logicPrefs.tfila==1) { mainScreen.update(mainScreen.infoDown, dafStr, txtValue6); }
             else 
             { 
                 Text txt = Text(mainScreen.colorBottomV, &font6, 1, 12, CENTER);
@@ -118,7 +119,7 @@ void MainState::infoSetRegularDay()
 }
 bool MainState::flagInfoSetRegularDay()
 {
-    bool f = (userPreferences.tfila==1 || userPreferences.dafHayomi==1);
+    bool f = (logicPrefs.tfila==1 || logicPrefs.dafHayomi==1);
     return f || showAll;
 }
 // שישי ושבת
@@ -134,13 +135,13 @@ void MainState::infoSetShabatInShabatOutRabenuTam()
 }
 bool MainState::flagInfoSetShabatInShabatOutRabenuTam()
 {
-    if(userPreferences.IORT==0) { return false; }
-    if(userPreferences.IORT==1) { return dayInfo.isYomHol(); }
-    if(userPreferences.IORT==2)
+    if(logicPrefs.IORT==0) { return false; }
+    if(logicPrefs.IORT==1) { return dayInfo.isYomHol(); }
+    if(logicPrefs.IORT==2)
     { 
         return (dayInfo.isShishi && !dayInfo.isErevHag && !dayInfo.isErevZom)||(dayInfo.isShabat && !dayInfo.isHag && !dayInfo.isZom)||(dayInfo.isMozaeiShabat && !dayInfo.isMozaeiHag && !dayInfo.isMozaeiZom);
     }
-    if(userPreferences.IORT==3) { return true; }
+    if(logicPrefs.IORT==3) { return true; }
     return false;
 }
 void MainState::infoSetShabatPlus()
@@ -153,7 +154,7 @@ void MainState::infoSetShabatPlus()
 }
 bool MainState::flagInfoSetShabatPlus()
 {
-    bool f = userPreferences.tfila==1;
+    bool f = logicPrefs.tfila==1;
     f = f && (dayInfo.isShabatPlus);
     f = f && dayInfo.isShabat;
     return f || showAll;
@@ -171,7 +172,7 @@ void MainState::infoSetHagInHagOutRabenuTam()
 }
 bool MainState::flagInfoSetHagInHagOutRabenuTam()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && (dayInfo.isHag || dayInfo.isErevHag);
     return f || showAll;
 }
@@ -180,14 +181,14 @@ void MainState::infoSetHagYaaleVeyavoHalel()
 {
     char holiday[50];
     dayInfo.getHoliday(holiday);
-    if((dayInfo.halelDilug||dayInfo.halelShalem) && userPreferences.tfila==1) // הלל וגם יעלה ויבוא
+    if((dayInfo.halelDilug||dayInfo.halelShalem) && logicPrefs.tfila==1) // הלל וגם יעלה ויבוא
     {
         mainScreen.update(mainScreen.infoUp, holiday, txtTitle6);
         if(dayInfo.halelDilug) {mainScreen.update(mainScreen.infoDownHalfRight, strings.halelBedilug, txtValue6);}
         if(dayInfo.halelShalem) {mainScreen.update(mainScreen.infoDownHalfRight, strings.halelShalem, txtValue6);}
         mainScreen.update(mainScreen.infoDownHalfLeft, strings.yaaleveyavo, txtValue6);
     }
-    else if(dayInfo.yaaleVeyavo && userPreferences.tfila==1) // רק יעלה ויבוא
+    else if(dayInfo.yaaleVeyavo && logicPrefs.tfila==1) // רק יעלה ויבוא
     {
         mainScreen.update(mainScreen.infoUp, holiday, txtTitle6);
         mainScreen.update(mainScreen.infoDown, strings.yaaleveyavo, txtValue6);
@@ -238,13 +239,13 @@ void MainState::infoSetZom()
     // עננו / יעלה ויבוא
     char holiday[50];
     Text txt1 = Text(mainScreen.colorBottomV, &font6, 1, 10, CENTER);
-    if(dayInfo.anenu && userPreferences.tfila==1) { mainScreen.update(mainScreen.zmanMiddleDownS, strings.anenu, txt1); }
-    if(dayInfo.yaaleVeyavo && userPreferences.tfila==1) { mainScreen.update(mainScreen.zmanMiddleDownS, strings.yaaleveyavo, txt1); }
+    if(dayInfo.anenu && logicPrefs.tfila==1) { mainScreen.update(mainScreen.zmanMiddleDownS, strings.anenu, txt1); }
+    if(dayInfo.yaaleVeyavo && logicPrefs.tfila==1) { mainScreen.update(mainScreen.zmanMiddleDownS, strings.yaaleveyavo, txt1); }
     Text txt = Text(mainScreen.colorBottomT, &font7, 1, 11, CENTER);
     if(dayInfo.isZom||dayInfo.isMozaeiZom) 
     { 
         dayInfo.getHoliday(holiday);
-        if(!((dayInfo.anenu||dayInfo.yaaleVeyavo) && userPreferences.tfila==1)) { txt.marginY = 16; }
+        if(!((dayInfo.anenu||dayInfo.yaaleVeyavo) && logicPrefs.tfila==1)) { txt.marginY = 16; }
         mainScreen.update(mainScreen.zmanMiddleUpS, holiday, txt); 
     }
     // ערב ט"ב ויו"כ
@@ -259,7 +260,7 @@ bool MainState::flagInfoSetZom()
 {
     bool f = dayInfo.isZom || dayInfo.isErevZom;
     f = f || (dayInfo.isMozaeiZom && isTimeInRange(Zman(14,0), zmanPlusDakot(dayInfo.rabenuTam, 5)));
-    f = f && userPreferences.moadim==1;
+    f = f && logicPrefs.moadim==1;
     return f || showAll;
 }
 void MainState::infoSetTishaBeav()
@@ -273,7 +274,7 @@ void MainState::infoSetTishaBeav()
 }
 bool MainState::flagInfoSetTishaBeav()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.isTishaBeav;
     return f || showAll;
 }
@@ -285,7 +286,7 @@ void MainState::infoSetRoshHodesh()
     char roshHodesh[50];
     dayInfo.tomorrow->getRoshHodesh(roshHodesh);
     mainScreen.update(mainScreen.infoUp, roshHodesh, txtTitle6);
-    if(userPreferences.tfila==1)
+    if(logicPrefs.tfila==1)
     {
         if(dayInfo.halelDilug||dayInfo.halelShalem) { mainScreen.update(mainScreen.infoDownHalfRight, strings.yaaleveyavo, txtValue6);}
         else {mainScreen.update(mainScreen.infoDown, strings.yaaleveyavo, txtValue6);}
@@ -295,7 +296,7 @@ void MainState::infoSetRoshHodesh()
 }
 bool MainState::flagInfoSetRoshHodesh()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.isRoshHodesh;
     return f || showAll;
 }
@@ -311,8 +312,8 @@ void MainState::infoSetNextRoshHodesh()
 }
 bool MainState::flagInfoSetNextRoshHodesh()
 {
-    bool f = userPreferences.moadim==1;
-    f = f && userPreferences.tfila==1;
+    bool f = logicPrefs.moadim==1;
+    f = f && logicPrefs.tfila==1;
     f = f && dayInfo.isShabatMevarchin;
     f = f && dayInfo.isShabat;
     f = f && isTimeInRange(Zman(5,0),Zman(14,0));
@@ -329,8 +330,8 @@ void MainState::infoSetMolad()
 }
 bool MainState::flagInfoSetMolad()
 {
-    bool f = userPreferences.moadim==1;
-    f = f && userPreferences.tfila==1;
+    bool f = logicPrefs.moadim==1;
+    f = f && logicPrefs.tfila==1;
     f = f && dayInfo.isShabatMevarchin;
     f = f && dayInfo.isShabat;
     f = f && isTimeInRange(Zman(5,0),Zman(14,0));
@@ -358,7 +359,7 @@ void MainState::infoSetIsraeli()
 }
 bool MainState::flagInfoSetIsraeli()
 {
-    bool f = userPreferences.showIsraeli==1;
+    bool f = logicPrefs.showIsraeli==1;
     f = f && dayInfo.isHagIsraeli;
     return f || showAll;
 }
@@ -385,7 +386,7 @@ void MainState::infoSetOmer()
 }
 bool MainState::flagInfoSetOmer()
 {
-    bool f = userPreferences.tfila==1;
+    bool f = logicPrefs.tfila==1;
     f = f && dayInfo.isOmer;
     return f || showAll;
 }
@@ -401,7 +402,7 @@ void MainState::infoSetHametz()
 }
 bool MainState::flagInfoSetHametz()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.tomorrow->isPesach;
     f = f && isTimeInRange(Zman(1,0), Zman(13,0));
     return f || showAll;
@@ -414,14 +415,14 @@ void MainState::infoSetHanuka()
     char hanuka[50];
     dayInfo.getHanuka(hanuka);
     mainScreen.update(mainScreen.infoUp, hanuka, txtTitle6);
-    if(userPreferences.tfila==1) { 
+    if(logicPrefs.tfila==1) { 
         mainScreen.update(mainScreen.infoDownHalfRight, strings.alHanisim, txtValue6); 
         mainScreen.update(mainScreen.infoDownHalfLeft, strings.halelShalem, txtValue6); 
     }
 }
 bool MainState::flagInfoSetHanuka()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.isHanuka;
     return f || showAll;
 }
@@ -442,7 +443,7 @@ void MainState::infoSetAseretYemeTshuva()
 }
 bool MainState::flagInfoSetAseretYemeTshuva()
 {
-    bool f = userPreferences.tfila==1;
+    bool f = logicPrefs.tfila==1;
     f = f && dayInfo.hamelechHakadosh;
     return f || showAll;
 }
@@ -452,11 +453,11 @@ void MainState::infoSetPurim()
     // פורים שמח
     // על הניסים
     mainScreen.update(mainScreen.infoUp, strings.purimSameah, txtTitle6);
-    if(userPreferences.tfila==1) { mainScreen.update(mainScreen.infoDown, strings.alHanisim, txtValue6); }
+    if(logicPrefs.tfila==1) { mainScreen.update(mainScreen.infoDown, strings.alHanisim, txtValue6); }
 }
 bool MainState::flagInfoSetPurim()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && ((userPreferences.homa==1 && dayInfo.isShushanPurim)||(userPreferences.homa==0 && dayInfo.isPurim));
     return f || showAll;
 }
@@ -471,7 +472,7 @@ void MainState::infoSetYerushalmi()
 }
 bool MainState::flagInfoSetYerushalmi()
 {
-    bool f = userPreferences.yerushalmi==1;
+    bool f = logicPrefs.yerushalmi==1;
     return f || showAll;
 }
 // הפטרה
@@ -489,8 +490,8 @@ bool MainState::flagInfoSetHaftara()
 {
     bool f = dayInfo.isShabat || dayInfo.isHag || dayInfo.isYomKipur || dayInfo.isTishaBeav;
     f = f || (dayInfo.isZom && (userPreferences.eda == ASHKENAZ || userPreferences.eda == CHABAD || userPreferences.eda == SFARAD));
-    f = f || (userPreferences.showIsraeli==1 && dayInfo.isAzmaut);
-    f = f && userPreferences.haftara==1;
+    f = f || (logicPrefs.showIsraeli==1 && dayInfo.isAzmaut);
+    f = f && logicPrefs.haftara==1;
     return f || showAll;
 }
 // תאריך עברי
@@ -507,7 +508,7 @@ void MainState::infoSetIvri()
 }
 bool MainState::flagInfoSetIvri()
 {
-    bool f = userPreferences.ivri==1;
+    bool f = logicPrefs.ivri==1;
     return f || showAll;
 }
 // ימי חב"ד

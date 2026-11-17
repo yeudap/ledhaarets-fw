@@ -1,6 +1,7 @@
 #include "States.h"
 #include "Logic.h"
 #include "../BLE/TextCommandHandler.h"
+#include "Preferences/LogicPrefs.h"
 
 extern UserPreferences userPreferences;
 extern Logic bl;
@@ -25,7 +26,7 @@ void kezevStrIluy(char *buffer, uint16_t dakot)
 void SetTohenIluyStateKezev::showStateScreen()
 {
     char kezev[50];
-    kezevStrIluy(kezev, userPreferences.intervalIluy);
+    kezevStrIluy(kezev, logicPrefs.intervalIluy);
     menuScreen.printMenu(strings.hakdasha, strings.aroch, kezev, strings.empty);
 };
 void SetTohenIluyStateKezevSet::showStateScreen()
@@ -38,7 +39,7 @@ void SetTohenIluyStateKezevSet::showStateScreen()
 }
 void SetTohenIluyStateKezevSet::menuAction()
 {
-    this->kezevTemp = userPreferences.intervalIluy;
+    this->kezevTemp = logicPrefs.intervalIluy;
 }
 void SetTohenIluyStateKezevSet::upAction()
 {
@@ -58,7 +59,7 @@ void SetTohenIluyStateKezevSet::downAction()
 }
 void SetTohenIluyStateKezevSet::okAction()
 {
-    userPreferences.intervalIluy = this->kezevTemp;
+    logicPrefs.intervalIluy = this->kezevTemp;
     bl.configStates();
 }
 
@@ -66,7 +67,7 @@ void SetTohenIluyStateKezevSet::okAction()
 void SetTohenIluyStateText::showStateScreen()
 {
     char kezev[50];
-    kezevStrIluy(kezev, userPreferences.intervalIluy);
+    kezevStrIluy(kezev, logicPrefs.intervalIluy);
     menuScreen.printMenu(strings.hakdasha, kezev, strings.aroch, strings.empty);
 }
 

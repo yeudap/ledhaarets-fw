@@ -132,6 +132,37 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       Nothing under `Preferences/` changed; contract strings untouched.
     - `git ls-files --eol`: all 7 files `w/crlf`, as before.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.4** (JC6416) — Logic:
+  - `userPreferences.<field>` → `logicPrefs.<field>` for the 27 Logic fields (`netzClk`,
+    `interval`, `intervalIluy`, `intervalTime`, `intervalInfo`, `dafHayomi`, `yerushalmi`, `yom`,
+    `parasha`, `haftara`, `ivri`, `loazi`, `tfila`, `moadim`, `showIsraeli`, `TAZ`, `SOZT`,
+    `SOZKS`, `HMM`, `PSZ`, `HAZ`, `ZSZ1`, `ZSZ`, `ZYS`, `ZPS`, `IPO`, `IORT`): 223 occurrences on
+    190 lines in `src/States/SetTochenTimeState.cpp` (51), `src/Screens/RegsScreen.cpp` (48),
+    `src/States/SetTochenInfoState.cpp` (46), `src/States/MainStateInfoSets.cpp` (41),
+    `src/States/MainStateTimeSets.cpp` (22), `src/Logic.cpp` (8), `src/States/SetInputText.cpp`
+    (4), `src/DB/DayInfo.cpp` (2), `src/States/MainState.cpp` (1), plus
+    `#include "Preferences/LogicPrefs.h"` in each. All 27 fields have consumers in JC6416. No
+    commented-out lines in this layer. No line mixes a Logic field with another layer's field;
+    `eda`, `hul`, `homa` in `MainStateInfoSets.cpp` / `MainStateTimeSets.cpp` stay on
+    `userPreferences` (Data layer).
+  - Edits made with the editor tool only (whole-file `replace_all` only in `SetTochenTimeState.cpp`,
+    `SetTochenInfoState.cpp` and `SetInputText.cpp`, where every `userPreferences.` access is a
+    Logic field; per-field or per-line elsewhere).
+  - **Verification** (reference: clean build of `7983099`, built before editing; both builds
+    clean, with `SOURCE_DATE_EPOCH=1763337600`):
+    - `pio run -d JC6416` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,060,912 bytes before and after (delta 0). RAM 61,124 and Flash
+      2,054,341 bytes, unchanged.
+    - `nm -C --size-sort`: identical.
+    - `objcopy --strip-debug`: the two ELFs are byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256)
+      and 32 in the trailer (two ranges; one trailer byte happens to match). As expected.
+    - `grep`: none of the 27 fields remains as `userPreferences.<field>` outside `Preferences/`;
+      `logicPrefs.` 223 times.
+    - `git diff --stat`: 9 files, 199 insertions, 190 deletions (190 replaced lines + 9 includes).
+      Nothing under `Preferences/` changed; contract strings untouched.
+    - `git ls-files --eol`: all 9 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 
