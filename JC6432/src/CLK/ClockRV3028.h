@@ -13,6 +13,15 @@ public:
 
 private:
     RV3028 rtc;
+
+    bool ensureBackupConfiguration();
+
+    bool writeRegister(uint8_t reg, uint8_t value);
+    bool readRegister(uint8_t reg, uint8_t &value);
+
+    bool waitEEPROM(uint32_t timeoutMs = 500);
+
+    bool writeEEPROMByte(uint8_t address, uint8_t value);
 };
 
 #endif

@@ -403,7 +403,6 @@ public:
     UserPref<String> textInput49;
     UserPref<String> textInput50;
     UserPref<String> textPlace;
-    UserPref<uint8_t> dayIndex;
     UserPref<uint8_t> shita;
     UserPref<uint8_t> eda;
     UserPref<uint8_t> ofek;
@@ -541,9 +540,6 @@ public:
                         
                         textPlace("textPlace", "whaht otwun", PT_STR, 2, &prefs),
                         // input custom place name
-                        
-                        dayIndex("dayIndex", 1, PT_U8, 3, &prefs),
-                        // TODO
                         
                         shita("shita", 0, PT_U8, 4, &prefs),
                         // 0. Or hachayim
@@ -861,7 +857,6 @@ public:
         // הוספת ההעדפות לווקטור לגישה גנרית
         simplePrefs.push_back(&forceWrite);
         simplePrefs.push_back(&textPlace);
-        simplePrefs.push_back(&dayIndex);
         simplePrefs.push_back(&shita);
         simplePrefs.push_back(&eda);
         simplePrefs.push_back(&ofek);

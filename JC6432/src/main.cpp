@@ -40,7 +40,6 @@ void setup()
   dma_display->setBrightness8(userPreferences.brightness);
   validate_rtc();
   validate_time();
-  //rtc.adjust(DateTime(__DATE__, __TIME__));
   initPlace();
   bl.init();
   if (okButton.isPushed())

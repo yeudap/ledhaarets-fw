@@ -192,25 +192,11 @@ void usaTimeStateToday(const LoaziDate& date, LoaziDate& dstStart, LoaziDate& ds
 
 void DayInfo::setShaonKaitzHoref(LoaziDate& date, Place* place)
 {
-    // Serial.println("======================");
-    // Serial.print("userPreferences.nz_hul: ");
-    // Serial.println(userPreferences.nz_hul);
     LoaziDate dstStart;
     LoaziDate dstEnd;
-    // char loaziStr[30];
-    // Serial.print("date: ");
-    // date.toString(loaziStr, 1);
-    // Serial.println(loaziStr);
 
     if(userPreferences.nz_hul==0) israelTimeStateToday(date, dstStart, dstEnd);
     if(userPreferences.nz_hul==1) usaTimeStateToday(date, dstStart,  dstEnd);
-
-    // Serial.print("dstStart: ");
-    // dstStart.toString(loaziStr, 1);
-    // Serial.println(loaziStr);
-    // Serial.print("dstEnd: ");
-    // dstEnd.toString(loaziStr, 1);
-    // Serial.println(loaziStr);
 
     shaon = 0;
     if (date == dstStart) shaon=1;  // יום תחילת שעון קיץ
@@ -218,10 +204,6 @@ void DayInfo::setShaonKaitzHoref(LoaziDate& date, Place* place)
     if (date >=  dstStart && date <  dstEnd) isShaonKaiz = true;
     else isShaonKaiz = false;
 
-    // Serial.print("shaon: ");
-    // Serial.println(shaon);
-    // Serial.print("isShaonKaiz: ");
-    // Serial.println(isShaonKaiz);
 
     if(userPreferences.shaonKaiz ==1)
     {
@@ -1027,7 +1009,6 @@ void DayInfo::setAfterShkiaa()
 }
 void DayInfo::setZmanMinha()
 {
-    // Serial.println("setZmanMinha");
     zmanMinha = true;
     if(tomorrow->holiday==33) // lag baomer
     {

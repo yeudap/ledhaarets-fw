@@ -307,7 +307,6 @@ void MainState::setNewDay()
 
     dayInfo.setNewDay();
     // dayInfo.printDayInfo();
-    // userPreferences.dayIndex= idx;
 }
 void MainState::updateHour()
 {

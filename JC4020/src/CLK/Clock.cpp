@@ -100,7 +100,7 @@ void validate_time()
 
     if (now < MIN_DATE || now > MAX_DATE)
     {
-        setClockTime(DateTime(2025, 1, 1, 0, 0, 1));
+        setClockTime(DateTime(2026, 9, 1, 0, 0, 1));
     }
 }
 
