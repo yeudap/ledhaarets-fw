@@ -21,6 +21,35 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   models. Details in `docs/baseline.md`, Sync 3. `Preferences/` unchanged. Closed F12 and F14;
   F11 partly resolved; F8 updated; recorded F15.
 
+### Stage 2a — per-layer preference structs
+
+- **2a.1** (JC6416) — Added per-layer preference views under `JC6416/src/Preferences/`:
+  `DataPrefs.h` (`dataPrefs.place` / `.zmanim` / `.minhagim`), `LogicPrefs.h`,
+  `PresentationPrefs.h` (`presentationPrefs`, with `layout`: `middleLine`, `upLine`, `screen`),
+  `DisplayPrefs.h`, `SystemPrefs.h` (`bt` only), `UserContent.h` (`textPrefs`), and
+  `PrefsViews.cpp` (`static_assert` per field, no code or data).
+  - **Form:** structs of `UserPref<T> &` references, instances `inline constexpr` in the
+    headers, bound to the existing `userPreferences` fields. Field names equal the keys; fields
+    in each struct are in BLE index order. Classification as in `docs/architecture/preferences.md`
+    §3/§4 (commit `e76aaea`).
+  - **Not in any struct:** `forceWrite` (central registry), `dayIndex` (to be removed, F16).
+  - **No consumer changes.** No existing file changed; JC4020 and JC6432 untouched.
+  - **Verification** (reference: clean build of `e76aaea`, built before editing):
+    - `pio run -d JC6416` (env `esp32dev`) succeeds; full build, 0 compiler warnings before
+      and after. GCC 8.4 accepts `inline constexpr`; no fallback needed.
+    - `firmware.bin` 2,060,912 bytes before and after (delta 0). RAM 61,124 and Flash
+      2,054,341 bytes, unchanged.
+    - `nm -C --size-sort`: identical.
+    - `tools/compare_bins.py`: 66 bytes differ — 32 in `app_desc` (ELF SHA-256), 33 in the
+      trailer, and 1 in code: a `__TIME__` digit in `getDate` (`src/Screens/VersionScreen.cpp:33`,
+      `movi.n a15, 52` vs `54`), from recompiling at a different time.
+    - Coverage script against `preferences.md` §4: 71 fields, each exactly once, each in the
+      struct matching its layer column, index order kept; `forceWrite` and `dayIndex` absent;
+      `UserContent` refers to `textPrefs`.
+    - `git status`: only the 7 new files. Keys, indexes, types, defaults, load order and
+      contract strings (UUIDs, `clk` / `sec` / `sys`, `LEDHAARETS`) unchanged.
+  - **Clock test:** not needed; compiled code identical except the build time.
+
 ## Planned for next production release
 
 Decided by the owner. To be done in the production projects, then ported here with the next sync.

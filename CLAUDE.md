@@ -115,7 +115,10 @@ Only the user changes the current stage.
    index, type and default, in the same load order (compare against
    `docs/architecture/preferences.md`). For sub-step 1, `git diff` shows only additions under
    `Preferences/`.
-4. Report the bin size delta per env.
+4. Report the bin size delta per env. For comparison builds (the reference and the candidate),
+   set `SOURCE_DATE_EPOCH` to the same fixed value in both, so `__DATE__` / `__TIME__` are
+   identical and a no-logic-change step is expected to compare `identical` with
+   `tools/compare_bins.py`. Never set it for a production build.
 5. Confirm that contract strings are unchanged (UUIDs, NVS namespaces and keys,
    advertisement prefix).
 6. Summarize what changed and what needs testing on a real clock.
