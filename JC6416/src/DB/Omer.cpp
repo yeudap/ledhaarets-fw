@@ -1,4 +1,5 @@
 #include "DayInfo.h"
+#include "Preferences/DataPrefs.h"
 
 void line1_baladi(char* buffer, int asarot, int ahadot)
 {
@@ -139,8 +140,8 @@ void DayInfo::getOmer(char* line1, char* line2)
     int shavua = omer/7;
     int yomBashavua = omer%7;
 
-    if(userPreferences.eda==TEIMAN_BALADI) { omer_baladi(line1, line2, asarot, ahadot, shavua, yomBashavua); }
-    if(userPreferences.eda==TEIMAN_SHAMI || userPreferences.eda==EDOT_MIZRAH) { omer_EM(line1, line2, asarot, ahadot, shavua, yomBashavua);}
-    if(userPreferences.eda==SFARAD || userPreferences.eda==CHABAD) { omer_ashkenaz(line1, line2, asarot, ahadot, shavua, yomBashavua, true);}
-    if(userPreferences.eda==ASHKENAZ) { omer_ashkenaz(line1, line2, asarot, ahadot, shavua, yomBashavua, false);}
+    if(dataPrefs.minhagim.eda==TEIMAN_BALADI) { omer_baladi(line1, line2, asarot, ahadot, shavua, yomBashavua); }
+    if(dataPrefs.minhagim.eda==TEIMAN_SHAMI || dataPrefs.minhagim.eda==EDOT_MIZRAH) { omer_EM(line1, line2, asarot, ahadot, shavua, yomBashavua);}
+    if(dataPrefs.minhagim.eda==SFARAD || dataPrefs.minhagim.eda==CHABAD) { omer_ashkenaz(line1, line2, asarot, ahadot, shavua, yomBashavua, true);}
+    if(dataPrefs.minhagim.eda==ASHKENAZ) { omer_ashkenaz(line1, line2, asarot, ahadot, shavua, yomBashavua, false);}
 }

@@ -1,41 +1,42 @@
 #include "Logic.h"
+#include "Preferences/DataPrefs.h"
 
 extern Logic bl;
 
 void chabadStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.chabad, "#");
-    if(userPreferences.eda==6) { sprintf(buffer, "%s %s", strings.chabad, "*"); }
+    if(dataPrefs.minhagim.eda==6) { sprintf(buffer, "%s %s", strings.chabad, "*"); }
 }
 void teimanShamiStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.teimanShami, "#");
-    if(userPreferences.eda==5) { sprintf(buffer, "%s %s", strings.teimanShami, "*"); }
+    if(dataPrefs.minhagim.eda==5) { sprintf(buffer, "%s %s", strings.teimanShami, "*"); }
 }
 void teimanBaladiStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.teimanBaladi, "#");
-    if(userPreferences.eda==4) { sprintf(buffer, "%s %s", strings.teimanBaladi, "*"); }
+    if(dataPrefs.minhagim.eda==4) { sprintf(buffer, "%s %s", strings.teimanBaladi, "*"); }
 }
 void ashkenazStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.ashkenaz, "#");
-    if(userPreferences.eda==3) { sprintf(buffer, "%s %s", strings.ashkenaz, "*"); }
+    if(dataPrefs.minhagim.eda==3) { sprintf(buffer, "%s %s", strings.ashkenaz, "*"); }
 }
 void sfaradStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.sfarad, "#");
-    if(userPreferences.eda==2) { sprintf(buffer, "%s %s", strings.sfarad, "*"); }
+    if(dataPrefs.minhagim.eda==2) { sprintf(buffer, "%s %s", strings.sfarad, "*"); }
 }
 void edotMizrahStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.edotHamizrah, "#");
-    if(userPreferences.eda==1) { sprintf(buffer, "%s %s", strings.edotHamizrah, "*"); }
+    if(dataPrefs.minhagim.eda==1) { sprintf(buffer, "%s %s", strings.edotHamizrah, "*"); }
 }
 void bneiHulStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.bneiHul, ">");
-    if(userPreferences.hul==1) { sprintf(buffer, "%s %s", strings.bneiHul, "<"); }
+    if(dataPrefs.minhagim.hul==1) { sprintf(buffer, "%s %s", strings.bneiHul, "<"); }
 }
 
 void EdotMizrah::showStateScreen() 
@@ -48,7 +49,7 @@ void EdotMizrah::showStateScreen()
     sfaradStr(sfarad);
     menuScreen.printMenu(strings.minhagTitle, bneiHul, edotMizrah, sfarad); 
 }
-void EdotMizrah::okAction() { userPreferences.eda= 1;}
+void EdotMizrah::okAction() { dataPrefs.minhagim.eda= 1;}
 
 void EdotSfarad::showStateScreen() 
 { 
@@ -60,7 +61,7 @@ void EdotSfarad::showStateScreen()
     ashkenazStr(ashkenaz);
     menuScreen.printMenu(strings.minhagTitle, edotMizrah, sfarad, ashkenaz); 
 }
-void EdotSfarad::okAction() { userPreferences.eda= 2;}
+void EdotSfarad::okAction() { dataPrefs.minhagim.eda= 2;}
 
 void EdotAshkenaz::showStateScreen() 
 { 
@@ -72,7 +73,7 @@ void EdotAshkenaz::showStateScreen()
     ashkenazStr(ashkenaz);
     menuScreen.printMenu(strings.minhagTitle, sfarad, ashkenaz, teimanBaladi); 
 }
-void EdotAshkenaz::okAction() { userPreferences.eda= 3;}
+void EdotAshkenaz::okAction() { dataPrefs.minhagim.eda= 3;}
 
 void EdotTeimanBaladi::showStateScreen() 
 { 
@@ -84,7 +85,7 @@ void EdotTeimanBaladi::showStateScreen()
     ashkenazStr(ashkenaz);
     menuScreen.printMenu(strings.minhagTitle, ashkenaz, teimanBaladi, teimanShami); 
 }
-void EdotTeimanBaladi::okAction() { userPreferences.eda= 4;}
+void EdotTeimanBaladi::okAction() { dataPrefs.minhagim.eda= 4;}
 
 void EdotTeimanShami::showStateScreen() 
 { 
@@ -96,7 +97,7 @@ void EdotTeimanShami::showStateScreen()
     teimanShamiStr(teimanShami);
     menuScreen.printMenu(strings.minhagTitle, teimanBaladi, teimanShami, chabad); 
 }
-void EdotTeimanShami::okAction() { userPreferences.eda= 5;}
+void EdotTeimanShami::okAction() { dataPrefs.minhagim.eda= 5;}
 
 void EdotChabad::showStateScreen() 
 {
@@ -110,8 +111,8 @@ void EdotChabad::showStateScreen()
 }
 void EdotChabad::okAction() 
 { 
-    userPreferences.shita= 4; 
-    userPreferences.eda= 6; 
+    dataPrefs.zmanim.shita= 4; 
+    dataPrefs.minhagim.eda= 6; 
 }
 
 void EdotBneiHul::showStateScreen() 
@@ -126,7 +127,7 @@ void EdotBneiHul::showStateScreen()
 }
 void EdotBneiHul::okAction()
 {
-    if(userPreferences.hul==0) { userPreferences.hul= 1; }
-    else { userPreferences.hul= 0; } 
+    if(dataPrefs.minhagim.hul==0) { dataPrefs.minhagim.hul= 1; }
+    else { dataPrefs.minhagim.hul= 0; } 
     bl.mainState.updateDayValues = true;
 }

@@ -163,6 +163,42 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       Nothing under `Preferences/` changed; contract strings untouched.
     - `git ls-files --eol`: all 9 files `w/crlf`, as before.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.5** (JC6416) — Data (last layer):
+  - `userPreferences.<field>` → `dataPrefs.place.<field>` (`textPlace`, `ofek`, `nz_lat`,
+    `nz_long`, `nz_height`, `nz_hul`, `timezone`, `shaonKaiz`, `homa`), `dataPrefs.zmanim.<field>`
+    (`shita`, `zriha`, `shkiaa`, `rabenuTam`, `zeetCochavim`, `zmanTalit`, `alotHashahar`,
+    `minhaG`, `sozksMga`, `soztMga`, `plagMinha`, `zeetShabat`, `zeetZom`, `nerot`) and
+    `dataPrefs.minhagim.<field>` (`eda`, `hul`, `shanim`): 397 occurrences (place 89, zmanim 241,
+    minhagim 67) on 344 lines in 15 files: `src/DB/Shita.cpp` (144), `src/States/MinhagState.cpp`
+    (48), `src/Screens/RegsScreen.cpp` (42), `src/States/OfekState.cpp` (41), `src/DB/DayInfo.cpp`
+    (40), `src/DB/Place.cpp` (19), `src/Logic.cpp` (19), `src/States/EdotState.cpp` (17),
+    `src/States/MainStateInfoSets.cpp` (7), `src/DB/Omer.cpp` (6), `src/States/SetClockState.cpp`
+    (5), `src/DB/DB.cpp` (3), `src/States/ShitaState.cpp` (3), `src/States/MainStateTimeSets.cpp`
+    (2), `src/States/MainState.cpp` (1), plus `#include "Preferences/DataPrefs.h"` in each. All 26
+    fields have consumers in JC6416.
+  - Commented-out debug lines replaced too, including the label text inside their string
+    literals (owner's decision): `src/DB/Place.cpp:127-132` and `src/States/OfekState.cpp:258-259`,
+    e.g. `// Serial.print("dataPrefs.place.nz_long: ");`.
+  - Edits made with the editor tool only (per-field `replace_all` per file).
+  - After this sub-step, the only `userPreferences.` accesses outside `Preferences/` are the
+    registry members (`simplePrefs`, `allPrefs` in `src/BLE/CoreService.cpp`; `resetSimplePrefs`,
+    `resetTextPrefs` in `src/States/ConfigState.cpp`; `printAllValues`, commented out, in
+    `src/main.cpp:63`) and `dayIndex` (`src/States/MainState.cpp:289`, F16), as planned for 2a.2.
+  - **Verification** (reference: clean build of `9235817`, built before editing; both builds
+    clean, with `SOURCE_DATE_EPOCH=1763337600`):
+    - `pio run -d JC6416` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,060,912 bytes before and after (delta 0). RAM 61,124 and Flash
+      2,054,341 bytes, unchanged.
+    - `nm -C --size-sort`: identical.
+    - `objcopy --strip-debug`: the two ELFs are byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256)
+      and 33 in the trailer. As expected.
+    - `grep`: none of the 26 fields remains as `userPreferences.<field>` outside `Preferences/`,
+      comments included; every `dataPrefs.<group>.<field>` uses the group the field belongs to.
+    - `git diff --stat`: 15 files, 359 insertions, 344 deletions (344 replaced lines + 15
+      includes). Nothing under `Preferences/` changed; contract strings untouched.
+    - `git ls-files --eol`: all 15 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 

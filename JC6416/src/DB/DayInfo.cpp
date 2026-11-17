@@ -1,6 +1,7 @@
 #include "DayInfo.h"
 #include "Preferences/PresentationPrefs.h"
 #include "Preferences/LogicPrefs.h"
+#include "Preferences/DataPrefs.h"
 
 extern Strings strings;
 extern DB db;
@@ -18,12 +19,12 @@ void DayInfo::initDay(int idx, DateTime* now, Place* place)
     initSun(place);
     // Serial.println("initSun done.");
     if(place->luchotChai) { UpdateChaiValues(place->kaiz); }
-    if(userPreferences.shita == 5) { zrihaA = zrihaA-4; shkiaaA = shkiaaA+4; }
-    setShita(shitot[userPreferences.shita]);
+    if(dataPrefs.zmanim.shita == 5) { zrihaA = zrihaA-4; shkiaaA = shkiaaA+4; }
+    setShita(shitot[dataPrefs.zmanim.shita]);
     // Serial.println("setShita done.");
-    if(place->orHachaim && userPreferences.shita == 0) { UpdateOrValues(place->kaiz); }
-    if(place->kiseRahamim && userPreferences.shita == 1) { UpdateKiseValues(place->kaiz); }
-    if(userPreferences.shita == 6) { UpdateTucValues(place->kaiz); }
+    if(place->orHachaim && dataPrefs.zmanim.shita == 0) { UpdateOrValues(place->kaiz); }
+    if(place->kiseRahamim && dataPrefs.zmanim.shita == 1) { UpdateKiseValues(place->kaiz); }
+    if(dataPrefs.zmanim.shita == 6) { UpdateTucValues(place->kaiz); }
 }
 void DayInfo::UpdateCommonValues()
 {
@@ -197,8 +198,8 @@ void DayInfo::setShaonKaitzHoref(LoaziDate& date, Place* place)
     LoaziDate dstStart;
     LoaziDate dstEnd;
 
-    if(userPreferences.nz_hul==0) israelTimeStateToday(date, dstStart, dstEnd);
-    if(userPreferences.nz_hul==1) usaTimeStateToday(date, dstStart,  dstEnd);
+    if(dataPrefs.place.nz_hul==0) israelTimeStateToday(date, dstStart, dstEnd);
+    if(dataPrefs.place.nz_hul==1) usaTimeStateToday(date, dstStart,  dstEnd);
 
     shaon = 0;
     if (date == dstStart) shaon=1;  // יום תחילת שעון קיץ
@@ -207,13 +208,13 @@ void DayInfo::setShaonKaitzHoref(LoaziDate& date, Place* place)
     else isShaonKaiz = false;
 
 
-    if(userPreferences.shaonKaiz ==1)
+    if(dataPrefs.place.shaonKaiz ==1)
     {
         if(isShaonKaiz) { place->kaiz = true; }
         if(!isShaonKaiz) { place->kaiz = false; }
     }
-    if(userPreferences.shaonKaiz==2){ place->kaiz = true; }
-    if(userPreferences.shaonKaiz==3){ place->kaiz = false; }
+    if(dataPrefs.place.shaonKaiz==2){ place->kaiz = true; }
+    if(dataPrefs.place.shaonKaiz==3){ place->kaiz = false; }
 }
 
 void DayInfo::initSun(Place* place)
@@ -422,10 +423,10 @@ void DayInfo::printDayInfo()
 }
 uint8_t haftaraByEda(uint8_t edotMizrah, uint8_t ashkenaz, uint8_t teiman_baladi, uint8_t teiman_shami)
 {
-    if(userPreferences.eda == EDOT_MIZRAH) return edotMizrah;
-    if(userPreferences.eda == ASHKENAZ || userPreferences.eda == CHABAD || userPreferences.eda == SFARAD) return ashkenaz;
-    if(userPreferences.eda == TEIMAN_BALADI) return teiman_baladi;
-    if(userPreferences.eda == TEIMAN_SHAMI) return teiman_shami;
+    if(dataPrefs.minhagim.eda == EDOT_MIZRAH) return edotMizrah;
+    if(dataPrefs.minhagim.eda == ASHKENAZ || dataPrefs.minhagim.eda == CHABAD || dataPrefs.minhagim.eda == SFARAD) return ashkenaz;
+    if(dataPrefs.minhagim.eda == TEIMAN_BALADI) return teiman_baladi;
+    if(dataPrefs.minhagim.eda == TEIMAN_SHAMI) return teiman_shami;
     return edotMizrah;
 }
 void DayInfo::setHaftara()
@@ -625,12 +626,12 @@ void DayInfo::setHaftara()
     if(shabatPlus==9) { haftara = haftaraByEda(56, 84, 98, 98); }  // החודש
     if(shabatPlus==11) { haftara = haftaraByEda(54, 83, 97, 97); }  // זכור
     if(shabatPlus==15) { haftara = haftaraByEda(49, 49, 49, 49); }  // תשובה
-    if(shabatPlus==12 && userPreferences.eda!=TEIMAN_BALADI) { haftara = 57; }  // הגדול
+    if(shabatPlus==12 && dataPrefs.minhagim.eda!=TEIMAN_BALADI) { haftara = 57; }  // הגדול
     if(nextShabat->parasha==6 && hebrewDate.hodesh==1) { haftara = haftaraByEda(71, 71, 103, 103);}  // שבת חוה"מ סוכות
     if(nextShabat->parasha==6 && hebrewDate.hodesh==9) { haftara = haftaraByEda(60, 60, 100, 100);}  // שבת חוה"מ פסח
     if(nextShabat->isHanuka && !(nextShabat->holiday==21)) { haftara = 35; }  // שבת חנוכה ראשונה
     if(nextShabat->isHanuka && nextShabat->holiday==21) { haftara = 22; }  // שבת חנוכה שניה
-    if(nextShabat->holiday==26 && userPreferences.homa == 1) { haftara = haftaraByEda(54, 83, 97, 97); }  // שושן פורים
+    if(nextShabat->holiday==26 && dataPrefs.place.homa == 1) { haftara = haftaraByEda(54, 83, 97, 97); }  // שושן פורים
     if(logicPrefs.showIsraeli==1 && isAzmaut) { haftara=61; }  // עצמאות
 
     switch (parasha)
@@ -685,7 +686,7 @@ void DayInfo::setHaftara()
 }
 void DayInfo::setHftaraMinha()
 {
-    if(isZom && (userPreferences.eda == ASHKENAZ || userPreferences.eda == CHABAD || userPreferences.eda == SFARAD)) { haftara=74; }
+    if(isZom && (dataPrefs.minhagim.eda == ASHKENAZ || dataPrefs.minhagim.eda == CHABAD || dataPrefs.minhagim.eda == SFARAD)) { haftara=74; }
     if(isYomKipur) { haftara=68; }
     if(isTishaBeav) { haftara = haftaraByEda(49, 74, 49, 49); }
 }
@@ -822,7 +823,7 @@ void DayInfo::setZom()
 }
 void DayInfo::setShanimLahurban()
 {
-    this->shanimLahurban = loaziDate.year-69 + userPreferences.shanim;
+    this->shanimLahurban = loaziDate.year-69 + dataPrefs.minhagim.shanim;
 }
 void DayInfo::getParasha(char* buffer)
 { 
@@ -1004,7 +1005,7 @@ void DayInfo::setAfterShkiaa()
     parasha = tomorrow->parasha;
     parasha_baladi = tomorrow->parasha_baladi;
     // parasha_hul = tomorrow->parasha_hul;
-    if(userPreferences.hul) { setHul(); }
+    if(dataPrefs.minhagim.hul) { setHul(); }
     setHaftara();
     setZom();
     afterShkiaa = true;
@@ -1022,9 +1023,9 @@ void DayInfo::setZmanMinha()
 }
 void DayInfo::setNewDay()
 {
-    if(userPreferences.hul) { setHul(); }
+    if(dataPrefs.minhagim.hul) { setHul(); }
     setZom();
-    if(userPreferences.eda == TEIMAN_BALADI) { setBaladi(); }
+    if(dataPrefs.minhagim.eda == TEIMAN_BALADI) { setBaladi(); }
     setHaftara();
     setShanimLahurban();
     setHazot();
@@ -1036,19 +1037,19 @@ bool DayInfo::isYomHol()
 const char * DayInfo::getBircatHashanim()
 {
     // עדות המזרח, שאמי
-    if(userPreferences.eda==1 || userPreferences.eda==5 || userPreferences.eda==0)
+    if(dataPrefs.minhagim.eda==1 || dataPrefs.minhagim.eda==5 || dataPrefs.minhagim.eda==0)
     {        
         if(barchenu) { return strings.barechenu; }
         if(barechAlenu) { return strings.barechAlenu; }
     }
     // אשכנז, ספרד, חב"ד
-    if(userPreferences.eda==2 || userPreferences.eda==6 || userPreferences.eda==3)
+    if(dataPrefs.minhagim.eda==2 || dataPrefs.minhagim.eda==6 || dataPrefs.minhagim.eda==3)
     {        
         if(barchenu) { return strings.vetenBracha; }
         if(barechAlenu) { return strings.vetenTalUmatar; }
     }
     // בלדי
-    if(userPreferences.eda==4)
+    if(dataPrefs.minhagim.eda==4)
     {        
         if(barchenu) { return strings.betaleleRatzon; }
         if(barechAlenu) { return strings.vetenTalUmatar; }
@@ -1063,17 +1064,17 @@ const char * DayInfo::getGeshemTal()
 }
 Zman DayInfo::getZriha()
 {
-    if (userPreferences.zriha==1) return zrihaM;
-    if (userPreferences.zriha==2) return zrihaN;
-    if (userPreferences.zriha==3) return zrihaA;
-    if (userPreferences.zriha==4 && userPreferences.ofek > 4) return zrihaN + 2.5;
+    if (dataPrefs.zmanim.zriha==1) return zrihaM;
+    if (dataPrefs.zmanim.zriha==2) return zrihaN;
+    if (dataPrefs.zmanim.zriha==3) return zrihaA;
+    if (dataPrefs.zmanim.zriha==4 && dataPrefs.place.ofek > 4) return zrihaN + 2.5;
     return zrihaM;
 }
 Zman DayInfo::getShkiaa()
 {
-    if (userPreferences.shkiaa==1) return shkiaaM;
-    if (userPreferences.shkiaa==2) return shkiaaN;
-    if (userPreferences.shkiaa==3) return shkiaaA;
+    if (dataPrefs.zmanim.shkiaa==1) return shkiaaM;
+    if (dataPrefs.zmanim.shkiaa==2) return shkiaaN;
+    if (dataPrefs.zmanim.shkiaa==3) return shkiaaA;
     return shkiaaM;
 }
 Zman DayInfo::getZeetCochavim()

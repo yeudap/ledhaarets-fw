@@ -4,6 +4,7 @@
 #include "Preferences/PresentationPrefs.h"
 #include "Preferences/DisplayPrefs.h"
 #include "Preferences/LogicPrefs.h"
+#include "Preferences/DataPrefs.h"
 
 extern Place* place;
 extern DayInfo dayInfo;
@@ -240,7 +241,7 @@ void MainState::checkTimeChanged()
 }
 void MainState::setShaonKaitzHoref()
 {
-    if(userPreferences.shaonKaiz==1)
+    if(dataPrefs.place.shaonKaiz==1)
     {
         if(dayInfo.shaon==1) { setShaonKaitz(); }
         if(dayInfo.shaon==2) { setShaonHoref(); }
