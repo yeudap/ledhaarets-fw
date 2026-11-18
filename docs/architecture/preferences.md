@@ -354,6 +354,7 @@
 - **`dateFormat`:** נקרא גם ב-`Screens/MainScreen.cpp:91`, כלומר שכבת התצוגה קוראת העדפה ישירות. הפריסה משתנה כשאין תאריך לועזי.
 - **`loazi`:** יש לו עורך ואין לו צרכן.
 - **`MainStateInfoSets`:** מפוצל ל-`…1.cpp` ול-`…2.cpp`. הצרכנים של `tfila`, `moadim`, `IORT` ושאר בחירות התוכן מתחלקים בין שני הקבצים.
+- **views (2a.1):** like JC6416; `DisplayPrefs` adds `colorIvri`, `colorLoazi`, `colorParashaV` at the end (index order); `screen` in `layout`.
 
 ## 9. תשובות והחלטות
 

@@ -659,6 +659,50 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       `UserContent`.
   - `CLAUDE.md`: stage line — 2a.1–2a.2 done in JC6416 and JC4020; next JC6432, after deciding
     the classification of `colorIvri`, `colorLoazi` and `colorParashaV`.
+- **2a.1** (JC6432) — per-layer preference views, replicated from JC6416:
+  - **Mapping (before editing):** `JC6432/src/Preferences/UserPreferences.cpp` is identical to
+    JC6416. `UserPreferences.h` differs only as documented (`preferences.md` §8, F2, F9): three
+    fields only in JC6432, `colorIvri` (72, default 6), `colorLoazi` (73, 1), `colorParashaV` (74, 6),
+    all U8, read by `Logic` (→ `mainScreen.colorX` → `Text` color in `MainScreen`) and edited by
+    `ColorState`, colors only; `screen` 75 (default 2) and `bt` 76; defaults `colorYom` 1,
+    `colorParasha` 1, `leil` 1. No name or type difference. `textPrefs` exists and is used
+    (`TextCommandHandler`, 7, no commented-out line), so `UserContent` is the same.
+  - **Classification (owner's decision):** the three colors in `DisplayPrefs`, in BLE index order
+    like every field, so they come after `clockFont` at the end of the struct; `screen` in
+    `presentationPrefs.layout`.
+  - **Files:** `DataPrefs.h`, `LogicPrefs.h`, `PresentationPrefs.h`, `SystemPrefs.h`,
+    `UserContent.h` byte-identical to JC6416 (`cmp`). `DisplayPrefs.h`: JC6416 plus 3 fields and 3
+    initializers at the end. `PrefsViews.cpp`: JC6416 plus 3 `static_assert`s after `clockFont`
+    (75 in total: 74 fields + `userContent.textPrefs`). LF in the working copy, like the other views
+    (F20). No existing file changed; no consumer changes.
+  - **Verification** (2a.1 replication rule, with the exact expectations for the three colors
+    approved before the step; reference: clean build of `39840bf`, built before editing; both
+    builds clean, with `SOURCE_DATE_EPOCH=1763337600`):
+    - `pio run -d JC6432` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,072,400 bytes before and after (delta 0). RAM 61,924 and Flash 2,065,825
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical. The full ELF is
+      byte-identical too; `tools/compare_bins.py`: "identical" (`PrefsViews.cpp.o` is discarded by
+      `--gc-sections`, as in JC4020).
+    - `count_prefs.py`: identical (text and `--json`).
+    - `count_deps.py`: 395 → 408 edges, 7,579 → 7,891 references. No base edge removed or changed.
+      13 new edges, all from view units: `PrefsViews → UserPreferences` 75, `PrefsViews →
+      DisplayPrefs` 12 and `DisplayPrefs → UserPreferences` 26, exactly as expected (JC6416: 72, 9,
+      20; +3 fields); the other 10 equal JC6416. Consumer sum 847 → 847, equal for each of the 29
+      consumers.
+    - Coverage script (layers from `preferences.md` §4, the three colors from §8; indexes from
+      JC6432's `UserPreferences.h`): 74 fields, each exactly once, each in the struct of its layer,
+      index order kept in every struct (`DisplayPrefs` ends with 72, 73, 74; `layout.screen` 75;
+      `bt` 76); `forceWrite` absent; `UserContent` refers to `textPrefs`.
+    - `git status`: only the 7 new files and the documents. Keys, indexes, types, defaults, load
+      order and contract strings unchanged (`UserPreferences.*` untouched).
+  - **Found while mapping (no change):** `dependencies.md` §10 gives the three JC6432 colors as
+    "9 / 3" (references / consumers). The 9 references are right, but only 2 consumers reference
+    them (`Logic` 3, `ColorState` 6). To be corrected when `dependencies.md` is regenerated.
+  - `preferences.md` §8 JC6432: one line on the views. `notes.md` (main-screen layout direction):
+    `Screens/MainScreen.cpp:91` reads `dateFormat` from Presentation, a cross-layer coupling for the
+    layer-isolation stage; not changed in 2a.
+  - **Clock test:** not needed; the image is byte-identical.
 
 ## Planned for next production release
 
