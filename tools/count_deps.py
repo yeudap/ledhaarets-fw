@@ -13,11 +13,21 @@ Implements the counting rules of docs/architecture/dependencies.md §1:
     counts toward the unit that implements the method;
   * manual exclusions: local shadowing of `now` / `place`, Place::orHachaim vs class orHachaim,
     Metadata counted only through `Metadata::`;
-  * free functions defined only in a .cpp (not declared in any header) are internal to it.
+  * free functions defined only in a .cpp (not declared in any header) are internal to it;
+  * access through a preference view (stage 2a; units in VIEW_UNITS, e.g. `dataPrefs.zmanim.shita`)
+    counts once toward the view unit (`Preferences/DataPrefs`), with the chain up to the
+    preference as identifier. It does not count toward `Preferences/UserPreferences`, also when a
+    method is called on the preference. The view globals (`inline constexpr <Struct> <name>{...}`)
+    are recognized only in the view units.
 
 The parser is heuristic (regex + brace matching, no preprocessor, no real C++ front end).
 Validation: on JC6416 at commit 9c75812 it reproduces all 374 edges of dependencies.md §4 with
 the exact reference counts (6,747 in total); the identifier count matches in 372 of them.
+After the view support (2a.2.8): output identical to the previous version on trees without views
+(JC4020 and JC6432 at e7f8efb, JC6416 at e76aaea). On JC6416 at e7f8efb, per consumer and per
+preference, references to UserPreferences plus the views equal the previous version's references
+to UserPreferences at c6882d6 (before 2a.2), except the 7.08 changes (`dayIndex` -1, four F11
+reads +4).
 It is tuned to this code base. Its main use is comparing two trees (before / after a production
 sync) with --compare. --includes is a rough helper (include edges with no reference behind them).
 
@@ -46,6 +56,11 @@ from collections import defaultdict, OrderedDict
 # --------------------------------------------------------------------------- units
 
 SRC_EXT = ('.h', '.hpp', '.cpp', '.c')
+
+# Units that define the per-layer preference views (stage 2a). Each holds one global, declared
+# `inline constexpr <Struct> <name>{...};`, whose members are references to `userPreferences` fields.
+VIEW_UNITS = {'Preferences/SystemPrefs', 'Preferences/UserContent', 'Preferences/PresentationPrefs',
+              'Preferences/DisplayPrefs', 'Preferences/LogicPrefs', 'Preferences/DataPrefs'}
 
 
 def unit_of(rel):
@@ -292,6 +307,13 @@ def handle_block(head, body, unit, is_header, m, cls, ns):
         return
     if '=' in split_paren_free(h):
         handle_stmt(h, unit, is_header, m, cls, ns, has_init=True)
+        return
+    if unit in VIEW_UNITS and not cls and not ns and '(' not in h:
+        # view global: `inline constexpr DataPrefs dataPrefs{...};` (brace init, no `=`).
+        # Registered as a plain global, not as a const, so that access chains are followed.
+        mv = re.match(r'(.*\b)([A-Za-z_]\w*)$', h, re.S)
+        if mv and base_type(mv.group(1)):
+            m.var_decl[mv.group(2)].append((unit, is_header, False, base_type(mv.group(1))))
         return
     # function definition
     fm = re.search(r'([\w:~]+(?:\s*operator\s*\S+)?)\s*\(', h)
@@ -548,6 +570,7 @@ def count_refs(files, m):
                 if u:
                     hit[u] = tok
                     label = tok
+                    view_root = u in VIEW_UNITS
                     indexed = False
                     j = e
                     cur = t
@@ -588,6 +611,11 @@ def count_refs(files, m):
                             label = label + '.' + mem
                             hit[mu] = label
                             hit.move_to_end(mu)
+                        if view_root and class_unit(m, mt) not in VIEW_UNITS:
+                            # access through a view ends at the preference it exposes
+                            # (dataPrefs.zmanim.shita): one reference to the view unit, none
+                            # to UserPreferences, also when a method is called on it
+                            break
                         cur = mt if mt in m.classes else None
             else:
                 u = (m.macros.get(tok) or m.enumerators.get(tok) or class_unit(m, tok)

@@ -271,6 +271,44 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - `CoreService.cpp` was identical in the three models after the 7.08 port; it now differs in
     JC6416 by this step, until 2a is replicated to JC4020 and JC6432.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.8** — `tools/count_deps.py` counts access through the layer views (step (a) before
+  regenerating `dependencies.md`):
+  - **Cause:** a view global (`inline constexpr DataPrefs dataPrefs{...};`) was not recognized: the
+    parser took the brace initializer for a block it does not handle, so `dataPrefs` was unknown
+    and the whole chain was dropped. After 2a.2 the consumer edges to `Preferences/UserPreferences`
+    shrank (e.g. `DB/Shita` 146 → 2) with no edge in their place.
+  - **Rule:** access through a view counts once toward the view unit (e.g. `DB/Shita →
+    Preferences/DataPrefs`), with the chain up to the preference as identifier
+    (`dataPrefs.zmanim.shita`), so the identifier count is still per preference. It does not
+    count toward `Preferences/UserPreferences`, also when a method is called on the preference.
+    `userContent.textPrefs` counts as `userContent` (namespace-qualified member types are not
+    followed, as for `userPreferences.textPrefs`).
+  - **Change:** `VIEW_UNITS` (the six view units); in `handle_block`, a brace-initialized global in
+    a view unit is registered as a global of its struct type (not as a const, so the chain is
+    followed); in `count_refs`, a chain rooted in a view stops at the first member whose type is
+    outside the view units. Output format and options unchanged. Docstring updated.
+  - No firmware source changed; no build. The counting rule in `dependencies.md` §1 is updated in
+    step (b), together with the regenerated sections.
+  - **Verification** (previous version of the tool from `e7f8efb`; scripts in the scratchpad):
+    - Only production sync in `c6882d6..HEAD` for JC6416: port 7.08 (`git log --oneline
+      c6882d6..HEAD -- JC6416`; the rest are 2a.2 steps). So the only allowed differences are the
+      7.08 ones.
+    - Trees without views, new vs previous tool, text and `--json`: identical on JC4020 and JC6432
+      at `e7f8efb`, and on JC6416 at `e76aaea`.
+    - JC6416 at `e7f8efb`, new vs previous tool: 47 edges differ, all of them new edges into a
+      view unit (41 from consumers, 6 from `PrefsViews`). Every other edge is identical,
+      including the view units' own edges (e.g. `DataPrefs → UserPreferences` 54).
+    - JC6416, new tool at `e7f8efb` vs previous tool at `c6882d6` (before 2a.2), consumers only
+      (units other than `UserPreferences`, `PrefsViews` and the views), references to
+      `UserPreferences` plus the views: 27 consumers; equal for each consumer except
+      `BLE/CoreService` 5 → 9 (+4) and `States/MainState` 8 → 7 (−1); 781 → 784 in total. Per
+      (consumer, preference), with view identifiers normalized to `userPreferences.<name>`, the
+      only differences are `CoreService` `rabenuTam`, `zeetCochavim`, `zeetShabat`, `zeetZom`
+      0 → 1 (F11) and `MainState` `dayIndex` 1 → 0 (F16). Both from 7.08, as expected.
+    - `PrefsViews` → views: 72 references (`DataPrefs` 26, `LogicPrefs` 27, `DisplayPrefs` 9,
+      `PresentationPrefs` 8, `SystemPrefs` 1, `UserContent` 1), one per `static_assert` in
+      `PrefsViews.cpp` (72: 71 preference fields + `userContent.textPrefs`). The message strings
+      are not counted.
 
 ## Planned for next production release
 
