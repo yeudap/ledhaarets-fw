@@ -97,8 +97,10 @@ Only the user changes the current stage.
 
 ## Working rules
 
-- One small, reviewable step at a time. Before editing, say which files will change, what
-  will change, and why. Then wait.
+- One small, reviewable step at a time. Before a new task, present a plan or mapping (which
+  files will change, what will change, and why) and stop for approval. Once a plan is approved
+  for sequential execution, carry out its steps without stopping; stop only on a deviation or
+  where the plan says to stop.
 - Never mix a move and a content change in one step.
 - Never touch anything outside this repository, especially the production projects and
   `ledhaarets-build`.
