@@ -1,4 +1,5 @@
 #include "States.h"
+#include "Preferences/PresentationPrefs.h"
 extern DayInfo dayInfo;
 
 
@@ -47,7 +48,7 @@ void MainState::timeSetZrihaYomShkiaa()
     char dayStr[20];
     dayInfo.getDayInWeek(dayStr, false);
     Text txt = Text(mainScreen.colorBottomT, &font5, 15, 7, CENTER);
-    if(userPreferences.leil==1 && dayInfo.afterShkiaa) 
+    if(presentationPrefs.leil==1 && dayInfo.afterShkiaa) 
     {
         Serial.println("if(userPreferences.leil==1 && dayInfo.afterShkiaa)");
         Serial.println(dayStr);

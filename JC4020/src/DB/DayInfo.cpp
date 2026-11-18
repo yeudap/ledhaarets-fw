@@ -1,4 +1,5 @@
 #include "DayInfo.h"
+#include "Preferences/PresentationPrefs.h"
 
 extern Strings strings;
 extern DB db;
@@ -904,7 +905,7 @@ void DayInfo::getShanimLahurban(char* _txt)
 }
 void DayInfo::getYomOrLeil(char* _yomTitle)
 {
-    if(userPreferences.leil==1 && afterShkiaa)
+    if(presentationPrefs.leil==1 && afterShkiaa)
     {
         sprintf(_yomTitle, "%s", strings.leil);
     }
@@ -916,7 +917,7 @@ void DayInfo::getYomOrLeil(char* _yomTitle)
 void DayInfo::getDayInWeek(char* _dayInWeek, bool yom)
 {
     uint8_t dayIndex = dayInWeek+1;
-    if(userPreferences.leil==1 && afterShkiaa)
+    if(presentationPrefs.leil==1 && afterShkiaa)
     {
         dayIndex %= 7;
         dayIndex += 1;

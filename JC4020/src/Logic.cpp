@@ -1,5 +1,6 @@
 #include "Logic.h"
 #include "DB/Place.h"
+#include "Preferences/PresentationPrefs.h"
 
 MainScreen mainScreen;
 MenuScreen menuScreen;
@@ -64,16 +65,16 @@ void Logic::configStates()
     this->setZeetShabatState.zeetTemp = userPreferences.zeetShabat;
     this->setZeetZomState.zeetTemp = userPreferences.zeetZom;
 	this->shitaState.shitaTemp = userPreferences.shita;
-    this->setTohenUpLine.currentState = userPreferences.upLine;
-    this->setTohenMiddleLine.currentState = userPreferences.middleLine;
+    this->setTohenUpLine.currentState = presentationPrefs.layout.upLine;
+    this->setTohenMiddleLine.currentState = presentationPrefs.layout.middleLine;
     this->setTohenBottomLineKezevSet.kezevTemp = userPreferences.interval;
     this->minhagNerotSetState.nerotTemp = userPreferences.nerot;
     this->setFontState.fontTemp = userPreferences.clockFont;
     this->setTohenBottomLineNetzSet.netzTemp = userPreferences.netzClk;
     this->minhagShanimSetState.shanimTemp = userPreferences.shanim;
     this->setShaonKaiz.kaizTemp = userPreferences.shaonKaiz;
-    this->setClkFormat.formatTemp = userPreferences.clockFormat;
-    this->setDateFormat.formatTemp = userPreferences.dateFormat;
+    this->setClkFormat.formatTemp = presentationPrefs.clockFormat;
+    this->setDateFormat.formatTemp = presentationPrefs.dateFormat;
     this->setTimeZoneCustomState.tempTZ = userPreferences.timezone;
     this->setGovaCustomState.tempGova = userPreferences.nz_height;
     this->setLonPre.tempPre = lonPre;

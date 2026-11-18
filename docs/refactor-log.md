@@ -492,6 +492,43 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     - `git diff --stat`: 2 files, 8 insertions, 6 deletions (6 replaced lines + 2 includes).
       `git ls-files --eol`: both `w/crlf`, as before.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.2** (JC4020) — UserContent and Presentation:
+  - `userPreferences.textPrefs` → `userContent.textPrefs`, 7 places in
+    `src/BLE/TextCommandHandler.cpp`, plus `#include "Preferences/UserContent.h"`. One of them
+    (`:79`) is inside the commented-out TEXT write block (F3); replaced by the 2a.2 rule. JC6416
+    has no commented-out line here.
+  - `userPreferences.<field>` → `presentationPrefs.<field>` for `leil`, `dateFormat`,
+    `clockFormat`, `timeFormat`, and → `presentationPrefs.layout.<field>` for `middleLine`,
+    `upLine`: 74 occurrences (27 of them `.layout.`) on 62 lines in 8 files: `src/States/SetClockState.cpp`
+    (26), `src/States/SetTochenState.cpp` (17, JC4020 only), `src/Screens/RegsScreen.cpp` (12),
+    `src/States/MainState.cpp` (9), `src/Logic.cpp` (4), `src/DB/Zman.cpp` (3), `src/DB/DayInfo.cpp`
+    (2), `src/States/MainStateTimeSets.cpp` (1), plus `#include "Preferences/PresentationPrefs.h"`
+    in each. `safa` and `layout.screen` have no consumers in JC4020.
+  - Differences from 2a.2.2 (JC6416; 50 occurrences, 4 `.layout.`, 7 files): `middleLine` and
+    `upLine` are used (`Logic`, `MainState`, `SetTochenState`); `dateFormat` is read twice in
+    `MainState` and not in `MainStateTimeSets`; `leil` is also read in `MainStateTimeSets`.
+  - Not changed: the string literal in `src/States/MainStateTimeSets.cpp:53`
+    (`Serial.println("if(userPreferences.leil==1 && dayInfo.afterShkiaa)");`, live code, owner's
+    decision; F21). Only the condition on the line above was replaced (single-line edit, no
+    `replace_all` in this file).
+  - Edits made with the editor tool only (per-field `replace_all` elsewhere).
+  - **Verification** (reference: the 2a.2.1 (JC4020) candidate build, source tree of `70b1b3b`):
+    - `pio run -d JC4020` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,055,536 bytes before and after (delta 0). RAM 61,132 and Flash 2,048,961
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256) and
+      33 in the trailer.
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 820 → 820, each consumer's sum
+      unchanged. Moved: `TextCommandHandler` → `UserContent` 6 (the commented line is not
+      counted); → `PresentationPrefs`: `SetClockState` 26, `SetTochenState` 17, `RegsScreen` 12,
+      `MainState` 9, `Logic` 4, `Zman` 3, `DayInfo` 2, `MainStateTimeSets` 1 (74). All other edges
+      unchanged.
+    - `grep`: none of the 7 fields remains as `userPreferences.<field>` outside `Preferences/`,
+      except the string literal above; `userContent.textPrefs` 7, `presentationPrefs.` 74.
+    - `git diff --stat`: 9 files, 78 insertions, 69 deletions (69 replaced lines + 9 includes).
+      `git ls-files --eol`: all 9 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 

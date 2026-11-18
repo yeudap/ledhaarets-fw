@@ -1,5 +1,6 @@
 #include "States.h"
 #include "DB/DB.h"
+#include "Preferences/PresentationPrefs.h"
 
 extern Place* place;
 extern DayInfo dayInfo;
@@ -99,7 +100,7 @@ void MainState::UpdateTimeSet(uint8_t index)
 
 void MainState::updateUpLine()
 {
-    if(userPreferences.dateFormat==8) { updateHebDate(true); }
+    if(presentationPrefs.dateFormat==8) { updateHebDate(true); }
     else { updateHebDate(false); updateLoaziDate(); }
 }
 void MainState::updateMiddleLine()
@@ -107,7 +108,7 @@ void MainState::updateMiddleLine()
     if(morphing) 
     { 
         uint8_t _hour = now.hour();
-        if (userPreferences.clockFormat == 12)
+        if (presentationPrefs.clockFormat == 12)
         {
             if (_hour == 0 || _hour == 12) { _hour = 12; }
             else  { _hour %= 12; }
@@ -121,13 +122,13 @@ void MainState::updateMiddleLine()
     }
     updateHour(); 
     updateMinute();
-    if(userPreferences.middleLine == 1) 
+    if(presentationPrefs.layout.middleLine == 1) 
     { 
         updateSecond1();
         updateSecond2();
     }
     updateNekudotaim();
-    if(userPreferences.middleLine==2) { updateYom(); }
+    if(presentationPrefs.layout.middleLine==2) { updateYom(); }
 }
 void MainState::checkTimeChanged()
 {
@@ -137,7 +138,7 @@ void MainState::checkTimeChanged()
         if(morphing) 
         { 
             uint8_t _hour = now.hour();
-            if (userPreferences.clockFormat == 12)
+            if (presentationPrefs.clockFormat == 12)
             {
                 if (_hour == 0 || _hour == 12) { _hour = 12; }
                 else  { _hour %= 12; }
@@ -219,7 +220,7 @@ void MainState::setNewDay()
 void MainState::updateHour()
 {
     uint8_t _hour = now.hour();
-    if (userPreferences.clockFormat == 12)
+    if (presentationPrefs.clockFormat == 12)
     {
         if (_hour == 0 || _hour == 12) { _hour = 12; }
         else  { _hour %= 12; }
@@ -236,7 +237,7 @@ void MainState::updateMinute()
 }
 void MainState::updateSecond()
 {
-    if (userPreferences.middleLine==1)
+    if (presentationPrefs.layout.middleLine==1)
     {
         if (now.second()%10 != currentSecond2) { updateSecond2(); }
         if (now.second()/10 != currentSecond1) { updateSecond1(); }
@@ -259,7 +260,7 @@ void MainState::updateNekudotaim()
     char nekudotaim[2];
     snprintf(nekudotaim, sizeof(nekudotaim), "%s", ":");
     mainScreen.updateNekudotaim1(nekudotaim);
-    if(userPreferences.middleLine == 1) { mainScreen.updateNekudotaim2(nekudotaim); }
+    if(presentationPrefs.layout.middleLine == 1) { mainScreen.updateNekudotaim2(nekudotaim); }
 }
 void MainState::updateHebDate(bool fullRow)
 {
@@ -279,7 +280,7 @@ void MainState::updateHebDate(bool fullRow)
 void MainState::updateLoaziDate()
 {
     char loaziStr[30];
-    dayInfo.loaziDate.toString(loaziStr, userPreferences.dateFormat);
+    dayInfo.loaziDate.toString(loaziStr, presentationPrefs.dateFormat);
     mainScreen.updateLoaziDate(loaziStr);
 }
 void MainState::updateDayUp()

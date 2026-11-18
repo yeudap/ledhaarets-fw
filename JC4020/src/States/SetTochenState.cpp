@@ -1,5 +1,6 @@
 #include "States.h"
 #include "Logic.h"
+#include "Preferences/PresentationPrefs.h"
 
 extern UserPreferences userPreferences;
 extern Logic bl;
@@ -48,26 +49,26 @@ void SetTohenUpLine::showStateScreen()
 }
 void SetTohenUpLine::menuAction() 
 { 
-    userPreferences.upLine = this->currentState;
+    presentationPrefs.layout.upLine = this->currentState;
 }
 void SetTohenUpLine::upAction() 
 { 
-    int stateTemp = userPreferences.upLine;
+    int stateTemp = presentationPrefs.layout.upLine;
     stateTemp += numOfUpLine-2;    
     stateTemp %= numOfUpLine;
     stateTemp++;
-    userPreferences.upLine = stateTemp;
+    presentationPrefs.layout.upLine = stateTemp;
 }
 void SetTohenUpLine::downAction() 
 { 
-    int stateTemp = userPreferences.upLine;
+    int stateTemp = presentationPrefs.layout.upLine;
     stateTemp %= numOfUpLine;
     stateTemp++;
-    userPreferences.upLine = stateTemp;
+    presentationPrefs.layout.upLine = stateTemp;
 }
 void SetTohenUpLine::okAction() 
 { 
-    this->currentState = userPreferences.upLine;
+    this->currentState = presentationPrefs.layout.upLine;
     bl.configStates();
 }
 
@@ -79,7 +80,7 @@ void SetTohenMiddleLine::stateLoop()
     { 
         bl.mainState.updateMinute(); 
     }
-    if (userPreferences.middleLine==1)
+    if (presentationPrefs.layout.middleLine==1)
     {
         if (now.second()/10 != currentSecond1) { bl.mainState.updateSecond1(); }
         if (now.second()%10 != currentSecond2) { bl.mainState.updateSecond2(); }
@@ -93,25 +94,25 @@ void SetTohenMiddleLine::showStateScreen()
 }
 void SetTohenMiddleLine::menuAction() 
 { 
-    userPreferences.middleLine = this->currentState;
+    presentationPrefs.layout.middleLine = this->currentState;
 }
 void SetTohenMiddleLine::upAction() 
 { 
-    int stateTemp = userPreferences.middleLine;
+    int stateTemp = presentationPrefs.layout.middleLine;
     stateTemp %= 2;
     stateTemp++;
-    userPreferences.middleLine = stateTemp;
+    presentationPrefs.layout.middleLine = stateTemp;
 }
 void SetTohenMiddleLine::downAction() 
 { 
-    int stateTemp = userPreferences.middleLine;
+    int stateTemp = presentationPrefs.layout.middleLine;
     stateTemp %= 2;
     stateTemp++;
-    userPreferences.middleLine = stateTemp;
+    presentationPrefs.layout.middleLine = stateTemp;
 }
 void SetTohenMiddleLine::okAction() 
 { 
-    this->currentState = userPreferences.middleLine;
+    this->currentState = presentationPrefs.layout.middleLine;
     bl.configStates();
 }
 
@@ -164,7 +165,7 @@ void yomBashavuaStr(char* buffer)
 void yomLezadStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.yomLezadShaon, ">");
-    if(userPreferences.middleLine==2) { sprintf(buffer, "%s %s", strings.yomLezadShaon, "<"); }
+    if(presentationPrefs.layout.middleLine==2) { sprintf(buffer, "%s %s", strings.yomLezadShaon, "<"); }
 }
 void kezevStr(char* buffer, uint16_t dakot)
 {
@@ -446,8 +447,8 @@ void SetTohenBottomLineYom::okAction()
 }
 void SetTohenBottomLineYomLezad::okAction()
 {     
-    if(userPreferences.middleLine==1) { userPreferences.middleLine = 2; }
-    else { userPreferences.middleLine = 1; } 
+    if(presentationPrefs.layout.middleLine==1) { presentationPrefs.layout.middleLine = 2; }
+    else { presentationPrefs.layout.middleLine = 1; } 
 }
 
 void colHayomStr(char* buffer, int userPreferencesZman)

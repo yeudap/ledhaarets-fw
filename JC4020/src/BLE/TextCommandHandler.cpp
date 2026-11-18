@@ -2,6 +2,7 @@
 #include "../Preferences/UserPreferences.h"
 #include "States/States.h"
 #include <Logic.h>
+#include "Preferences/UserContent.h"
 
 extern UserPreferences userPreferences;
 extern Logic bl;
@@ -26,7 +27,7 @@ String getTextByIndex(uint8_t index)
         return "";
     }
 
-    UserPref<String> *textPref = (UserPref<String> *)userPreferences.textPrefs[index];
+    UserPref<String> *textPref = (UserPref<String> *)userContent.textPrefs[index];
     return textPref->getValue();
 }
 
@@ -76,7 +77,7 @@ CommandResult handleWriteText(uint8_t index, const String &text)
 
     // try
     // {
-    //     UserPref<String> *textPref = (UserPref<String> *)userPreferences.textPrefs[index];
+    //     UserPref<String> *textPref = (UserPref<String> *)userContent.textPrefs[index];
     //     *textPref = text;
     //     bl.mainState.numOfValidTexts = handleGetTextCount().data1;
     //     // הפעלת הפונקציה להצגת טקסט
@@ -105,8 +106,8 @@ CommandResult handleDeleteText(uint8_t index)
         // עוברים על כל האינדקסים החל מזה שנמחק
         for (int i = index; i < numOfNameSets - 1; i++)
         {
-            UserPref<String> *currentPref = (UserPref<String> *)userPreferences.textPrefs[i];
-            UserPref<String> *nextPref = (UserPref<String> *)userPreferences.textPrefs[i + 1];
+            UserPref<String> *currentPref = (UserPref<String> *)userContent.textPrefs[i];
+            UserPref<String> *nextPref = (UserPref<String> *)userContent.textPrefs[i + 1];
 
             String nextText = nextPref->getValue();
 
@@ -173,8 +174,8 @@ CommandResult handleSwapTexts(uint8_t index1, uint8_t index2)
 
     try
     {
-        UserPref<String> *textPref1 = (UserPref<String> *)userPreferences.textPrefs[index1];
-        UserPref<String> *textPref2 = (UserPref<String> *)userPreferences.textPrefs[index2];
+        UserPref<String> *textPref1 = (UserPref<String> *)userContent.textPrefs[index1];
+        UserPref<String> *textPref2 = (UserPref<String> *)userContent.textPrefs[index2];
 
         String temp = textPref1->getValue();
         *textPref1 = textPref2->getValue();
@@ -198,7 +199,7 @@ CommandResult handleGetTextCount()
     {
         for (uint8_t i = 0; i < numOfNameSets; i++)
         {
-            UserPref<String> *textPref = (UserPref<String> *)userPreferences.textPrefs[i];
+            UserPref<String> *textPref = (UserPref<String> *)userContent.textPrefs[i];
             if (textPref->getValue().length() > 0)
             {
                 count++;

@@ -1,5 +1,6 @@
 #include "Zman.h"
 #include "Preferences/UserPreferences.h"
+#include "Preferences/PresentationPrefs.h"
 
 extern UserPreferences userPreferences;
 
@@ -13,7 +14,7 @@ Zman::Zman(uint8_t _shaot, uint8_t _dakot, uint8_t _shniot)
 }
 uint8_t Zman::getShaot() 
 { 
-    if (userPreferences.clockFormat == 12) 
+    if (presentationPrefs.clockFormat == 12) 
     {
         if (shaot == 0 || shaot == 12) { return 12; }
         return shaot % 12; 
@@ -24,7 +25,7 @@ uint8_t Zman::getDakot() { return dakot; }
 uint8_t Zman::getShniot() { return shniot; }
 void Zman::toString(char* buffer) 
 {
-    if (userPreferences.timeFormat == 0) 
+    if (presentationPrefs.timeFormat == 0) 
     {
         sprintf(buffer, "%d:%02d", getShaot(), dakot);
     }
@@ -34,7 +35,7 @@ void Zman::toString(char* buffer)
 }
 void Zman::toStringSec(char* buffer) 
 { 
-    if (userPreferences.timeFormat == 0) 
+    if (presentationPrefs.timeFormat == 0) 
     {
         sprintf(buffer, "%d:%02d:%02d", getShaot(), dakot, shniot);
     }
