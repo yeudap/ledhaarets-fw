@@ -1,4 +1,5 @@
 #include "Logic.h"
+#include "Preferences/DisplayPrefs.h"
 
 extern Logic bl;
 extern GFXfont* font_list[numOfFonts];
@@ -17,7 +18,7 @@ void SetFontState::stateLoop()
 }
 void SetFontState::menuAction() 
 { 
-    this->fontTemp = userPreferences.clockFont;
+    this->fontTemp = displayPrefs.clockFont;
 }
 void SetFontState::upAction() 
 {
@@ -35,7 +36,7 @@ void SetFontState::okAction()
 {
     if(this->fontTemp == 4) { bl.mainState.morphing = true; }
     else { bl.mainState.morphing = false; }
-    userPreferences.clockFont= this->fontTemp;
-    mainScreen.clockFont = font_list[userPreferences.clockFont];
+    displayPrefs.clockFont= this->fontTemp;
+    mainScreen.clockFont = font_list[displayPrefs.clockFont];
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...vdumw  ifsgn");
 }

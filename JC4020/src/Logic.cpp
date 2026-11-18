@@ -1,6 +1,7 @@
 #include "Logic.h"
 #include "DB/Place.h"
 #include "Preferences/PresentationPrefs.h"
+#include "Preferences/DisplayPrefs.h"
 
 MainScreen mainScreen;
 MenuScreen menuScreen;
@@ -36,20 +37,20 @@ void Logic::init()
 }
 void Logic::configStates()
 {
-    mainScreen.colorUp = color_list[userPreferences.colorUp];
-    mainScreen.colorMiddle = color_list[userPreferences.colorMiddle];
-    mainScreen.colorBottomT = color_list[userPreferences.colorBottomT];
-    mainScreen.colorBottomV = color_list[userPreferences.colorBottomV];
-    mainScreen.clockFont = font_list[userPreferences.clockFont];
+    mainScreen.colorUp = color_list[displayPrefs.colorUp];
+    mainScreen.colorMiddle = color_list[displayPrefs.colorMiddle];
+    mainScreen.colorBottomT = color_list[displayPrefs.colorBottomT];
+    mainScreen.colorBottomV = color_list[displayPrefs.colorBottomV];
+    mainScreen.clockFont = font_list[displayPrefs.clockFont];
     mainState.intervalTimeSet = userPreferences.interval;
     mainState.showTimeToNetz = userPreferences.netzClk != 0;
     mainState.setText();
     mainState.initTimeSetFuncList();
-    this->setColorUpLine.colorTemp = userPreferences.colorUp;
-    this->setColorMiddleLine.colorTemp = userPreferences.colorMiddle;
-    this->setColorBottomTLine.colorTemp = userPreferences.colorBottomT;
-    this->setColorBottomVLine.colorTemp = userPreferences.colorBottomV;
-    this->setBrightnessState.brightTemp = userPreferences.brightness;
+    this->setColorUpLine.colorTemp = displayPrefs.colorUp;
+    this->setColorMiddleLine.colorTemp = displayPrefs.colorMiddle;
+    this->setColorBottomTLine.colorTemp = displayPrefs.colorBottomT;
+    this->setColorBottomVLine.colorTemp = displayPrefs.colorBottomV;
+    this->setBrightnessState.brightTemp = displayPrefs.brightness;
     this->setOfekState.ofekTemp = userPreferences.ofek;
     this->showTime.showTemp = 1;
     this->setZrihaState.zrihaTemp = userPreferences.zriha;
@@ -69,7 +70,7 @@ void Logic::configStates()
     this->setTohenMiddleLine.currentState = presentationPrefs.layout.middleLine;
     this->setTohenBottomLineKezevSet.kezevTemp = userPreferences.interval;
     this->minhagNerotSetState.nerotTemp = userPreferences.nerot;
-    this->setFontState.fontTemp = userPreferences.clockFont;
+    this->setFontState.fontTemp = displayPrefs.clockFont;
     this->setTohenBottomLineNetzSet.netzTemp = userPreferences.netzClk;
     this->minhagShanimSetState.shanimTemp = userPreferences.shanim;
     this->setShaonKaiz.kaizTemp = userPreferences.shaonKaiz;
