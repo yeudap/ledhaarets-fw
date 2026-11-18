@@ -105,7 +105,13 @@ Only the user changes the current stage.
 - Never flash, upload, or talk to hardware: no upload targets, no `esptool`, no serial
   monitor. The user flashes test clocks.
 - Never run `build_tool.py` or anything that uploads to the server.
-- Do not commit, push, reset, or switch branches. Propose a commit message; the user commits.
+- Commit a step only after every verification check of that step passes, with a message in the
+  existing style (subject `<step>: <what> (<model>)`, body with the counts and the verification
+  result). If any check deviates from the expected result, stop before committing and report.
+- Never push, reset, checkout or switch branches; push is done by the owner only
+  (`.claude/settings.json` blocks these commands).
+- Show a diff before editing only when the owner asks for it, or when the step has no binary
+  verification (documents only, tools).
 - Do not change `PROJECT_VER` unless asked.
 - No reformatting, no fixing unrelated warnings or typos, no "improving" code being moved.
   Anything that looks like a bug goes to `docs/refactor-log.md` → Findings, not into the code.

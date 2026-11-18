@@ -8,7 +8,9 @@
       "Bash(git diff)",
       "Bash(git diff *)",
       "Bash(git log *)",
-      "Bash(git show *)"
+      "Bash(git show *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ],
     "deny": [
       "Bash(pio *upload*)",
@@ -16,11 +18,13 @@
       "Bash(platformio *upload*)",
       "Bash(*esptool*)",
       "Bash(*build_tool*)",
-      "Bash(git commit *)",
+      "Bash(git push)",
       "Bash(git push *)",
       "Bash(git reset *)",
       "Bash(git clean *)",
+      "Bash(git checkout)",
       "Bash(git checkout *)",
+      "Bash(git switch)",
       "Bash(git switch *)",
       "Bash(git rebase *)",
       "Bash(rm -rf *)"
