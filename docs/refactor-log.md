@@ -464,6 +464,34 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - `preferences.md` §8: one line on the JC4020 views. `dependencies.md` is regenerated after
     the replication to JC6432.
   - **Clock test:** not needed; the image is byte-identical.
+- **2a.2** (JC4020) — replication of 2a.2: same rule and layer order as 2a.2 (JC6416). Sub-steps
+  2a.2.1–2a.2.5; there is no 2a.2.6 (the tools already count access through the views), and the
+  four `isZeetPref` lines of `CoreService` (2a.2.7 in JC6416) move with Data in 2a.2.5.
+  Verification of every sub-step (approved plan): reference = clean build of the previous
+  sub-step's tree, candidate = clean build after editing, both with `SOURCE_DATE_EPOCH=1763337600`;
+  `nm -C --size-sort` identical; ELFs identical after `objcopy --strip-debug`; `compare_bins.py`
+  only `app_desc` (ELF SHA-256) and trailer; `count_prefs.py` byte-identical to the output after
+  2a.1 (JC4020); `count_deps.py`: every consumer's sum (`dependencies.md` §10) unchanged, only its
+  split moves from `UserPreferences` to the view, all other edges unchanged; occurrence counts as
+  in the plan; 0 compiler warnings; edited files keep `w/crlf`. Scripts in the scratchpad.
+- **2a.2.1** (JC4020) — System: `userPreferences.bt` → `systemPrefs.bt`, 6 places:
+  `src/States/ConfigState.cpp` (5) and `src/main.cpp` (1), plus `#include "Preferences/SystemPrefs.h"`
+  after the last existing include in both files. Same as 2a.2.1 (JC6416).
+  - Edits made with the editor tool only (per-field `replace_all`).
+  - **Verification** (reference: the 2a.1 (JC4020) candidate build, same source tree as `109bbb2`):
+    - `pio run -d JC4020` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,055,536 bytes before and after (delta 0). RAM 61,132 and Flash 2,048,961
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256) and
+      33 in the trailer.
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 820 → 820; `ConfigState` 9
+      (`SystemPrefs` 5, `UserPreferences` 4), `main` 4 (`SystemPrefs` 1, `UserPreferences` 3);
+      all other edges unchanged.
+    - `grep`: no `userPreferences.bt` outside `Preferences/`; `systemPrefs.bt` 6 times.
+    - `git diff --stat`: 2 files, 8 insertions, 6 deletions (6 replaced lines + 2 includes).
+      `git ls-files --eol`: both `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 

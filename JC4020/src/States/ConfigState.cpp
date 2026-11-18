@@ -1,6 +1,7 @@
 #include "Logic.h"
 #include "BLE/Authmanager.h"
 #include "BLE/Bluetooth.h"
+#include "Preferences/SystemPrefs.h"
 
 extern Logic bl;
 void setBTStr(char* buffer, uint8_t val)
@@ -12,13 +13,13 @@ void setBTStr(char* buffer, uint8_t val)
 void BTState::showStateScreen()          
 { 
     char btStr[50];
-    setBTStr(btStr, userPreferences.bt);
+    setBTStr(btStr, systemPrefs.bt);
     menuScreen.printMenu(strings.menuConfg, strings.MemoryMap, btStr, strings.resetPref); 
 }
 void ResetPrefState::showStateScreen()   
 { 
     char btStr[50];
-    setBTStr(btStr, userPreferences.bt);
+    setBTStr(btStr, systemPrefs.bt);
     menuScreen.printMenu(strings.menuConfg, btStr, strings.resetPref, strings.resetPass); 
 }
 void ResetTextState::showStateScreen()   { menuScreen.printMenu(strings.menuConfg, strings.resetPref, strings.resetText, strings.resetPass); }
@@ -29,7 +30,7 @@ void AboutDeviceState::showStateScreen() { menuScreen.printMenu(strings.menuConf
 void MemoryMapState::showStateScreen()   
 { 
     char btStr[50];
-    setBTStr(btStr, userPreferences.bt);
+    setBTStr(btStr, systemPrefs.bt);
     menuScreen.printMenu(strings.menuConfg, strings.aboutDevice, strings.MemoryMap, btStr); 
 }
 
@@ -44,7 +45,7 @@ void SetBTState::showStateScreen()
 }
 void SetBTState::menuAction() 
 { 
-    this->btTemp = userPreferences.bt;
+    this->btTemp = systemPrefs.bt;
 }
 void SetBTState::upAction() 
 {
@@ -58,7 +59,7 @@ void SetBTState::downAction()
 }
 void SetBTState::okAction() 
 {
-    userPreferences.bt= this->btTemp;
+    systemPrefs.bt= this->btTemp;
     if(this->btTemp == 1) bleApplyState(true);
     else bleApplyState(false);
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbuwb  ifsgn");
