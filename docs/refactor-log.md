@@ -786,6 +786,43 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     - `git diff --stat`: 7 files, 63 insertions, 56 deletions (56 replaced lines + 7 includes).
       `git ls-files --eol`: all 7 files `w/crlf`, as before.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.4** (JC6432) — Logic:
+  - `userPreferences.<field>` → `logicPrefs.<field>` for the 27 Logic fields: 259 occurrences on
+    226 lines in `src/States/SetTochenTimeState.cpp` (52), `src/Screens/RegsScreen.cpp` (48),
+    `src/States/SetTochenInfoState.cpp` (46), `src/States/MainStateInfoSets2.cpp` (41),
+    `src/States/MainStateInfoSets1.cpp` (36), `src/States/MainStateTimeSets.cpp` (21),
+    `src/Logic.cpp` (8), `src/States/SetInputText.cpp` (4), `src/DB/DayInfo.cpp` (2),
+    `src/States/MainState.cpp` (1), plus `#include "Preferences/LogicPrefs.h"` in each.
+    No line mixes a Logic field with another layer's field; `eda`, `hul`, `homa` in
+    `MainStateInfoSets1/2.cpp` / `MainStateTimeSets.cpp` stay on `userPreferences` (Data, next
+    sub-step).
+  - Differences from 2a.2.4 (JC6416; 223 occurrences, 9 files): `MainStateInfoSets` is split into
+    `…1.cpp` and `…2.cpp` (77 together, JC6416 41); `loazi` is not read in `MainStateTimeSets`
+    (21, JC6416 22); `SetTochenTimeState` reads `intervalTime` once more (52, JC6416 51).
+  - One commented-out line, replaced by the 2a.2 rule: `src/States/MainStateInfoSets2.cpp:240`
+    (`:239` before the include), `// if(!((dayInfo.anenu||dayInfo.yaaleVeyavo) && logicPrefs.tfila==1)) …`.
+    JC6416 has no commented-out line in this layer.
+  - Edits made with the editor tool only: whole-file `replace_all` in `SetTochenTimeState.cpp`,
+    `SetTochenInfoState.cpp` and `SetInputText.cpp` (every `userPreferences.` access is a Logic
+    field; the parameter `userPreferencesZman` has no dot and is not affected); per-field
+    elsewhere (`interval*` before `interval`, `ZSZ1` before `ZSZ`).
+  - **Verification** (reference: the 2a.2.3 (JC6432) candidate build, source tree of `17a1b2a`):
+    - `pio run -d JC6432` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,072,400 bytes before and after (delta 0). RAM 61,924 and Flash 2,065,825
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256) and
+      33 in the trailer.
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 847 → 847, each consumer's sum
+      unchanged. Moved to `LogicPrefs`: `SetTochenTimeState` 52, `RegsScreen` 48,
+      `SetTochenInfoState` 46, `MainStateInfoSets2` 40 (the commented line is not counted),
+      `MainStateInfoSets1` 36, `MainStateTimeSets` 21, `Logic` 8, `SetInputText` 4, `DayInfo` 2,
+      `MainState` 1 (258). All other edges unchanged.
+    - `grep`: no Logic field remains as `userPreferences.<field>` outside `Preferences/`, comments
+      included; `logicPrefs.` 259 times.
+    - `git diff --stat`: 10 files, 236 insertions, 226 deletions (226 replaced lines + 10
+      includes). `git ls-files --eol`: all 10 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 

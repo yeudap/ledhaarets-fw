@@ -1,5 +1,6 @@
 #include "States.h"
 #include "Logic.h"
+#include "Preferences/LogicPrefs.h"
 
 extern UserPreferences userPreferences;
 extern Logic bl;
@@ -23,28 +24,28 @@ void kezevStrTime(char* buffer, uint16_t dakot)
 void loaziStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.taarichLoazi, ">");
-    if(userPreferences.loazi==1) { sprintf(buffer, "%s %s", strings.taarichLoazi, "<"); }
+    if(logicPrefs.loazi==1) { sprintf(buffer, "%s %s", strings.taarichLoazi, "<"); }
 }
 
 // Loazi
 void SetTohenBottomLineLoazi::showStateScreen()
 {
     char kezev[50];
-    kezevStrTime(kezev, userPreferences.intervalTime);
+    kezevStrTime(kezev, logicPrefs.intervalTime);
     char loazi[50];
     loaziStr(loazi);
     menuScreen.printMenu(strings.zmaneHayom, strings.zrihaSkiaaZeetHacochavim, loazi, kezev);
 }
 void SetTohenBottomLineLoazi::okAction()
 {     
-    if(userPreferences.loazi==0) { userPreferences.loazi= 1; }
-    else { userPreferences.loazi= 0; } 
+    if(logicPrefs.loazi==0) { logicPrefs.loazi= 1; }
+    else { logicPrefs.loazi= 0; } 
 }
 // kezev
 void SetTohenTimeStateKezev::showStateScreen()
 {
     char kezev[50];
-    kezevStrTime(kezev, userPreferences.intervalTime);
+    kezevStrTime(kezev, logicPrefs.intervalTime);
     menuScreen.printMenu(strings.zmaneHayom, strings.zrihaSkiaaZeetHacochavim, kezev, strings.talitAlotZriha);
 }
 void SetTohenTimeStateKezevSet::showStateScreen() 
@@ -57,7 +58,7 @@ void SetTohenTimeStateKezevSet::showStateScreen()
 }
 void SetTohenTimeStateKezevSet::menuAction() 
 { 
-    this->kezevTemp = userPreferences.intervalTime;
+    this->kezevTemp = logicPrefs.intervalTime;
 }
 void SetTohenTimeStateKezevSet::upAction() 
 {
@@ -71,14 +72,14 @@ void SetTohenTimeStateKezevSet::downAction()
 }
 void SetTohenTimeStateKezevSet::okAction() 
 {
-    userPreferences.intervalTime= this->kezevTemp;
+    logicPrefs.intervalTime= this->kezevTemp;
     bl.configStates();
 }
 
 void SetTohenBottomLineTAZ::showStateScreen() 
 {  
     char kezev[50];
-    kezevStrTime(kezev, userPreferences.intervalTime);
+    kezevStrTime(kezev, logicPrefs.intervalTime);
     menuScreen.printMenu(strings.zmaneHayom, kezev, strings.talitAlotZriha, strings.sofZmanTfila); 
 }
 void SetTohenBottomLineSOZT::showStateScreen() {  menuScreen.printMenu(strings.zmaneHayom, strings.talitAlotZriha, strings.sofZmanTfila, strings.sofZmanKriatShma); }
@@ -89,7 +90,7 @@ void SetTohenBottomLineHAZ::showStateScreen() {  menuScreen.printMenu(strings.zm
 void SetTohenBottomLineZSZ::showStateScreen()
 {
     char kezev[50];
-    kezevStrTime(kezev, userPreferences.intervalTime);
+    kezevStrTime(kezev, logicPrefs.intervalTime);
     menuScreen.printMenu(strings.zmaneHayom, strings.hazotMinhaGMinhaK, strings.zrihaSkiaaZeetHacochavim, kezev);
 }
 
@@ -120,47 +121,47 @@ void zmaneiHayomMenu(const char* title, int userPreferencesZman, uint8_t select)
     if(select==1) { menuScreen.printMenu(title, colHayom, bazmanHamatim, bichlalLo); }
     if(select==2) { menuScreen.printMenu(title, bichlalLo, colHayom, bazmanHamatim); }
 }
-void SetTohenBottomLineTAZ0::showStateScreen() { zmaneiHayomMenu(strings.talitAlotZriha, userPreferences.TAZ, 0); }
-void SetTohenBottomLineTAZ0::okAction() { userPreferences.TAZ= 0; }
-void SetTohenBottomLineSOZT0::showStateScreen() { zmaneiHayomMenu(strings.sofZmanTfila, userPreferences.SOZT, 0); }
-void SetTohenBottomLineSOZT0::okAction() { userPreferences.SOZT= 0; }
-void SetTohenBottomLineSOZKS0::showStateScreen() { zmaneiHayomMenu(strings.sofZmanKriatShma, userPreferences.SOZKS, 0); }
-void SetTohenBottomLineSOZKS0::okAction() { userPreferences.SOZKS= 0; }
-void SetTohenBottomLineHMM0::showStateScreen() { zmaneiHayomMenu(strings.hazotMinhaGMinhaK, userPreferences.HMM, 0); }
-void SetTohenBottomLineHMM0::okAction() { userPreferences.HMM= 0; }
-void SetTohenBottomLinePSZ0::showStateScreen() { zmaneiHayomMenu(strings.plagShkiaaCochavim, userPreferences.PSZ, 0); }
-void SetTohenBottomLinePSZ0::okAction() { userPreferences.PSZ= 0; }
-void SetTohenBottomLineHAZ0::showStateScreen() { zmaneiHayomMenu(strings.hazotAlotZriha, userPreferences.HAZ, 0); }
-void SetTohenBottomLineHAZ0::okAction() { userPreferences.HAZ= 0; }
-void SetTohenBottomLineZSZ0::showStateScreen() { zmaneiHayomMenu(strings.zrihaSkiaaZeetHacochavim, userPreferences.ZSZ1, 0); }
-void SetTohenBottomLineZSZ0::okAction() { userPreferences.ZSZ1= 0; }
+void SetTohenBottomLineTAZ0::showStateScreen() { zmaneiHayomMenu(strings.talitAlotZriha, logicPrefs.TAZ, 0); }
+void SetTohenBottomLineTAZ0::okAction() { logicPrefs.TAZ= 0; }
+void SetTohenBottomLineSOZT0::showStateScreen() { zmaneiHayomMenu(strings.sofZmanTfila, logicPrefs.SOZT, 0); }
+void SetTohenBottomLineSOZT0::okAction() { logicPrefs.SOZT= 0; }
+void SetTohenBottomLineSOZKS0::showStateScreen() { zmaneiHayomMenu(strings.sofZmanKriatShma, logicPrefs.SOZKS, 0); }
+void SetTohenBottomLineSOZKS0::okAction() { logicPrefs.SOZKS= 0; }
+void SetTohenBottomLineHMM0::showStateScreen() { zmaneiHayomMenu(strings.hazotMinhaGMinhaK, logicPrefs.HMM, 0); }
+void SetTohenBottomLineHMM0::okAction() { logicPrefs.HMM= 0; }
+void SetTohenBottomLinePSZ0::showStateScreen() { zmaneiHayomMenu(strings.plagShkiaaCochavim, logicPrefs.PSZ, 0); }
+void SetTohenBottomLinePSZ0::okAction() { logicPrefs.PSZ= 0; }
+void SetTohenBottomLineHAZ0::showStateScreen() { zmaneiHayomMenu(strings.hazotAlotZriha, logicPrefs.HAZ, 0); }
+void SetTohenBottomLineHAZ0::okAction() { logicPrefs.HAZ= 0; }
+void SetTohenBottomLineZSZ0::showStateScreen() { zmaneiHayomMenu(strings.zrihaSkiaaZeetHacochavim, logicPrefs.ZSZ1, 0); }
+void SetTohenBottomLineZSZ0::okAction() { logicPrefs.ZSZ1= 0; }
 
-void SetTohenBottomLineTAZ1::showStateScreen() { zmaneiHayomMenu(strings.talitAlotZriha, userPreferences.TAZ, 1); }
-void SetTohenBottomLineTAZ1::okAction() { userPreferences.TAZ= 1; }
-void SetTohenBottomLineSOZT1::showStateScreen() { zmaneiHayomMenu(strings.sofZmanTfila, userPreferences.SOZT, 1); }
-void SetTohenBottomLineSOZT1::okAction() { userPreferences.SOZT= 1;  }
-void SetTohenBottomLineSOZKS1::showStateScreen() { zmaneiHayomMenu(strings.sofZmanKriatShma, userPreferences.SOZKS, 1); }
-void SetTohenBottomLineSOZKS1::okAction() { userPreferences.SOZKS= 1; }
-void SetTohenBottomLineHMM1::showStateScreen() { zmaneiHayomMenu(strings.hazotMinhaGMinhaK, userPreferences.HMM, 1); }
-void SetTohenBottomLineHMM1::okAction() { userPreferences.HMM= 1; }
-void SetTohenBottomLinePSZ1::showStateScreen() { zmaneiHayomMenu(strings.plagShkiaaCochavim, userPreferences.PSZ, 1); }
-void SetTohenBottomLinePSZ1::okAction() { userPreferences.PSZ= 1; }
-void SetTohenBottomLineHAZ1::showStateScreen() { zmaneiHayomMenu(strings.hazotAlotZriha, userPreferences.HAZ, 1); }
-void SetTohenBottomLineHAZ1::okAction() { userPreferences.HAZ= 1; }
-void SetTohenBottomLineZSZ1::showStateScreen() { zmaneiHayomMenu(strings.zrihaSkiaaZeetHacochavim, userPreferences.ZSZ1, 1); }
-void SetTohenBottomLineZSZ1::okAction() { userPreferences.ZSZ1= 1; }
+void SetTohenBottomLineTAZ1::showStateScreen() { zmaneiHayomMenu(strings.talitAlotZriha, logicPrefs.TAZ, 1); }
+void SetTohenBottomLineTAZ1::okAction() { logicPrefs.TAZ= 1; }
+void SetTohenBottomLineSOZT1::showStateScreen() { zmaneiHayomMenu(strings.sofZmanTfila, logicPrefs.SOZT, 1); }
+void SetTohenBottomLineSOZT1::okAction() { logicPrefs.SOZT= 1;  }
+void SetTohenBottomLineSOZKS1::showStateScreen() { zmaneiHayomMenu(strings.sofZmanKriatShma, logicPrefs.SOZKS, 1); }
+void SetTohenBottomLineSOZKS1::okAction() { logicPrefs.SOZKS= 1; }
+void SetTohenBottomLineHMM1::showStateScreen() { zmaneiHayomMenu(strings.hazotMinhaGMinhaK, logicPrefs.HMM, 1); }
+void SetTohenBottomLineHMM1::okAction() { logicPrefs.HMM= 1; }
+void SetTohenBottomLinePSZ1::showStateScreen() { zmaneiHayomMenu(strings.plagShkiaaCochavim, logicPrefs.PSZ, 1); }
+void SetTohenBottomLinePSZ1::okAction() { logicPrefs.PSZ= 1; }
+void SetTohenBottomLineHAZ1::showStateScreen() { zmaneiHayomMenu(strings.hazotAlotZriha, logicPrefs.HAZ, 1); }
+void SetTohenBottomLineHAZ1::okAction() { logicPrefs.HAZ= 1; }
+void SetTohenBottomLineZSZ1::showStateScreen() { zmaneiHayomMenu(strings.zrihaSkiaaZeetHacochavim, logicPrefs.ZSZ1, 1); }
+void SetTohenBottomLineZSZ1::okAction() { logicPrefs.ZSZ1= 1; }
 
-void SetTohenBottomLineTAZ2::showStateScreen() { zmaneiHayomMenu(strings.talitAlotZriha, userPreferences.TAZ, 2); }
-void SetTohenBottomLineTAZ2::okAction() { userPreferences.TAZ= 2; }
-void SetTohenBottomLineSOZT2::showStateScreen() { zmaneiHayomMenu(strings.sofZmanTfila, userPreferences.SOZT, 2); }
-void SetTohenBottomLineSOZT2::okAction() { userPreferences.SOZT= 2; }
-void SetTohenBottomLineSOZKS2::showStateScreen() { zmaneiHayomMenu(strings.sofZmanKriatShma, userPreferences.SOZKS, 2); }
-void SetTohenBottomLineSOZKS2::okAction() { userPreferences.SOZKS= 2; }
-void SetTohenBottomLineHMM2::showStateScreen() { zmaneiHayomMenu(strings.hazotMinhaGMinhaK, userPreferences.HMM, 2); }
-void SetTohenBottomLineHMM2::okAction() { userPreferences.HMM= 2; }
-void SetTohenBottomLinePSZ2::showStateScreen() { zmaneiHayomMenu(strings.plagShkiaaCochavim, userPreferences.PSZ, 2); }
-void SetTohenBottomLinePSZ2::okAction() { userPreferences.PSZ= 2;}
-void SetTohenBottomLineHAZ2::showStateScreen() { zmaneiHayomMenu(strings.hazotAlotZriha, userPreferences.HAZ, 2); }
-void SetTohenBottomLineHAZ2::okAction() { userPreferences.HAZ= 2;}
-void SetTohenBottomLineZSZ2::showStateScreen() { zmaneiHayomMenu(strings.zrihaSkiaaZeetHacochavim, userPreferences.ZSZ1, 2); }
-void SetTohenBottomLineZSZ2::okAction() { userPreferences.ZSZ1= 2; }
+void SetTohenBottomLineTAZ2::showStateScreen() { zmaneiHayomMenu(strings.talitAlotZriha, logicPrefs.TAZ, 2); }
+void SetTohenBottomLineTAZ2::okAction() { logicPrefs.TAZ= 2; }
+void SetTohenBottomLineSOZT2::showStateScreen() { zmaneiHayomMenu(strings.sofZmanTfila, logicPrefs.SOZT, 2); }
+void SetTohenBottomLineSOZT2::okAction() { logicPrefs.SOZT= 2; }
+void SetTohenBottomLineSOZKS2::showStateScreen() { zmaneiHayomMenu(strings.sofZmanKriatShma, logicPrefs.SOZKS, 2); }
+void SetTohenBottomLineSOZKS2::okAction() { logicPrefs.SOZKS= 2; }
+void SetTohenBottomLineHMM2::showStateScreen() { zmaneiHayomMenu(strings.hazotMinhaGMinhaK, logicPrefs.HMM, 2); }
+void SetTohenBottomLineHMM2::okAction() { logicPrefs.HMM= 2; }
+void SetTohenBottomLinePSZ2::showStateScreen() { zmaneiHayomMenu(strings.plagShkiaaCochavim, logicPrefs.PSZ, 2); }
+void SetTohenBottomLinePSZ2::okAction() { logicPrefs.PSZ= 2;}
+void SetTohenBottomLineHAZ2::showStateScreen() { zmaneiHayomMenu(strings.hazotAlotZriha, logicPrefs.HAZ, 2); }
+void SetTohenBottomLineHAZ2::okAction() { logicPrefs.HAZ= 2;}
+void SetTohenBottomLineZSZ2::showStateScreen() { zmaneiHayomMenu(strings.zrihaSkiaaZeetHacochavim, logicPrefs.ZSZ1, 2); }
+void SetTohenBottomLineZSZ2::okAction() { logicPrefs.ZSZ1= 2; }

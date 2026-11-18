@@ -1,5 +1,6 @@
 #include "DayInfo.h"
 #include "Preferences/PresentationPrefs.h"
+#include "Preferences/LogicPrefs.h"
 
 extern Strings strings;
 extern DB db;
@@ -630,7 +631,7 @@ void DayInfo::setHaftara()
     if(nextShabat->isHanuka && !(nextShabat->holiday==21)) { haftara = 35; }  // שבת חנוכה ראשונה
     if(nextShabat->isHanuka && nextShabat->holiday==21) { haftara = 22; }  // שבת חנוכה שניה
     if(nextShabat->holiday==26 && userPreferences.homa == 1) { haftara = haftaraByEda(54, 83, 97, 97); }  // שושן פורים
-    if(userPreferences.showIsraeli==1 && isAzmaut) { haftara=61; }  // עצמאות
+    if(logicPrefs.showIsraeli==1 && isAzmaut) { haftara=61; }  // עצמאות
 
     switch (parasha)
     {
@@ -761,7 +762,7 @@ void DayInfo::setHul()
 }
 void DayInfo::setTahanun()
 {
-    if(userPreferences.showIsraeli==0 && (isAzmaut || isYomYerushalaim))
+    if(logicPrefs.showIsraeli==0 && (isAzmaut || isYomYerushalaim))
     {
         enTahanun = false;
     }

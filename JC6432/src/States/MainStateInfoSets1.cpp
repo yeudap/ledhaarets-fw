@@ -1,4 +1,5 @@
 #include "States.h"
+#include "Preferences/LogicPrefs.h"
 extern DayInfo dayInfo;
 extern DayInfo dayInfoTomorrow;
 
@@ -75,7 +76,7 @@ void MainState::infoSet_1_RegularDay()
 }
 bool MainState::flaginfoSet_1_RegularDay()
 {
-    bool f = userPreferences.tfila==1;
+    bool f = logicPrefs.tfila==1;
     return f || showAll;
 }
 void MainState::infoSet_1_Tahanun()
@@ -93,7 +94,7 @@ void MainState::infoSet_1_Tahanun()
 }
 bool MainState::flaginfoSet_1_Tahanun()
 {
-    bool f = (userPreferences.tfila==1 && (dayInfo.enZidkatcha || dayInfo.enTahanun));
+    bool f = (logicPrefs.tfila==1 && (dayInfo.enZidkatcha || dayInfo.enTahanun));
     return f || showAll;
 }
 // שישי ושבת
@@ -112,13 +113,13 @@ void MainState::infoSet_1_ShabatInShabatOutRabenuTam()
 }
 bool MainState::flaginfoSet_1_ShabatInShabatOutRabenuTam()
 {
-    if(userPreferences.IORT==0) { return false; }
-    if(userPreferences.IORT==1) { return dayInfo.isYomHol(); }
-    if(userPreferences.IORT==2)
+    if(logicPrefs.IORT==0) { return false; }
+    if(logicPrefs.IORT==1) { return dayInfo.isYomHol(); }
+    if(logicPrefs.IORT==2)
     { 
         return (dayInfo.isShishi && !dayInfo.isErevHag && !dayInfo.isErevZom)||(dayInfo.isShabat && !dayInfo.isHag && !dayInfo.isZom)||(dayInfo.isMozaeiShabat && !dayInfo.isMozaeiHag && !dayInfo.isMozaeiZom);
     }
-    if(userPreferences.IORT==3) { return true; }
+    if(logicPrefs.IORT==3) { return true; }
     return false;
 }
 void MainState::infoSet_1_ShabatPlus()
@@ -131,7 +132,7 @@ void MainState::infoSet_1_ShabatPlus()
 }
 bool MainState::flaginfoSet_1_ShabatPlus()
 {
-    bool f = userPreferences.tfila==1;
+    bool f = logicPrefs.tfila==1;
     f = f && (dayInfo.isShabatPlus);
     f = f && dayInfo.isShabat;
     return f || showAll;
@@ -152,7 +153,7 @@ void MainState::infoSet_1_HagInHagOutRabenuTam()
 }
 bool MainState::flaginfoSet_1_HagInHagOutRabenuTam()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && (dayInfo.isHag || dayInfo.isErevHag);
     return f || showAll;
 }
@@ -188,7 +189,7 @@ bool MainState::flaginfoSet_1_HagYaaleVeyavoHalel1()
 {
     bool f = (dayInfo.isHag || dayInfo.isMoed);
     f = f & (dayInfo.halelDilug||dayInfo.halelShalem || dayInfo.yaaleVeyavo);
-    f = f & userPreferences.tfila==1;
+    f = f & logicPrefs.tfila==1;
     return f || showAll;
 }
 // ערב חג - ערוב תבשילין
@@ -232,7 +233,7 @@ bool MainState::flaginfoSet_1_Zom()
 {
     bool f = dayInfo.isZom || dayInfo.isErevZom;
     f = f || (dayInfo.isMozaeiZom && isTimeInRange(Zman(14,0), zmanPlusDakot(dayInfo.rabenuTam, 5)));
-    f = f && userPreferences.moadim==1;
+    f = f && logicPrefs.moadim==1;
     return f || showAll;
 }
 void MainState::infoSet_1_Zom1()
@@ -252,21 +253,21 @@ bool MainState::flaginfoSet_1_Zom1()
 {
     bool f = dayInfo.isZom || dayInfo.isErevZom;
     f = f || (dayInfo.isMozaeiZom && isTimeInRange(Zman(14,0), zmanPlusDakot(dayInfo.rabenuTam, 5)));
-    f = f && userPreferences.moadim==1;
+    f = f && logicPrefs.moadim==1;
     return f || showAll;
 }
 void MainState::infoSet_1_Zom2()
 {
     //Serial.println("infoSet_1_Zom2");
     // עננו / יעלה ויבוא
-    if(dayInfo.anenu && userPreferences.tfila==1) { mainScreen.update(mainScreen.infoAll, strings.anenu, txtInfo); }
-    if(dayInfo.yaaleVeyavo && userPreferences.tfila==1) { mainScreen.update(mainScreen.infoLeft, strings.yaaleveyavo, txtInfo); }
+    if(dayInfo.anenu && logicPrefs.tfila==1) { mainScreen.update(mainScreen.infoAll, strings.anenu, txtInfo); }
+    if(dayInfo.yaaleVeyavo && logicPrefs.tfila==1) { mainScreen.update(mainScreen.infoLeft, strings.yaaleveyavo, txtInfo); }
 }
 bool MainState::flaginfoSet_1_Zom2()
 {
     bool f = dayInfo.isZom || dayInfo.isErevZom;
     f = f || (dayInfo.isMozaeiZom && isTimeInRange(Zman(14,0), zmanPlusDakot(dayInfo.rabenuTam, 5)));
-    f = f && userPreferences.moadim==1;
+    f = f && logicPrefs.moadim==1;
     return f || showAll;
 }
 void MainState::infoSet_1_TishaBeav()
@@ -280,7 +281,7 @@ void MainState::infoSet_1_TishaBeav()
 }
 bool MainState::flaginfoSet_1_TishaBeav()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.isTishaBeav;
     return f || showAll;
 }
@@ -296,7 +297,7 @@ void MainState::infoSet_1_RoshHodesh()
 }
 bool MainState::flaginfoSet_1_RoshHodesh()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.isRoshHodesh;
     return f || showAll;
 }
@@ -311,8 +312,8 @@ void MainState::infoSet_1_RoshHodesh1()
 }
 bool MainState::flaginfoSet_1_RoshHodesh1()
 {
-    bool f = userPreferences.moadim==1;
-    f = f && userPreferences.tfila==1;
+    bool f = logicPrefs.moadim==1;
+    f = f && logicPrefs.tfila==1;
     f = f && dayInfo.isRoshHodesh;
     return f || showAll;
 }
@@ -327,8 +328,8 @@ void MainState::infoSet_1_NextRoshHodesh()
 }
 bool MainState::flaginfoSet_1_NextRoshHodesh()
 {
-    bool f = userPreferences.moadim==1;
-    f = f && userPreferences.tfila==1;
+    bool f = logicPrefs.moadim==1;
+    f = f && logicPrefs.tfila==1;
     f = f && dayInfo.isShabatMevarchin;
     f = f && dayInfo.isShabat;
     f = f && isTimeInRange(Zman(5,0),Zman(14,0));
@@ -345,8 +346,8 @@ void MainState::infoSet_1_Molad()
 }
 bool MainState::flaginfoSet_1_Molad()
 {
-    bool f = userPreferences.moadim==1;
-    f = f && userPreferences.tfila==1;
+    bool f = logicPrefs.moadim==1;
+    f = f && logicPrefs.tfila==1;
     f = f && dayInfo.isShabatMevarchin;
     f = f && dayInfo.isShabat;
     f = f && isTimeInRange(Zman(5,0),Zman(14,0));
@@ -374,7 +375,7 @@ void MainState::infoSet_1_Israeli()
 }
 bool MainState::flaginfoSet_1_Israeli()
 {
-    bool f = userPreferences.showIsraeli==1;
+    bool f = logicPrefs.showIsraeli==1;
     f = f && dayInfo.isHagIsraeli;
     return f || showAll;
 }
@@ -419,7 +420,7 @@ void MainState::infoSet_1_Hametz()
 }
 bool MainState::flaginfoSet_1_Hametz()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.tomorrow->isPesach;
     f = f && isTimeInRange(Zman(1,0), Zman(13,0));
     return f || showAll;
@@ -434,7 +435,7 @@ void MainState::infoSet_1_Hametz1()
 }
 bool MainState::flaginfoSet_1_Hametz1()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.tomorrow->isPesach;
     f = f && isTimeInRange(Zman(1,0), Zman(13,0));
     return f || showAll;
@@ -450,7 +451,7 @@ void MainState::infoSet_1_Hanuka()
 }
 bool MainState::flaginfoSet_1_Hanuka()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && dayInfo.isHanuka;
     return f || showAll;
 }
@@ -463,8 +464,8 @@ void MainState::infoSet_1_Hanuka1()
 }
 bool MainState::flaginfoSet_1_Hanuka1()
 {
-    bool f = userPreferences.moadim==1;
-    f = f && userPreferences.tfila==1;
+    bool f = logicPrefs.moadim==1;
+    f = f && logicPrefs.tfila==1;
     f = f && dayInfo.isHanuka;
     return f || showAll;
 }
@@ -484,7 +485,7 @@ void MainState::infoSet_1_AseretYemeTshuva()
 }
 bool MainState::flaginfoSet_1_AseretYemeTshuva()
 {
-    bool f = userPreferences.tfila==1;
+    bool f = logicPrefs.tfila==1;
     f = f && dayInfo.hamelechHakadosh;
     return f || showAll;
 }
@@ -498,7 +499,7 @@ void MainState::infoSet_1_AseretYemeTshuva1()
 }
 bool MainState::flaginfoSet_1_AseretYemeTshuva1()
 {
-    bool f = userPreferences.tfila==1;
+    bool f = logicPrefs.tfila==1;
     f = f && dayInfo.hamelechHakadosh;
     f = f && dayInfo.hamelechHamishpat;
     return f || showAll;
@@ -509,7 +510,7 @@ void MainState::infoSet_1_Purim()
     //Serial.println("infoSet_1_Purim");
     // פורים שמח
     // על הניסים
-    if(userPreferences.tfila==1) { 
+    if(logicPrefs.tfila==1) { 
         mainScreen.update(mainScreen.infoRight, strings.purimSameah, txtInfo); 
         mainScreen.update(mainScreen.infoLeft, strings.alHanisim, txtInfo); 
     }
@@ -517,7 +518,7 @@ void MainState::infoSet_1_Purim()
 }
 bool MainState::flaginfoSet_1_Purim()
 {
-    bool f = userPreferences.moadim==1;
+    bool f = logicPrefs.moadim==1;
     f = f && ((userPreferences.homa==1 && dayInfo.isShushanPurim)||(userPreferences.homa==0 && dayInfo.isPurim));
     return f || showAll;
 }
@@ -531,7 +532,7 @@ void MainState::infoSet_1_Bavli()
 }
 bool MainState::flaginfoSet_1_Bavli()
 {
-    bool f = userPreferences.dafHayomi==1;
+    bool f = logicPrefs.dafHayomi==1;
     return f || showAll;
 }
 // דף היומי ירושלמי
@@ -544,7 +545,7 @@ void MainState::infoSet_1_Yerushalmi()
 }
 bool MainState::flaginfoSet_1_Yerushalmi()
 {
-    bool f = userPreferences.yerushalmi==1;
+    bool f = logicPrefs.yerushalmi==1;
     return f || showAll;
 }
 
@@ -583,8 +584,8 @@ bool MainState::flaginfoSet_1_Haftara()
 {
     bool f = dayInfo.isShabat || dayInfo.isHag || dayInfo.isYomKipur || dayInfo.isTishaBeav;
     f = f || (dayInfo.isZom && (userPreferences.eda == ASHKENAZ || userPreferences.eda == CHABAD || userPreferences.eda == SFARAD));
-    f = f || (userPreferences.showIsraeli==1 && dayInfo.isAzmaut);
-    f = f && userPreferences.haftara==1;
+    f = f || (logicPrefs.showIsraeli==1 && dayInfo.isAzmaut);
+    f = f && logicPrefs.haftara==1;
     return f || showAll;
 }
 
