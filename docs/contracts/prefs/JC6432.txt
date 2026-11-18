@@ -1,0 +1,383 @@
+# prefs contract: JC6432 (tools/prefs_contract.py)
+# columns: key, type tag (code), index, default, C++ type, namespace
+[simplePrefs] 75
+forceWrite	PT_U8(1)	1	0	uint8_t	clk
+textPlace	PT_STR(8)	2	"whaht otwun"	String	clk
+shita	PT_U8(1)	4	0	uint8_t	clk
+eda	PT_U8(1)	5	1	uint8_t	clk
+ofek	PT_U8(1)	6	1	uint8_t	clk
+nz_lat	PT_BLOB(9)	7	32.07 (0x404008f5c28f5c29)	double	clk
+nz_long	PT_BLOB(9)	8	34.78 (0x404163d70a3d70a4)	double	clk
+nz_height	PT_I16(2)	9	20	int16_t	clk
+nz_hul	PT_U8(1)	10	0	uint8_t	clk
+timezone	PT_I8(0)	11	2	int8_t	clk
+brightness	PT_U8(1)	12	200	uint8_t	clk
+safa	PT_U8(1)	13	1	uint8_t	clk
+colorUp	PT_U8(1)	14	1	uint8_t	clk
+colorMiddle	PT_U8(1)	15	6	uint8_t	clk
+colorBottomT	PT_U8(1)	16	1	uint8_t	clk
+colorBottomV	PT_U8(1)	17	6	uint8_t	clk
+colorYom	PT_U8(1)	18	1	uint8_t	clk
+colorParasha	PT_U8(1)	19	1	uint8_t	clk
+colorIluy	PT_U8(1)	20	6	uint8_t	clk
+clockFont	PT_U8(1)	21	0	uint8_t	clk
+dateFormat	PT_U8(1)	22	1	uint8_t	clk
+clockFormat	PT_U8(1)	23	24	uint8_t	clk
+timeFormat	PT_U8(1)	24	0	uint8_t	clk
+shaonKaiz	PT_U8(1)	25	1	uint8_t	clk
+middleLine	PT_U8(1)	26	1	uint8_t	clk
+upLine	PT_U8(1)	27	1	uint8_t	clk
+zriha	PT_U8(1)	28	2	uint8_t	clk
+shkiaa	PT_U8(1)	29	3	uint8_t	clk
+rabenuTam	PT_U8(1)	30	20	uint8_t	clk
+zeetCochavim	PT_U8(1)	31	8	uint8_t	clk
+zmanTalit	PT_U8(1)	32	4	uint8_t	clk
+alotHashahar	PT_U8(1)	33	4	uint8_t	clk
+minhaG	PT_U8(1)	34	3	uint8_t	clk
+sozksMga	PT_U8(1)	35	1	uint8_t	clk
+soztMga	PT_U8(1)	36	1	uint8_t	clk
+plagMinha	PT_U8(1)	37	1	uint8_t	clk
+zeetShabat	PT_U8(1)	38	16	uint8_t	clk
+zeetZom	PT_U8(1)	39	14	uint8_t	clk
+nerot	PT_U8(1)	40	22	uint8_t	clk
+homa	PT_U8(1)	41	0	uint8_t	clk
+hul	PT_U8(1)	42	0	uint8_t	clk
+leil	PT_U8(1)	43	1	uint8_t	clk
+netzClk	PT_U8(1)	44	0	uint8_t	clk
+shanim	PT_U8(1)	45	0	uint8_t	clk
+interval	PT_U16(3)	46	30	uint16_t	clk
+intervalIluy	PT_U16(3)	47	30	uint16_t	clk
+intervalTime	PT_U16(3)	48	30	uint16_t	clk
+intervalInfo	PT_U16(3)	49	30	uint16_t	clk
+dafHayomi	PT_U8(1)	50	1	uint8_t	clk
+yerushalmi	PT_U8(1)	51	0	uint8_t	clk
+yom	PT_U8(1)	52	0	uint8_t	clk
+parasha	PT_U8(1)	53	0	uint8_t	clk
+haftara	PT_U8(1)	54	1	uint8_t	clk
+ivri	PT_U8(1)	55	0	uint8_t	clk
+loazi	PT_U8(1)	56	0	uint8_t	clk
+tfila	PT_U8(1)	57	1	uint8_t	clk
+moadim	PT_U8(1)	58	1	uint8_t	clk
+showIsraeli	PT_U8(1)	59	1	uint8_t	clk
+TAZ	PT_U8(1)	60	1	uint8_t	clk
+SOZT	PT_U8(1)	61	1	uint8_t	clk
+SOZKS	PT_U8(1)	62	1	uint8_t	clk
+HMM	PT_U8(1)	63	1	uint8_t	clk
+PSZ	PT_U8(1)	64	1	uint8_t	clk
+HAZ	PT_U8(1)	65	1	uint8_t	clk
+ZSZ1	PT_U8(1)	66	1	uint8_t	clk
+ZSZ	PT_U8(1)	67	1	uint8_t	clk
+ZYS	PT_U8(1)	68	3	uint8_t	clk
+ZPS	PT_U8(1)	69	0	uint8_t	clk
+IPO	PT_U8(1)	70	2	uint8_t	clk
+IORT	PT_U8(1)	71	2	uint8_t	clk
+colorIvri	PT_U8(1)	72	6	uint8_t	clk
+colorLoazi	PT_U8(1)	73	1	uint8_t	clk
+colorParashaV	PT_U8(1)	74	6	uint8_t	clk
+screen	PT_U8(1)	75	2	uint8_t	clk
+bt	PT_U8(1)	76	1	uint8_t	clk
+[textPrefs] 50
+textInput1	PT_STR(8)	0	""	String	clk
+textInput2	PT_STR(8)	0	""	String	clk
+textInput3	PT_STR(8)	0	""	String	clk
+textInput4	PT_STR(8)	0	""	String	clk
+textInput5	PT_STR(8)	0	""	String	clk
+textInput6	PT_STR(8)	0	""	String	clk
+textInput7	PT_STR(8)	0	""	String	clk
+textInput8	PT_STR(8)	0	""	String	clk
+textInput9	PT_STR(8)	0	""	String	clk
+textInput10	PT_STR(8)	0	""	String	clk
+textInput11	PT_STR(8)	0	""	String	clk
+textInput12	PT_STR(8)	0	""	String	clk
+textInput13	PT_STR(8)	0	""	String	clk
+textInput14	PT_STR(8)	0	""	String	clk
+textInput15	PT_STR(8)	0	""	String	clk
+textInput16	PT_STR(8)	0	""	String	clk
+textInput17	PT_STR(8)	0	""	String	clk
+textInput18	PT_STR(8)	0	""	String	clk
+textInput19	PT_STR(8)	0	""	String	clk
+textInput20	PT_STR(8)	0	""	String	clk
+textInput21	PT_STR(8)	0	""	String	clk
+textInput22	PT_STR(8)	0	""	String	clk
+textInput23	PT_STR(8)	0	""	String	clk
+textInput24	PT_STR(8)	0	""	String	clk
+textInput25	PT_STR(8)	0	""	String	clk
+textInput26	PT_STR(8)	0	""	String	clk
+textInput27	PT_STR(8)	0	""	String	clk
+textInput28	PT_STR(8)	0	""	String	clk
+textInput29	PT_STR(8)	0	""	String	clk
+textInput30	PT_STR(8)	0	""	String	clk
+textInput31	PT_STR(8)	0	""	String	clk
+textInput32	PT_STR(8)	0	""	String	clk
+textInput33	PT_STR(8)	0	""	String	clk
+textInput34	PT_STR(8)	0	""	String	clk
+textInput35	PT_STR(8)	0	""	String	clk
+textInput36	PT_STR(8)	0	""	String	clk
+textInput37	PT_STR(8)	0	""	String	clk
+textInput38	PT_STR(8)	0	""	String	clk
+textInput39	PT_STR(8)	0	""	String	clk
+textInput40	PT_STR(8)	0	""	String	clk
+textInput41	PT_STR(8)	0	""	String	clk
+textInput42	PT_STR(8)	0	""	String	clk
+textInput43	PT_STR(8)	0	""	String	clk
+textInput44	PT_STR(8)	0	""	String	clk
+textInput45	PT_STR(8)	0	""	String	clk
+textInput46	PT_STR(8)	0	""	String	clk
+textInput47	PT_STR(8)	0	""	String	clk
+textInput48	PT_STR(8)	0	""	String	clk
+textInput49	PT_STR(8)	0	""	String	clk
+textInput50	PT_STR(8)	0	""	String	clk
+[allPrefs] 125
+textInput1	PT_STR(8)	0	""	String	clk
+textInput2	PT_STR(8)	0	""	String	clk
+textInput3	PT_STR(8)	0	""	String	clk
+textInput4	PT_STR(8)	0	""	String	clk
+textInput5	PT_STR(8)	0	""	String	clk
+textInput6	PT_STR(8)	0	""	String	clk
+textInput7	PT_STR(8)	0	""	String	clk
+textInput8	PT_STR(8)	0	""	String	clk
+textInput9	PT_STR(8)	0	""	String	clk
+textInput10	PT_STR(8)	0	""	String	clk
+textInput11	PT_STR(8)	0	""	String	clk
+textInput12	PT_STR(8)	0	""	String	clk
+textInput13	PT_STR(8)	0	""	String	clk
+textInput14	PT_STR(8)	0	""	String	clk
+textInput15	PT_STR(8)	0	""	String	clk
+textInput16	PT_STR(8)	0	""	String	clk
+textInput17	PT_STR(8)	0	""	String	clk
+textInput18	PT_STR(8)	0	""	String	clk
+textInput19	PT_STR(8)	0	""	String	clk
+textInput20	PT_STR(8)	0	""	String	clk
+textInput21	PT_STR(8)	0	""	String	clk
+textInput22	PT_STR(8)	0	""	String	clk
+textInput23	PT_STR(8)	0	""	String	clk
+textInput24	PT_STR(8)	0	""	String	clk
+textInput25	PT_STR(8)	0	""	String	clk
+textInput26	PT_STR(8)	0	""	String	clk
+textInput27	PT_STR(8)	0	""	String	clk
+textInput28	PT_STR(8)	0	""	String	clk
+textInput29	PT_STR(8)	0	""	String	clk
+textInput30	PT_STR(8)	0	""	String	clk
+textInput31	PT_STR(8)	0	""	String	clk
+textInput32	PT_STR(8)	0	""	String	clk
+textInput33	PT_STR(8)	0	""	String	clk
+textInput34	PT_STR(8)	0	""	String	clk
+textInput35	PT_STR(8)	0	""	String	clk
+textInput36	PT_STR(8)	0	""	String	clk
+textInput37	PT_STR(8)	0	""	String	clk
+textInput38	PT_STR(8)	0	""	String	clk
+textInput39	PT_STR(8)	0	""	String	clk
+textInput40	PT_STR(8)	0	""	String	clk
+textInput41	PT_STR(8)	0	""	String	clk
+textInput42	PT_STR(8)	0	""	String	clk
+textInput43	PT_STR(8)	0	""	String	clk
+textInput44	PT_STR(8)	0	""	String	clk
+textInput45	PT_STR(8)	0	""	String	clk
+textInput46	PT_STR(8)	0	""	String	clk
+textInput47	PT_STR(8)	0	""	String	clk
+textInput48	PT_STR(8)	0	""	String	clk
+textInput49	PT_STR(8)	0	""	String	clk
+textInput50	PT_STR(8)	0	""	String	clk
+forceWrite	PT_U8(1)	1	0	uint8_t	clk
+textPlace	PT_STR(8)	2	"whaht otwun"	String	clk
+shita	PT_U8(1)	4	0	uint8_t	clk
+eda	PT_U8(1)	5	1	uint8_t	clk
+ofek	PT_U8(1)	6	1	uint8_t	clk
+nz_lat	PT_BLOB(9)	7	32.07 (0x404008f5c28f5c29)	double	clk
+nz_long	PT_BLOB(9)	8	34.78 (0x404163d70a3d70a4)	double	clk
+nz_height	PT_I16(2)	9	20	int16_t	clk
+nz_hul	PT_U8(1)	10	0	uint8_t	clk
+timezone	PT_I8(0)	11	2	int8_t	clk
+brightness	PT_U8(1)	12	200	uint8_t	clk
+safa	PT_U8(1)	13	1	uint8_t	clk
+colorUp	PT_U8(1)	14	1	uint8_t	clk
+colorMiddle	PT_U8(1)	15	6	uint8_t	clk
+colorBottomT	PT_U8(1)	16	1	uint8_t	clk
+colorBottomV	PT_U8(1)	17	6	uint8_t	clk
+colorYom	PT_U8(1)	18	1	uint8_t	clk
+colorParasha	PT_U8(1)	19	1	uint8_t	clk
+colorIluy	PT_U8(1)	20	6	uint8_t	clk
+clockFont	PT_U8(1)	21	0	uint8_t	clk
+dateFormat	PT_U8(1)	22	1	uint8_t	clk
+clockFormat	PT_U8(1)	23	24	uint8_t	clk
+timeFormat	PT_U8(1)	24	0	uint8_t	clk
+shaonKaiz	PT_U8(1)	25	1	uint8_t	clk
+middleLine	PT_U8(1)	26	1	uint8_t	clk
+upLine	PT_U8(1)	27	1	uint8_t	clk
+zriha	PT_U8(1)	28	2	uint8_t	clk
+shkiaa	PT_U8(1)	29	3	uint8_t	clk
+rabenuTam	PT_U8(1)	30	20	uint8_t	clk
+zeetCochavim	PT_U8(1)	31	8	uint8_t	clk
+zmanTalit	PT_U8(1)	32	4	uint8_t	clk
+alotHashahar	PT_U8(1)	33	4	uint8_t	clk
+minhaG	PT_U8(1)	34	3	uint8_t	clk
+sozksMga	PT_U8(1)	35	1	uint8_t	clk
+soztMga	PT_U8(1)	36	1	uint8_t	clk
+plagMinha	PT_U8(1)	37	1	uint8_t	clk
+zeetShabat	PT_U8(1)	38	16	uint8_t	clk
+zeetZom	PT_U8(1)	39	14	uint8_t	clk
+nerot	PT_U8(1)	40	22	uint8_t	clk
+homa	PT_U8(1)	41	0	uint8_t	clk
+hul	PT_U8(1)	42	0	uint8_t	clk
+leil	PT_U8(1)	43	1	uint8_t	clk
+netzClk	PT_U8(1)	44	0	uint8_t	clk
+shanim	PT_U8(1)	45	0	uint8_t	clk
+interval	PT_U16(3)	46	30	uint16_t	clk
+intervalIluy	PT_U16(3)	47	30	uint16_t	clk
+intervalTime	PT_U16(3)	48	30	uint16_t	clk
+intervalInfo	PT_U16(3)	49	30	uint16_t	clk
+dafHayomi	PT_U8(1)	50	1	uint8_t	clk
+yerushalmi	PT_U8(1)	51	0	uint8_t	clk
+yom	PT_U8(1)	52	0	uint8_t	clk
+parasha	PT_U8(1)	53	0	uint8_t	clk
+haftara	PT_U8(1)	54	1	uint8_t	clk
+ivri	PT_U8(1)	55	0	uint8_t	clk
+loazi	PT_U8(1)	56	0	uint8_t	clk
+tfila	PT_U8(1)	57	1	uint8_t	clk
+moadim	PT_U8(1)	58	1	uint8_t	clk
+showIsraeli	PT_U8(1)	59	1	uint8_t	clk
+TAZ	PT_U8(1)	60	1	uint8_t	clk
+SOZT	PT_U8(1)	61	1	uint8_t	clk
+SOZKS	PT_U8(1)	62	1	uint8_t	clk
+HMM	PT_U8(1)	63	1	uint8_t	clk
+PSZ	PT_U8(1)	64	1	uint8_t	clk
+HAZ	PT_U8(1)	65	1	uint8_t	clk
+ZSZ1	PT_U8(1)	66	1	uint8_t	clk
+ZSZ	PT_U8(1)	67	1	uint8_t	clk
+ZYS	PT_U8(1)	68	3	uint8_t	clk
+ZPS	PT_U8(1)	69	0	uint8_t	clk
+IPO	PT_U8(1)	70	2	uint8_t	clk
+IORT	PT_U8(1)	71	2	uint8_t	clk
+colorIvri	PT_U8(1)	72	6	uint8_t	clk
+colorLoazi	PT_U8(1)	73	1	uint8_t	clk
+colorParashaV	PT_U8(1)	74	6	uint8_t	clk
+screen	PT_U8(1)	75	2	uint8_t	clk
+bt	PT_U8(1)	76	1	uint8_t	clk
+[nvs-load] 126
+clk	begin		rw
+clk	getString	textInput1	""
+clk	getString	textInput2	""
+clk	getString	textInput3	""
+clk	getString	textInput4	""
+clk	getString	textInput5	""
+clk	getString	textInput6	""
+clk	getString	textInput7	""
+clk	getString	textInput8	""
+clk	getString	textInput9	""
+clk	getString	textInput10	""
+clk	getString	textInput11	""
+clk	getString	textInput12	""
+clk	getString	textInput13	""
+clk	getString	textInput14	""
+clk	getString	textInput15	""
+clk	getString	textInput16	""
+clk	getString	textInput17	""
+clk	getString	textInput18	""
+clk	getString	textInput19	""
+clk	getString	textInput20	""
+clk	getString	textInput21	""
+clk	getString	textInput22	""
+clk	getString	textInput23	""
+clk	getString	textInput24	""
+clk	getString	textInput25	""
+clk	getString	textInput26	""
+clk	getString	textInput27	""
+clk	getString	textInput28	""
+clk	getString	textInput29	""
+clk	getString	textInput30	""
+clk	getString	textInput31	""
+clk	getString	textInput32	""
+clk	getString	textInput33	""
+clk	getString	textInput34	""
+clk	getString	textInput35	""
+clk	getString	textInput36	""
+clk	getString	textInput37	""
+clk	getString	textInput38	""
+clk	getString	textInput39	""
+clk	getString	textInput40	""
+clk	getString	textInput41	""
+clk	getString	textInput42	""
+clk	getString	textInput43	""
+clk	getString	textInput44	""
+clk	getString	textInput45	""
+clk	getString	textInput46	""
+clk	getString	textInput47	""
+clk	getString	textInput48	""
+clk	getString	textInput49	""
+clk	getString	textInput50	""
+clk	getUChar	forceWrite	0
+clk	getString	textPlace	"whaht otwun"
+clk	getUChar	shita	0
+clk	getUChar	eda	1
+clk	getUChar	ofek	1
+clk	getDouble	nz_lat	32.07 (0x404008f5c28f5c29)
+clk	getDouble	nz_long	34.78 (0x404163d70a3d70a4)
+clk	getShort	nz_height	20
+clk	getUChar	nz_hul	0
+clk	getChar	timezone	2
+clk	getUChar	brightness	200
+clk	getUChar	safa	1
+clk	getUChar	colorUp	1
+clk	getUChar	colorMiddle	6
+clk	getUChar	colorBottomT	1
+clk	getUChar	colorBottomV	6
+clk	getUChar	colorYom	1
+clk	getUChar	colorParasha	1
+clk	getUChar	colorIluy	6
+clk	getUChar	clockFont	0
+clk	getUChar	dateFormat	1
+clk	getUChar	clockFormat	24
+clk	getUChar	timeFormat	0
+clk	getUChar	shaonKaiz	1
+clk	getUChar	middleLine	1
+clk	getUChar	upLine	1
+clk	getUChar	zriha	2
+clk	getUChar	shkiaa	3
+clk	getUChar	rabenuTam	20
+clk	getUChar	zeetCochavim	8
+clk	getUChar	zmanTalit	4
+clk	getUChar	alotHashahar	4
+clk	getUChar	minhaG	3
+clk	getUChar	sozksMga	1
+clk	getUChar	soztMga	1
+clk	getUChar	plagMinha	1
+clk	getUChar	zeetShabat	16
+clk	getUChar	zeetZom	14
+clk	getUChar	nerot	22
+clk	getUChar	homa	0
+clk	getUChar	hul	0
+clk	getUChar	leil	1
+clk	getUChar	netzClk	0
+clk	getUChar	shanim	0
+clk	getUShort	interval	30
+clk	getUShort	intervalIluy	30
+clk	getUShort	intervalTime	30
+clk	getUShort	intervalInfo	30
+clk	getUChar	dafHayomi	1
+clk	getUChar	yerushalmi	0
+clk	getUChar	yom	0
+clk	getUChar	parasha	0
+clk	getUChar	haftara	1
+clk	getUChar	ivri	0
+clk	getUChar	loazi	0
+clk	getUChar	tfila	1
+clk	getUChar	moadim	1
+clk	getUChar	showIsraeli	1
+clk	getUChar	TAZ	1
+clk	getUChar	SOZT	1
+clk	getUChar	SOZKS	1
+clk	getUChar	HMM	1
+clk	getUChar	PSZ	1
+clk	getUChar	HAZ	1
+clk	getUChar	ZSZ1	1
+clk	getUChar	ZSZ	1
+clk	getUChar	ZYS	3
+clk	getUChar	ZPS	0
+clk	getUChar	IPO	2
+clk	getUChar	IORT	2
+clk	getUChar	colorIvri	6
+clk	getUChar	colorLoazi	1
+clk	getUChar	colorParashaV	6
+clk	getUChar	screen	2
+clk	getUChar	bt	1
+[serial] 0

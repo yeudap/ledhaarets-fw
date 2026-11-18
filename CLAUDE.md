@@ -122,6 +122,8 @@ Only the user changes the current stage.
   (source files are CRLF in the working copy); check with `git ls-files --eol` after every step.
   Exception: `tools/gen_deps_doc.py write` may rewrite only the blocks between the
   `<!-- generated:<name>:begin/end -->` markers in `docs/architecture/dependencies.md`, with CRLF.
+  Second exception: `tools/prefs_contract.py write` may (re)write only the preference contract
+  baselines `docs/contracts/prefs/<model>.txt`, with LF.
   Everything else in that file, and every other file, is edited with the editor tools.
 
 ## Verification after every step

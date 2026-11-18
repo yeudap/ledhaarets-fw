@@ -896,6 +896,56 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - Not changed: `notes.md` cites `MainScreen.cpp:91` (correct at 2a.1 (JC6432)); the line is
     `:92` since the include of 2a.2.2.
   - `CLAUDE.md`: stage line — next is 2a.3, planned with the owner before any execution.
+- **2a.3 — plan** (decided with the owner): each layer owns its global object in its own file
+  (`DataPrefs dataPrefs;` in `DataPrefs.cpp`, etc.); `UserPreferences` keeps only pointers, the
+  lists, load, reset and the `clk` namespace. The definitions (key, type, index, default) move with
+  the objects as they are; a table in flash is a separate step (2a.4). The `CoreService` index
+  checks and actions (`== 4`, `== 6`, the zeet keys) do not change until the actions mechanism. One
+  table for all three models (same preferences and indexes, as in JC6432); defaults stay per model.
+  The image changes from 2a.3.3 on, so the reference is a contract tool on the PC, and in the end a
+  test on a clock.
+- **2a.3.0** (all models) — preference contract tool, `tools/prefs_contract.py`:
+  - **What it does:** compiles the real registry code of a model on the PC, against minimal host
+    stubs (`tools/prefs_contract/stub/`: `String`, `Serial`, `Preferences`, an empty
+    `States/States.h`), runs `setupPreferences()` and prints what was built: every entry of
+    `simplePrefs`, `textPrefs` and `allPrefs` in list order (key, type tag and code, index,
+    default, C++ type, namespace), every `Preferences` call made during the load (`[nvs-load]`:
+    namespace, function, key, default passed), and every line printed to Serial meanwhile
+    (`[serial]`). The firmware sources are only read.
+  - **Compiler:** MSVC (VS 2022 Community, cl 14.44, found with `vswhere` / `vcvars64.bat`); g++
+    if it is on PATH or with `--cxx g++`. There is no g++ on the PC (owner's decision: MSVC).
+  - **Source file rule:** `<src>/Preferences/*.cpp` except `PrefsViews.cpp` (compile-time checks
+    only), plus `tools/prefs_contract/main.cpp`. **To maintain:** when the preference files move
+    (layer folders, or the per-layer owner files of 2a.3.3), `source_files()` must be updated so
+    that every file that defines a preference object or the registry is compiled. Also in the
+    tool's docstring.
+  - **NVS name limit:** the tool fails if any key or namespace name, in the lists or in the NVS
+    log, is longer than 15 characters (`NVS_KEY_NAME_MAX_SIZE` 16 with the terminator).
+  - **Baselines:** `docs/contracts/prefs/JC6416.txt`, `JC4020.txt`, `JC6432.txt` (LF), written
+    only by `prefs_contract.py write`. `check` compares, prints a unified diff and exits 1 on any
+    difference.
+  - **Verification:**
+    - Counts: JC6416 and JC4020 `simplePrefs` 72, `textPrefs` 50, `allPrefs` 122, `nvs-load` 123
+      (`begin` + 122 gets); JC6432 75 / 50 / 125 / 126. `[serial] 0` in all three. JC6416 and
+      JC4020 outputs identical except the model name.
+    - Script against the documents: key, index, type and default of every `simplePrefs` entry
+      equal `docs/contracts/ble.md` §8 (main table, the † defaults and the 72–76 table) for all
+      three models, and `preferences.md` §4 for JC6416: 0 differences. All 50 texts: `PT_STR`,
+      index 0, default `""`, `clk`.
+    - Sensitivity (scratch copies of `JC6416/src/Preferences`, one change each): `eda` default
+      1 → 2 changes exactly its `simplePrefs`, `allPrefs` and `nvs-load` lines; `ofek` index
+      6 → 16 changes exactly its `simplePrefs` and `allPrefs` lines; swapping the `push_back` of
+      `eda` and `ofek` swaps exactly those lines in the three sections. A 16-character key fails
+      the tool (exit 2) in all three sections.
+    - Second run byte-identical for every model. `check` passes after `write`; with one baseline
+      value changed by hand it reports the line and exits 1 (restored, identical to the first run).
+    - The stub's `PreferenceType` matches
+      `framework-arduinoespressif32/libraries/Preferences/src/Preferences.h:19-21` (2.0.17), same
+      enumerators in the same order.
+    - `git status`: only the new tool files and baselines, and the rule in `CLAUDE.md`. No firmware
+      file changed, so no build is needed.
+  - `CLAUDE.md`: second exception to the editor-tools rule (`prefs_contract.py write`, baselines
+    only).
 
 ## Planned for next production release
 
