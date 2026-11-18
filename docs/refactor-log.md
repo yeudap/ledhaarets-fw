@@ -225,6 +225,37 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     - A Hebrew comment that ends with the word: `src/BLE/CoreService.cpp:613`
       ("ולא ל-userPreferences."). Not an access.
     - All other preference accesses go through the layer views.
+- **2a.2.7** (JC6416) — 2a.2 rule applied to the code that came with production 7.08 (F11):
+  - `src/BLE/CoreService.cpp:655-658`: `&userPreferences.<field>` → `&dataPrefs.zmanim.<field>` for
+    `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom` (the `isZeetPref` range check), plus
+    `#include "Preferences/DataPrefs.h"` after the last existing include. No other change on the
+    lines. The views are references to the same objects (`PrefsViews.cpp:27-36` asserts the
+    addresses), so the pointer comparison is unchanged.
+  - Edits made with the editor tool only.
+  - Before editing, the 7.08 port was checked for new direct accesses (JC6416 at `d01dd0f` vs
+    `18e4bf2`, end of 2a.2):
+    - `grep "userPreferences\s*\."` outside `Preferences/`: the only additions are the four
+      `isZeetPref` lines; the `dayIndex` write is gone. Registry members and the comment unchanged.
+    - `tools/count_prefs.py`: two differences only. `dayIndex` is gone, and `CoreService r1/w0`
+      is new for the four zeet keys. The tool counts access through the views too, so the
+      `CoreService` reads remain after this step (identical output before and after the edit).
+  - **Verification** (reference: clean build of `d01dd0f`, built before editing; both builds
+    clean, with `SOURCE_DATE_EPOCH=1763337600`):
+    - `pio run -d JC6416` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,060,800 bytes before and after (delta 0). RAM 61,100 and Flash
+      2,054,229 bytes, unchanged. (7.08 vs 2a.2.5: −112 bytes bin, −24 RAM, −112 Flash.)
+    - `nm -C --size-sort`: identical.
+    - `objcopy --strip-debug`: the two ELFs are byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256)
+      and 33 in the trailer. As expected.
+    - `grep`: none of the four fields remains as `userPreferences.<field>` outside `Preferences/`;
+      `dataPrefs.zmanim.` 4 times in `CoreService.cpp`.
+    - `git diff --stat`: 1 file, 5 insertions, 4 deletions (4 replaced lines + 1 include).
+      Nothing under `Preferences/` changed; contract strings untouched.
+    - `git ls-files --eol`: `w/crlf`, as before.
+  - `CoreService.cpp` was identical in the three models after the 7.08 port; it now differs in
+    JC6416 by this step, until 2a is replicated to JC4020 and JC6432.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 
