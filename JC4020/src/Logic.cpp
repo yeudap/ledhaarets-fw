@@ -3,6 +3,7 @@
 #include "Preferences/PresentationPrefs.h"
 #include "Preferences/DisplayPrefs.h"
 #include "Preferences/LogicPrefs.h"
+#include "Preferences/DataPrefs.h"
 
 MainScreen mainScreen;
 MenuScreen menuScreen;
@@ -52,33 +53,33 @@ void Logic::configStates()
     this->setColorBottomTLine.colorTemp = displayPrefs.colorBottomT;
     this->setColorBottomVLine.colorTemp = displayPrefs.colorBottomV;
     this->setBrightnessState.brightTemp = displayPrefs.brightness;
-    this->setOfekState.ofekTemp = userPreferences.ofek;
+    this->setOfekState.ofekTemp = dataPrefs.place.ofek;
     this->showTime.showTemp = 1;
-    this->setZrihaState.zrihaTemp = userPreferences.zriha;
-    this->setShkiaaState.shkiaaTemp = userPreferences.shkiaa;
-    this->setZeetCochavimState.zeetTemp = userPreferences.zeetCochavim;
-    this->setRabenuTamState.rtTemp = userPreferences.rabenuTam;
-    this->setTalitState.talitTemp = userPreferences.zmanTalit;
-    this->setAlotState.alotTemp = userPreferences.alotHashahar;
-    this->setSozksMgaState.sozksTemp = userPreferences.sozksMga;
-    this->setSoztMgaState.soztTemp = userPreferences.soztMga;
-    this->setMinhaGState.minhaTemp = userPreferences.minhaG;
-    this->setPlagState.plagTemp = userPreferences.plagMinha;
-    this->setZeetShabatState.zeetTemp = userPreferences.zeetShabat;
-    this->setZeetZomState.zeetTemp = userPreferences.zeetZom;
-	this->shitaState.shitaTemp = userPreferences.shita;
+    this->setZrihaState.zrihaTemp = dataPrefs.zmanim.zriha;
+    this->setShkiaaState.shkiaaTemp = dataPrefs.zmanim.shkiaa;
+    this->setZeetCochavimState.zeetTemp = dataPrefs.zmanim.zeetCochavim;
+    this->setRabenuTamState.rtTemp = dataPrefs.zmanim.rabenuTam;
+    this->setTalitState.talitTemp = dataPrefs.zmanim.zmanTalit;
+    this->setAlotState.alotTemp = dataPrefs.zmanim.alotHashahar;
+    this->setSozksMgaState.sozksTemp = dataPrefs.zmanim.sozksMga;
+    this->setSoztMgaState.soztTemp = dataPrefs.zmanim.soztMga;
+    this->setMinhaGState.minhaTemp = dataPrefs.zmanim.minhaG;
+    this->setPlagState.plagTemp = dataPrefs.zmanim.plagMinha;
+    this->setZeetShabatState.zeetTemp = dataPrefs.zmanim.zeetShabat;
+    this->setZeetZomState.zeetTemp = dataPrefs.zmanim.zeetZom;
+	this->shitaState.shitaTemp = dataPrefs.zmanim.shita;
     this->setTohenUpLine.currentState = presentationPrefs.layout.upLine;
     this->setTohenMiddleLine.currentState = presentationPrefs.layout.middleLine;
     this->setTohenBottomLineKezevSet.kezevTemp = logicPrefs.interval;
-    this->minhagNerotSetState.nerotTemp = userPreferences.nerot;
+    this->minhagNerotSetState.nerotTemp = dataPrefs.zmanim.nerot;
     this->setFontState.fontTemp = displayPrefs.clockFont;
     this->setTohenBottomLineNetzSet.netzTemp = logicPrefs.netzClk;
-    this->minhagShanimSetState.shanimTemp = userPreferences.shanim;
-    this->setShaonKaiz.kaizTemp = userPreferences.shaonKaiz;
+    this->minhagShanimSetState.shanimTemp = dataPrefs.minhagim.shanim;
+    this->setShaonKaiz.kaizTemp = dataPrefs.place.shaonKaiz;
     this->setClkFormat.formatTemp = presentationPrefs.clockFormat;
     this->setDateFormat.formatTemp = presentationPrefs.dateFormat;
-    this->setTimeZoneCustomState.tempTZ = userPreferences.timezone;
-    this->setGovaCustomState.tempGova = userPreferences.nz_height;
+    this->setTimeZoneCustomState.tempTZ = dataPrefs.place.timezone;
+    this->setGovaCustomState.tempGova = dataPrefs.place.nz_height;
     this->setLonPre.tempPre = lonPre;
     this->setLonInt.tempInt = lonInt;
     this->setLonFrac.tempFrac = lonFrac;

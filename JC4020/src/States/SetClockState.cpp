@@ -2,6 +2,7 @@
 #include "DB/DB.h"
 #include "Logic.h"
 #include "Preferences/PresentationPrefs.h"
+#include "Preferences/DataPrefs.h"
 
 extern Logic bl;
 extern DayInfo dayInfo;
@@ -60,7 +61,7 @@ void MinhagLeilState::showStateScreen()
     char leilAhreiShkiaa[50];
     leilAhreiShkiaaStr(leilAhreiShkiaa);
     char shaonKaiz[50];
-    shaonKaizStr(shaonKaiz, userPreferences.shaonKaiz);
+    shaonKaizStr(shaonKaiz, dataPrefs.place.shaonKaiz);
     menuScreen.printMenu(strings.menuMinag, setTimeFormat, leilAhreiShkiaa, shaonKaiz); 
 }
 void MinhagLeilState::okAction()
@@ -73,7 +74,7 @@ void ShaonKaiz::showStateScreen()
     char leilAhreiShkiaa[50];
     leilAhreiShkiaaStr(leilAhreiShkiaa);
     char shaonKaiz[50];
-    shaonKaizStr(shaonKaiz, userPreferences.shaonKaiz);
+    shaonKaizStr(shaonKaiz, dataPrefs.place.shaonKaiz);
     menuScreen.printMenu(strings.menuClock, leilAhreiShkiaa, shaonKaiz, strings.kivunShaon); 
 }
 void ClockSetTime::showStateScreen() 
@@ -81,7 +82,7 @@ void ClockSetTime::showStateScreen()
     char clkFormatStr[50];
     setClkFormatStr(clkFormatStr, presentationPrefs.clockFormat);
     char shaonKaiz[50];
-    shaonKaizStr(shaonKaiz, userPreferences.shaonKaiz);
+    shaonKaizStr(shaonKaiz, dataPrefs.place.shaonKaiz);
     menuScreen.printMenu(strings.menuClock, shaonKaiz, strings.kivunShaon, clkFormatStr); 
 }
 
@@ -158,7 +159,7 @@ void SetShaonKaiz::showStateScreen()
 }
 void SetShaonKaiz::menuAction() 
 { 
-    this->kaizTemp = userPreferences.shaonKaiz;
+    this->kaizTemp = dataPrefs.place.shaonKaiz;
 }
 void SetShaonKaiz::upAction() 
 {
@@ -173,7 +174,7 @@ void SetShaonKaiz::downAction()
 }
 void SetShaonKaiz::okAction() 
 {
-    userPreferences.shaonKaiz= this->kaizTemp;
+    dataPrefs.place.shaonKaiz= this->kaizTemp;
     if(this->kaizTemp==2) { setShaonKaitz(); }
     if(this->kaizTemp==3) { setShaonHoref(); }
     bl.mainState.updateDayValues = true;

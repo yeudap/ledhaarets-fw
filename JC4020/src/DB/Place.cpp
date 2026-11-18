@@ -1,4 +1,5 @@
 #include "Place.h"
+#include "Preferences/DataPrefs.h"
 
 Place* place;
 int numOfOfeks;
@@ -111,34 +112,34 @@ Place places[] = {
 
 void initPlace()
 {
-    places[0] = Place(userPreferences.textPlace.c_str(), userPreferences.nz_lat, userPreferences.nz_long, userPreferences.timezone, userPreferences.nz_height, userPreferences.nerot, userPreferences.homa, userPreferences.nz_hul, nullptr,  nullptr,  nullptr);
+    places[0] = Place(dataPrefs.place.textPlace.c_str(), dataPrefs.place.nz_lat, dataPrefs.place.nz_long, dataPrefs.place.timezone, dataPrefs.place.nz_height, dataPrefs.zmanim.nerot, dataPrefs.place.homa, dataPrefs.place.nz_hul, nullptr,  nullptr,  nullptr);
     numOfOfeks = sizeof(places) / sizeof(places[0]);
 
-    uint8_t idx = userPreferences.ofek;
+    uint8_t idx = dataPrefs.place.ofek;
     if(idx<0 || idx>=numOfOfeks) 
     {
-        idx = userPreferences.ofek.getDefault(); 
-		userPreferences.ofek= idx;
+        idx = dataPrefs.place.ofek.getDefault(); 
+		dataPrefs.place.ofek= idx;
     }
     place = &places[idx];
 
     // Serial.println("initPlace: ");
-    // Serial.print("userPreferences.nz_long: ");
-    // Serial.println(userPreferences.nz_long);
-    // Serial.print("userPreferences.nz_lat: ");
-    // Serial.println(userPreferences.nz_lat);
-    // Serial.print("userPreferences.timezone: ");
-    // Serial.println(userPreferences.timezone);
+    // Serial.print("dataPrefs.place.nz_long: ");
+    // Serial.println(dataPrefs.place.nz_long);
+    // Serial.print("dataPrefs.place.nz_lat: ");
+    // Serial.println(dataPrefs.place.nz_lat);
+    // Serial.print("dataPrefs.place.timezone: ");
+    // Serial.println(dataPrefs.place.timezone);
 
     double_t val;
-    val = userPreferences.nz_long;
+    val = dataPrefs.place.nz_long;
     lonPre = 1;
     if (val < 0) { lonPre = -1; }
     val *= lonPre; // abs
     lonInt = int(val);
     lonFrac = (val-lonInt)*100;
 
-    val = userPreferences.nz_lat;
+    val = dataPrefs.place.nz_lat;
     latPre = 1;
     if (val < 0) { latPre = -1; }
     val *= latPre; // abs

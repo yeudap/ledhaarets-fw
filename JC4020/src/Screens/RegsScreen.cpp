@@ -2,6 +2,7 @@
 #include "Preferences/PresentationPrefs.h"
 #include "Preferences/DisplayPrefs.h"
 #include "Preferences/LogicPrefs.h"
+#include "Preferences/DataPrefs.h"
 extern UserPreferences userPreferences;
 
 RegsScreen::RegsScreen()
@@ -221,27 +222,27 @@ void printValue(Area* area, int value, int defaultValue)
 }
 void RegsScreen::printValues()
 {
-    printValue(a1, (int)userPreferences.shita, (int)userPreferences.shita.getDefault());
-    printValue(a2, (int)userPreferences.eda, (int)userPreferences.eda.getDefault());
-    printValue(a3, (int)userPreferences.ofek, (int)userPreferences.ofek.getDefault());
-    printValue(a4, (int)userPreferences.timezone, (int)userPreferences.timezone.getDefault());
+    printValue(a1, (int)dataPrefs.zmanim.shita, (int)dataPrefs.zmanim.shita.getDefault());
+    printValue(a2, (int)dataPrefs.minhagim.eda, (int)dataPrefs.minhagim.eda.getDefault());
+    printValue(a3, (int)dataPrefs.place.ofek, (int)dataPrefs.place.ofek.getDefault());
+    printValue(a4, (int)dataPrefs.place.timezone, (int)dataPrefs.place.timezone.getDefault());
     printValue(a5, (int)displayPrefs.clockFont, (int)displayPrefs.clockFont.getDefault());
     printValue(a6, (int)presentationPrefs.dateFormat, (int)presentationPrefs.dateFormat.getDefault());
     printValue(a7, (int)presentationPrefs.clockFormat, (int)presentationPrefs.clockFormat.getDefault());
-    printValue(b1, (int)userPreferences.shaonKaiz, (int)userPreferences.shaonKaiz.getDefault());
+    printValue(b1, (int)dataPrefs.place.shaonKaiz, (int)dataPrefs.place.shaonKaiz.getDefault());
     printValue(b2, (int)presentationPrefs.layout.middleLine, (int)presentationPrefs.layout.middleLine.getDefault());
     printValue(b3, (int)presentationPrefs.layout.upLine, (int)presentationPrefs.layout.upLine.getDefault());
-    printValue(b4, (int)userPreferences.zriha, (int)userPreferences.zriha.getDefault());
-    printValue(b5, (int)userPreferences.shkiaa, (int)userPreferences.shkiaa.getDefault());
-    printValue(b6, (int)userPreferences.rabenuTam, (int)userPreferences.rabenuTam.getDefault());
-    printValue(b7, (int)userPreferences.zeetCochavim, (int)userPreferences.zeetCochavim.getDefault());
-    printValue(c1, (int)userPreferences.zmanTalit, (int)userPreferences.zmanTalit.getDefault());
-    printValue(c2, (int)userPreferences.alotHashahar, (int)userPreferences.alotHashahar.getDefault());
-    printValue(c3, (int)userPreferences.minhaG, (int)userPreferences.minhaG.getDefault());
-    printValue(c4, (int)userPreferences.zeetShabat, (int)userPreferences.zeetShabat.getDefault());
-    printValue(c5, (int)userPreferences.zeetZom, (int)userPreferences.zeetZom.getDefault());
-    printValue(c6, (int)userPreferences.nerot, (int)userPreferences.nerot.getDefault());
-    printValue(c7, (int)userPreferences.hul, (int)userPreferences.hul.getDefault());
+    printValue(b4, (int)dataPrefs.zmanim.zriha, (int)dataPrefs.zmanim.zriha.getDefault());
+    printValue(b5, (int)dataPrefs.zmanim.shkiaa, (int)dataPrefs.zmanim.shkiaa.getDefault());
+    printValue(b6, (int)dataPrefs.zmanim.rabenuTam, (int)dataPrefs.zmanim.rabenuTam.getDefault());
+    printValue(b7, (int)dataPrefs.zmanim.zeetCochavim, (int)dataPrefs.zmanim.zeetCochavim.getDefault());
+    printValue(c1, (int)dataPrefs.zmanim.zmanTalit, (int)dataPrefs.zmanim.zmanTalit.getDefault());
+    printValue(c2, (int)dataPrefs.zmanim.alotHashahar, (int)dataPrefs.zmanim.alotHashahar.getDefault());
+    printValue(c3, (int)dataPrefs.zmanim.minhaG, (int)dataPrefs.zmanim.minhaG.getDefault());
+    printValue(c4, (int)dataPrefs.zmanim.zeetShabat, (int)dataPrefs.zmanim.zeetShabat.getDefault());
+    printValue(c5, (int)dataPrefs.zmanim.zeetZom, (int)dataPrefs.zmanim.zeetZom.getDefault());
+    printValue(c6, (int)dataPrefs.zmanim.nerot, (int)dataPrefs.zmanim.nerot.getDefault());
+    printValue(c7, (int)dataPrefs.minhagim.hul, (int)dataPrefs.minhagim.hul.getDefault());
     printValue(d1, (int)presentationPrefs.leil, (int)presentationPrefs.leil.getDefault());
     printValue(d2, (int)presentationPrefs.leil, (int)presentationPrefs.leil.getDefault());
     printValue(d3, (int)logicPrefs.dafHayomi, (int)logicPrefs.dafHayomi.getDefault());
@@ -270,40 +271,40 @@ void RegsScreen::printValues()
     printValue(g5, (int)displayPrefs.colorYom, (int)displayPrefs.colorYom.getDefault());
     printValue(g6, (int)displayPrefs.colorParasha, (int)displayPrefs.colorParasha.getDefault());
     printValue(g7, (int)displayPrefs.colorIluy, (int)displayPrefs.colorIluy.getDefault());
-    printValue(h1, (int)userPreferences.homa, (int)userPreferences.homa.getDefault());
+    printValue(h1, (int)dataPrefs.place.homa, (int)dataPrefs.place.homa.getDefault());
     printValue(h2, (int)logicPrefs.netzClk, (int)logicPrefs.netzClk.getDefault());
-    printValue(h3, (int)userPreferences.shanim, (int)userPreferences.shanim.getDefault());
+    printValue(h3, (int)dataPrefs.minhagim.shanim, (int)dataPrefs.minhagim.shanim.getDefault());
     printValue(h4, (int)logicPrefs.interval, (int)logicPrefs.interval.getDefault());
     printValue(h5, (int)logicPrefs.intervalIluy, (int)logicPrefs.intervalIluy.getDefault());
     printValue(h6, (int)logicPrefs.intervalTime, (int)logicPrefs.intervalTime.getDefault());
     printValue(h7, (int)logicPrefs.intervalInfo, (int)logicPrefs.intervalInfo.getDefault());
         
     double_t val;
-    val = userPreferences.nz_long;
+    val = dataPrefs.place.nz_long;
     int lonPre = 1;
     if (val < 0) { lonPre = -1; }
     val *= lonPre; // abs
     int lonInt = int(val);
     int lonFrac = (val-lonInt)*100;
-    val = userPreferences.nz_lat;
+    val = dataPrefs.place.nz_lat;
     int latPre = 1;
     if (val < 0) { latPre = -1; }
     val *= latPre; // abs
     int latInt = int(val);
     int latFrac = (val-latInt)*100;
-    val = userPreferences.nz_long.getDefault();
+    val = dataPrefs.place.nz_long.getDefault();
     int lonPreDef = 1;
     if (val < 0) { lonPreDef = -1; }
     val *= lonPreDef; // abs
     int lonIntDef = int(val);
     int lonFracDef = (val-lonIntDef)*100;
-    val = userPreferences.nz_lat.getDefault();
+    val = dataPrefs.place.nz_lat.getDefault();
     int latPreDef = 1;
     if (val < 0) { latPreDef = -1; }
     val *= latPreDef; // abs
     int latIntDef = int(val);
     int latFracDef = (val-latIntDef)*100;
-    printValue(i1, (int)userPreferences.nz_height, (int)userPreferences.nz_height.getDefault());
+    printValue(i1, (int)dataPrefs.place.nz_height, (int)dataPrefs.place.nz_height.getDefault());
     printValue(i2, (int)lonPre, (int)lonPreDef);
     printValue(i3, (int)lonInt, (int)lonIntDef);
     printValue(i4, (int)lonFrac, (int)lonFracDef);

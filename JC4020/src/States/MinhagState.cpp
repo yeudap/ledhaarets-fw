@@ -1,5 +1,6 @@
 #include "Logic.h"
 #include "DB\Shita.h"
+#include "Preferences/DataPrefs.h"
 
 extern Shita* shitot[numOfShitot];
 extern Logic bl;
@@ -65,29 +66,29 @@ void ZeetShabatState::showStateScreen()
 void ZeetZomState::showStateScreen() 
 { 
     char shanim[50];
-    shanimStr(shanim, userPreferences.shanim);
+    shanimStr(shanim, dataPrefs.minhagim.shanim);
     menuScreen.printMenu(strings.menuMinag, strings.zeetShabat, strings.zeetZomDerabanan, shanim); 
 }
 void MinhagShanimState::showStateScreen() 
 { 
     char shanim[50];
-    shanimStr(shanim, userPreferences.shanim);
+    shanimStr(shanim, dataPrefs.minhagim.shanim);
     char nerot[50];
-    nerotStr(nerot, userPreferences.nerot);
+    nerotStr(nerot, dataPrefs.zmanim.nerot);
     menuScreen.printMenu(strings.menuMinag, strings.zeetZomDerabanan, shanim, nerot); 
 }
 void MinhagNerotState::showStateScreen() 
 { 
     char shanim[50];
-    shanimStr(shanim, userPreferences.shanim);
+    shanimStr(shanim, dataPrefs.minhagim.shanim);
     char nerot[50];
-    nerotStr(nerot, userPreferences.nerot);
+    nerotStr(nerot, dataPrefs.zmanim.nerot);
     menuScreen.printMenu(strings.menuMinag, shanim, nerot, strings.hazegColZmaneiHayom); 
 }
 void ShowTimeState::showStateScreen() 
 { 
     char nerot[50];
-    nerotStr(nerot, userPreferences.nerot);
+    nerotStr(nerot, dataPrefs.zmanim.nerot);
     menuScreen.printMenu(strings.menuMinag, nerot, strings.hazegColZmaneiHayom, strings.shitaTitle); 
 }
 
@@ -146,7 +147,7 @@ Zman getZriha(uint8_t i)
     if(i == 1) { return dayInfo.zrihaM; }
     if(i == 2) 
     { 
-        if(userPreferences.shita ==1 && userPreferences.ofek > 4) // kiseRahamim
+        if(dataPrefs.zmanim.shita ==1 && dataPrefs.place.ofek > 4) // kiseRahamim
         {
             return dayInfo.zrihaN + 2.5;
         }
@@ -168,7 +169,7 @@ void SetZrihaState::showStateScreen()
 }
 void SetZrihaState::menuAction() 
 { 
-    this->zrihaTemp = userPreferences.zriha;
+    this->zrihaTemp = dataPrefs.zmanim.zriha;
 }
 void SetZrihaState::upAction() 
 {
@@ -184,7 +185,7 @@ void SetZrihaState::downAction()
 void SetZrihaState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.zriha= this->zrihaTemp;
+    dataPrefs.zmanim.zriha= this->zrihaTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -211,7 +212,7 @@ void SetShkiaaState::showStateScreen()
 }
 void SetShkiaaState::menuAction() 
 { 
-    this->shkiaaTemp = userPreferences.shkiaa;
+    this->shkiaaTemp = dataPrefs.zmanim.shkiaa;
 }
 void SetShkiaaState::upAction() 
 {
@@ -227,7 +228,7 @@ void SetShkiaaState::downAction()
 void SetShkiaaState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.shkiaa= this->shkiaaTemp;
+    dataPrefs.zmanim.shkiaa= this->shkiaaTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -236,7 +237,7 @@ void SetShkiaaState::okAction()
 void MinhagNerotSetState::showStateScreen() 
 {
     char shanim[50];
-    shanimStr(shanim, userPreferences.shanim);
+    shanimStr(shanim, dataPrefs.minhagim.shanim);
     char nerot[50];
     nerotStr(nerot, this->nerotTemp);
     menuScreen.printMenu(strings.menuMinag, shanim, nerot, strings.shitaTitle); 
@@ -245,7 +246,7 @@ void MinhagNerotSetState::showStateScreen()
 }
 void MinhagNerotSetState::menuAction() 
 { 
-    this->nerotTemp = userPreferences.nerot;
+    this->nerotTemp = dataPrefs.zmanim.nerot;
 }
 void MinhagNerotSetState::upAction() 
 {
@@ -259,7 +260,7 @@ void MinhagNerotSetState::downAction()
 }
 void MinhagNerotSetState::okAction() 
 {
-    userPreferences.nerot= this->nerotTemp;
+    dataPrefs.zmanim.nerot= this->nerotTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -270,14 +271,14 @@ void MinhagShanimSetState::showStateScreen()
     char shanim[50];
     shanimStr(shanim, this->shanimTemp);
     char nerot[50];
-    nerotStr(nerot, userPreferences.nerot);
+    nerotStr(nerot, dataPrefs.zmanim.nerot);
     menuScreen.printMenu(strings.menuMinag, strings.zeetHacochavim, shanim, nerot); 
     menuScreen.shanim->addRoundRect(false, menuScreen.shanim->x, menuScreen.shanim->y+1, menuScreen.shanim->width, menuScreen.shanim->high-1, 3, YELLOW);
     menuScreen.shanim->addArrows();
 }
 void MinhagShanimSetState::menuAction() 
 { 
-    this->shanimTemp = userPreferences.shanim;
+    this->shanimTemp = dataPrefs.minhagim.shanim;
 }
 void MinhagShanimSetState::upAction() 
 {
@@ -291,7 +292,7 @@ void MinhagShanimSetState::downAction()
 }
 void MinhagShanimSetState::okAction() 
 {
-    userPreferences.shanim= this->shanimTemp;
+    dataPrefs.minhagim.shanim= this->shanimTemp;
     dayInfo.setShanimLahurban();
     bl.mainState.updateDayValues = true;
 }
@@ -306,13 +307,13 @@ void SetZeetCochavimState::showStateScreen()
     uint8_t plus = zeetTemp;
     plus %= numOfZeetCochavin;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->zeetCochavimMethods(zeetTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->zeetCochavimMethods(zeetTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
     menuScreen.printMenu(strings.zeetHacochavim, zeetMethod[minus], zeetMethod[zeetTemp], zeetMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetZeetCochavimState::menuAction() 
 { 
-    this->zeetTemp = userPreferences.zeetCochavim;
+    this->zeetTemp = dataPrefs.zmanim.zeetCochavim;
 }
 void SetZeetCochavimState::upAction() 
 {
@@ -328,7 +329,7 @@ void SetZeetCochavimState::downAction()
 void SetZeetCochavimState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.zeetCochavim= this->zeetTemp;
+    dataPrefs.zmanim.zeetCochavim= this->zeetTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -343,13 +344,13 @@ void SetRabenuTamState::showStateScreen()
     uint8_t plus = rtTemp;
     plus %= numOfZeetCochavin;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->zeetCochavimMethods(rtTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->zeetCochavimMethods(rtTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
     menuScreen.printMenu(strings.rabenuTam, zeetMethod[minus], zeetMethod[rtTemp], zeetMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetRabenuTamState::menuAction() 
 { 
-    this->rtTemp = userPreferences.rabenuTam;
+    this->rtTemp = dataPrefs.zmanim.rabenuTam;
 }
 void SetRabenuTamState::upAction() 
 {
@@ -365,7 +366,7 @@ void SetRabenuTamState::downAction()
 void SetRabenuTamState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.rabenuTam= this->rtTemp;
+    dataPrefs.zmanim.rabenuTam= this->rtTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -380,13 +381,13 @@ void SetTalitState::showStateScreen()
     uint8_t plus = talitTemp;
     plus %= numOfTalit;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->zmanTalitMethods(talitTemp, &dayInfo.sun, dayInfo.alotHashahar, dayInfo.getZriha(), dayInfo.getShkiaa());
+    Zman zman = shitot[dataPrefs.zmanim.shita]->zmanTalitMethods(talitTemp, &dayInfo.sun, dayInfo.alotHashahar, dayInfo.getZriha(), dayInfo.getShkiaa());
     menuScreen.printMenu(strings.zmanTalitUtfilin, talitMethod[minus], talitMethod[talitTemp], talitMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetTalitState::menuAction() 
 { 
-    this->talitTemp = userPreferences.zmanTalit;
+    this->talitTemp = dataPrefs.zmanim.zmanTalit;
 }
 void SetTalitState::upAction() 
 {
@@ -402,7 +403,7 @@ void SetTalitState::downAction()
 void SetTalitState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.zmanTalit= this->talitTemp;
+    dataPrefs.zmanim.zmanTalit= this->talitTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -417,13 +418,13 @@ void SetAlotState::showStateScreen()
     uint8_t plus = alotTemp;
     plus %= numOfAlot;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->alotMethods(alotTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->alotMethods(alotTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
     menuScreen.printMenu(strings.alotHashahar, alotMethod[minus], alotMethod[alotTemp], alotMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetAlotState::menuAction() 
 { 
-    this->alotTemp = userPreferences.alotHashahar;
+    this->alotTemp = dataPrefs.zmanim.alotHashahar;
 }
 void SetAlotState::upAction() 
 {
@@ -439,7 +440,7 @@ void SetAlotState::downAction()
 void SetAlotState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.alotHashahar= this->alotTemp;
+    dataPrefs.zmanim.alotHashahar= this->alotTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -454,13 +455,13 @@ void SetSozksMgaState::showStateScreen()
     uint8_t plus = sozksTemp;
     plus %= numOfSozMga;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->sozksMgaMethods(sozksTemp, &dayInfo.sun, dayInfo.alot90, dayInfo.zeet90, dayInfo.alot72, dayInfo.zeet72, dayInfo.zrihaA, dayInfo.shkiaaA, dayInfo.zrihaN, dayInfo.shkiaaN);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->sozksMgaMethods(sozksTemp, &dayInfo.sun, dayInfo.alot90, dayInfo.zeet90, dayInfo.alot72, dayInfo.zeet72, dayInfo.zrihaA, dayInfo.shkiaaA, dayInfo.zrihaN, dayInfo.shkiaaN);
     menuScreen.printMenu(strings.sozksMga, sozMgaMethod[minus], sozMgaMethod[sozksTemp], sozMgaMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetSozksMgaState::menuAction() 
 { 
-    this->sozksTemp = userPreferences.sozksMga;
+    this->sozksTemp = dataPrefs.zmanim.sozksMga;
 }
 void SetSozksMgaState::upAction() 
 {
@@ -476,7 +477,7 @@ void SetSozksMgaState::downAction()
 void SetSozksMgaState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.sozksMga= this->sozksTemp;
+    dataPrefs.zmanim.sozksMga= this->sozksTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -491,13 +492,13 @@ void SetSoztMgaState::showStateScreen()
     uint8_t plus = soztTemp;
     plus %= numOfSozMga;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->soztMgaMethods(soztTemp, &dayInfo.sun, dayInfo.alot90, dayInfo.zeet90, dayInfo.alot72, dayInfo.zeet72, dayInfo.zrihaM, dayInfo.shkiaaM, dayInfo.zrihaN, dayInfo.shkiaaN);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->soztMgaMethods(soztTemp, &dayInfo.sun, dayInfo.alot90, dayInfo.zeet90, dayInfo.alot72, dayInfo.zeet72, dayInfo.zrihaM, dayInfo.shkiaaM, dayInfo.zrihaN, dayInfo.shkiaaN);
     menuScreen.printMenu(strings.soztMga, sozMgaMethod[minus], sozMgaMethod[soztTemp], sozMgaMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetSoztMgaState::menuAction() 
 { 
-    this->soztTemp = userPreferences.soztMga;
+    this->soztTemp = dataPrefs.zmanim.soztMga;
 }
 void SetSoztMgaState::upAction() 
 {
@@ -513,7 +514,7 @@ void SetSoztMgaState::downAction()
 void SetSoztMgaState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.soztMga= this->soztTemp;
+    dataPrefs.zmanim.soztMga= this->soztTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -528,13 +529,13 @@ void SetMinhaGState::showStateScreen()
     uint8_t plus = minhaTemp;
     plus %= numOfMinhaG;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->minhaGMethods(minhaTemp, &dayInfo.sun, dayInfo.hatsot, dayInfo.zrihaM, dayInfo.shkiaaM);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->minhaGMethods(minhaTemp, &dayInfo.sun, dayInfo.hatsot, dayInfo.zrihaM, dayInfo.shkiaaM);
     menuScreen.printMenu(strings.minhaGdola, minhaGMethod[minus], minhaGMethod[minhaTemp], minhaGMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetMinhaGState::menuAction() 
 { 
-    this->minhaTemp = userPreferences.minhaG;
+    this->minhaTemp = dataPrefs.zmanim.minhaG;
 }
 void SetMinhaGState::upAction() 
 {
@@ -550,7 +551,7 @@ void SetMinhaGState::downAction()
 void SetMinhaGState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.minhaG= this->minhaTemp;
+    dataPrefs.zmanim.minhaG= this->minhaTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -565,13 +566,13 @@ void SetPlagState::showStateScreen()
     uint8_t plus = plagTemp;
     plus %= numOfPlag;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->plagMethods(plagTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM, dayInfo.shkiaaM);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->plagMethods(plagTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM, dayInfo.shkiaaM);
     menuScreen.printMenu(strings.plagHaminha, plagMethod[minus], plagMethod[plagTemp], plagMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetPlagState::menuAction() 
 { 
-    this->plagTemp = userPreferences.plagMinha;
+    this->plagTemp = dataPrefs.zmanim.plagMinha;
 }
 void SetPlagState::upAction() 
 {
@@ -587,7 +588,7 @@ void SetPlagState::downAction()
 void SetPlagState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.plagMinha= this->plagTemp;
+    dataPrefs.zmanim.plagMinha= this->plagTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -602,13 +603,13 @@ void SetZeetShabatState::showStateScreen()
     uint8_t plus = zeetTemp;
     plus %= numOfZeetCochavin;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->zeetCochavimMethods(zeetTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->zeetCochavimMethods(zeetTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
     menuScreen.printMenu(strings.zeetShabat, zeetMethod[minus], zeetMethod[zeetTemp], zeetMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetZeetShabatState::menuAction() 
 { 
-    this->zeetTemp = userPreferences.zeetShabat;
+    this->zeetTemp = dataPrefs.zmanim.zeetShabat;
 }
 void SetZeetShabatState::upAction() 
 {
@@ -624,7 +625,7 @@ void SetZeetShabatState::downAction()
 void SetZeetShabatState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.zeetShabat= this->zeetTemp;
+    dataPrefs.zmanim.zeetShabat= this->zeetTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
@@ -639,13 +640,13 @@ void SetZeetZomState::showStateScreen()
     uint8_t plus = zeetTemp;
     plus %= numOfZeetCochavin;
     plus++;
-    Zman zman = shitot[userPreferences.shita]->zeetCochavimMethods(zeetTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
+    Zman zman = shitot[dataPrefs.zmanim.shita]->zeetCochavimMethods(zeetTemp, &dayInfo.sun, dayInfo.zrihaM, dayInfo.shkiaaM);
     menuScreen.printMenu(strings.zeetZomDerabanan, zeetMethod[minus], zeetMethod[zeetTemp], zeetMethod[plus]); 
     menuScreen.addZman(zman);
 }
 void SetZeetZomState::menuAction() 
 { 
-    this->zeetTemp = userPreferences.zeetZom;
+    this->zeetTemp = dataPrefs.zmanim.zeetZom;
 }
 void SetZeetZomState::upAction() 
 {
@@ -661,7 +662,7 @@ void SetZeetZomState::downAction()
 void SetZeetZomState::okAction() 
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.zeetZom= this->zeetTemp;
+    dataPrefs.zmanim.zeetZom= this->zeetTemp;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }

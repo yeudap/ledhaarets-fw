@@ -596,6 +596,69 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       `git ls-files --eol`: all 7 files `w/crlf`, as before.
   - **Recorded:** F21 (documentation only, no code change).
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.5** (JC4020) — Data (last layer; includes the 2a.2.7 (JC6416) `CoreService` lines):
+  - `userPreferences.<field>` → `dataPrefs.place.<field>` (`textPlace`, `ofek`, `nz_lat`,
+    `nz_long`, `nz_height`, `nz_hul`, `timezone`, `shaonKaiz`, `homa`), `dataPrefs.zmanim.<field>`
+    (`shita`, `zriha`, `shkiaa`, `rabenuTam`, `zeetCochavim`, `zmanTalit`, `alotHashahar`,
+    `minhaG`, `sozksMga`, `soztMga`, `plagMinha`, `zeetShabat`, `zeetZom`, `nerot`) and
+    `dataPrefs.minhagim.<field>` (`eda`, `hul`, `shanim`): 401 occurrences (place 89, zmanim 245,
+    minhagim 67) on 348 lines in 16 files: `src/DB/Shita.cpp` (144), `src/States/MinhagState.cpp`
+    (48), `src/Screens/RegsScreen.cpp` (42), `src/States/OfekState.cpp` (41), `src/DB/DayInfo.cpp`
+    (40), `src/DB/Place.cpp` (19), `src/Logic.cpp` (19), `src/States/EdotState.cpp` (17),
+    `src/States/MainStateInfoSets.cpp` (7), `src/DB/Omer.cpp` (6), `src/States/SetClockState.cpp`
+    (5), `src/BLE/CoreService.cpp` (4, the `isZeetPref` range check), `src/DB/DB.cpp` (3),
+    `src/States/ShitaState.cpp` (3), `src/States/MainStateTimeSets.cpp` (2), `src/States/MainState.cpp`
+    (1), plus `#include "Preferences/DataPrefs.h"` after the last existing include in each.
+  - Same files and the same count per file as 2a.2.5 + 2a.2.7 (JC6416) (397 + 4). The views are
+    references to the same objects (`PrefsViews.cpp` asserts the addresses), so the pointer
+    comparison in `isZeetPref` is unchanged.
+  - Commented-out debug lines replaced too, including the label text inside their string literals
+    (owner's decision in 2a.2.5 (JC6416)): `src/DB/Place.cpp:127-132` and
+    `src/States/OfekState.cpp:259-260`.
+  - Edits made with the editor tool only. Files whose remaining `userPreferences.` accesses are all
+    Data fields: whole-file `replace_all` into the file's main group, then per-field `replace_all`
+    to move the fields of the other groups (`DB.cpp`, `Omer.cpp`, `ShitaState.cpp`,
+    `SetClockState.cpp`: one group, no correction; `DayInfo.cpp`, `Place.cpp`, `Shita.cpp`,
+    `Logic.cpp`, `RegsScreen.cpp`, `EdotState.cpp`, `MinhagState.cpp`, `OfekState.cpp`: with
+    corrections). Per-field `replace_all` in `CoreService.cpp` (registry members and a comment),
+    `MainStateTimeSets.cpp` (F21 string), `MainStateInfoSets.cpp` and `MainState.cpp`.
+  - **Verification** (reference: the 2a.2.4 (JC4020) candidate build, source tree of `1cc19bf`):
+    - `pio run -d JC4020` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,055,536 bytes before and after (delta 0). RAM 61,132 and Flash 2,048,961
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256) and
+      33 in the trailer.
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 820 → 820, each consumer's sum
+      unchanged; 393 references moved to `DataPrefs` (the 8 in commented-out lines are not
+      counted). All other edges unchanged.
+    - `grep`: none of the 26 fields remains as `userPreferences.<field>` outside `Preferences/`,
+      comments included; every `dataPrefs.<group>.<field>` uses the group the field belongs to
+      (script check).
+    - `git diff --stat`: 16 files, 364 insertions, 348 deletions (348 replaced lines + 16
+      includes). `git ls-files --eol`: all 16 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
+  - **End of 2a.2 (JC4020):** `grep "userPreferences\s*\."` outside `Preferences/` finds only:
+    - Registry members:
+      - `resetSimplePrefs` — `src/States/ConfigState.cpp:81`, `:143`.
+      - `resetTextPrefs` — `src/States/ConfigState.cpp:101`, `:142`.
+      - `simplePrefs` — `src/BLE/CoreService.cpp:563`, `:710`.
+      - `allPrefs` — `src/BLE/CoreService.cpp:644`.
+      - `printAllValues` — `src/main.cpp:63`, commented out.
+    - Not accesses:
+      - A Hebrew comment that ends with the word: `src/BLE/CoreService.cpp:614`.
+      - The debug string `src/States/MainStateTimeSets.cpp:55` (F21; documented exception).
+    - Same list as at the end of 2a.2 (JC6416), plus the F21 string; `dayIndex` was removed in 7.08.
+    - **Replication progress** (`dependencies.md` §10, consumers only): 820 references before 2a.2
+      and after it, equal for each of the 25 consumers. By target after 2a.2: `DataPrefs` 393,
+      `LogicPrefs` 254, `PresentationPrefs` 74, `DisplayPrefs` 43, `SystemPrefs` 6, `UserContent`
+      6, `UserPreferences` direct 44 (registry members, `extern UserPreferences userPreferences;`
+      declarations, `UserPref` types in `TextCommandHandler`, `setupPreferences`). The §10 baseline
+      for JC4020 was Data 393, Logic 254, Presentation 74, Display 43, System 6, `UserPreferences`
+      direct 50; the 6 `textPrefs` references of `TextCommandHandler` moved from the direct row to
+      `UserContent`.
+  - `CLAUDE.md`: stage line — 2a.1–2a.2 done in JC6416 and JC4020; next JC6432, after deciding
+    the classification of `colorIvri`, `colorLoazi` and `colorParashaV`.
 
 ## Planned for next production release
 

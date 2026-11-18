@@ -1,6 +1,7 @@
 #include "States.h"
 #include "Logic.h"
 #include "DB\Place.h"
+#include "Preferences/DataPrefs.h"
 
 extern UserPreferences userPreferences;
 extern Logic bl;
@@ -17,7 +18,7 @@ bool globalchangedOfek = false;
 void irMukefetHomaStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.irMukefetHoma, ">");
-    if(userPreferences.homa==1) { sprintf(buffer, "%s %s", strings.irMukefetHoma, "<"); }
+    if(dataPrefs.place.homa==1) { sprintf(buffer, "%s %s", strings.irMukefetHoma, "<"); }
 }
 void OfekState::showStateScreen() 
 { 
@@ -39,8 +40,8 @@ void SetHomaCustomState::showStateScreen()
 }
 void SetHomaCustomState::okAction()
 {
-    if(userPreferences.homa==0) { userPreferences.homa= 1; }
-    else { userPreferences.homa= 0; } 
+    if(dataPrefs.place.homa==0) { dataPrefs.place.homa= 1; }
+    else { dataPrefs.place.homa= 0; } 
 }
 void SetOfekState::showStateScreen() 
 { 
@@ -52,7 +53,7 @@ void SetOfekState::showStateScreen()
 }
 void SetOfekState::menuAction() 
 { 
-    this->ofekTemp = userPreferences.ofek;
+    this->ofekTemp = dataPrefs.place.ofek;
 }
 void SetOfekState::upAction() 
 {
@@ -66,17 +67,17 @@ void SetOfekState::downAction()
 }
 void SetOfekState::okAction() 
 {
-    userPreferences.ofek= this->ofekTemp;
+    dataPrefs.place.ofek= this->ofekTemp;
     printUpdateSucc();
 }
 
 void lonStr(char* buffer)
 {
-    sprintf(buffer, "%.2f : %s",userPreferences.nz_long.getValue() , strings.kavOrech);
+    sprintf(buffer, "%.2f : %s",dataPrefs.place.nz_long.getValue() , strings.kavOrech);
 }
 void latStr(char* buffer)
 {
-    sprintf(buffer, "%.2f : %s",userPreferences.nz_lat.getValue() , strings.kavRohav);
+    sprintf(buffer, "%.2f : %s",dataPrefs.place.nz_lat.getValue() , strings.kavRohav);
 }
 void govaStr(char* buffer, int gova)
 {
@@ -85,7 +86,7 @@ void govaStr(char* buffer, int gova)
 void hulStr(char* buffer)
 {
     sprintf(buffer, "%s %s", strings.huzLaaretz, ">");
-    if(userPreferences.nz_hul==1) { sprintf(buffer, "%s %s", strings.huzLaaretz, "<"); }
+    if(dataPrefs.place.nz_hul==1) { sprintf(buffer, "%s %s", strings.huzLaaretz, "<"); }
 }
 void tzStr(char* buffer, int tz)
 {
@@ -98,7 +99,7 @@ void LonCustomState::showStateScreen()
     char lat[50];
     latStr(lat);
     char tz[50];
-    tzStr(tz, userPreferences.timezone);
+    tzStr(tz, dataPrefs.place.timezone);
     menuScreen.printMenu(strings.ofekTitle, tz, lon, lat); 
 }
 void LatCustomState::showStateScreen()
@@ -108,7 +109,7 @@ void LatCustomState::showStateScreen()
     char lat[50];
     latStr(lat);
     char gova[50];
-    govaStr(gova, userPreferences.nz_height);
+    govaStr(gova, dataPrefs.place.nz_height);
     menuScreen.printMenu(strings.ofekTitle, lon, lat, gova); 
 }
 void GovaCustomState::showStateScreen()
@@ -118,17 +119,17 @@ void GovaCustomState::showStateScreen()
     char hul[50];
     hulStr(hul);
     char gova[50];
-    govaStr(gova, userPreferences.nz_height);
+    govaStr(gova, dataPrefs.place.nz_height);
     menuScreen.printMenu(strings.ofekTitle, lat, gova, hul); 
 }
 void SetHulCustomState::showStateScreen()
 {
     char tz[50];
-    tzStr(tz, userPreferences.timezone);
+    tzStr(tz, dataPrefs.place.timezone);
     char hul[50];
     hulStr(hul);
     char gova[50];
-    govaStr(gova, userPreferences.nz_height);
+    govaStr(gova, dataPrefs.place.nz_height);
     menuScreen.printMenu(strings.ofekTitle, gova, hul, tz); 
 }
 void TimeZoneCustomState::showStateScreen()
@@ -136,7 +137,7 @@ void TimeZoneCustomState::showStateScreen()
     char lon[50];
     lonStr(lon);
     char tz[50];
-    tzStr(tz, userPreferences.timezone);
+    tzStr(tz, dataPrefs.place.timezone);
     char hul[50];
     hulStr(hul);
     menuScreen.printMenu(strings.ofekTitle, hul, tz, lon); 
@@ -145,8 +146,8 @@ void TimeZoneCustomState::showStateScreen()
 // hul
 void SetHulCustomState::okAction()
 {
-    if(userPreferences.nz_hul==0) { userPreferences.nz_hul= 1; userPreferences.hul= 1; }
-    else { userPreferences.nz_hul= 0; userPreferences.hul= 0; } 
+    if(dataPrefs.place.nz_hul==0) { dataPrefs.place.nz_hul= 1; dataPrefs.minhagim.hul= 1; }
+    else { dataPrefs.place.nz_hul= 0; dataPrefs.minhagim.hul= 0; } 
 }
 
 // Gova
@@ -164,7 +165,7 @@ void SetGovaCustomState::showStateScreen()
 }
 void SetGovaCustomState::menuAction() 
 { 
-    this->tempGova = userPreferences.nz_height;
+    this->tempGova = dataPrefs.place.nz_height;
 }
 void SetGovaCustomState::upAction() 
 {
@@ -178,9 +179,9 @@ void SetGovaCustomState::downAction()
 }
 void SetGovaCustomState::okAction() 
 {
-    if(this->tempGova != userPreferences.nz_height)
+    if(this->tempGova != dataPrefs.place.nz_height)
     {
-        userPreferences.nz_height= this->tempGova;
+        dataPrefs.place.nz_height= this->tempGova;
         initPlace();
         bl.configStates();
         bl.mainState.updateDayValues = true;   
@@ -202,7 +203,7 @@ void SetTimeZoneCustomState::showStateScreen()
 }
 void SetTimeZoneCustomState::menuAction() 
 { 
-    this->tempTZ = userPreferences.timezone;
+    this->tempTZ = dataPrefs.place.timezone;
 }
 void SetTimeZoneCustomState::upAction() 
 {
@@ -216,9 +217,9 @@ void SetTimeZoneCustomState::downAction()
 }
 void SetTimeZoneCustomState::okAction() 
 {
-    if(this->tempTZ != userPreferences.timezone)
+    if(this->tempTZ != dataPrefs.place.timezone)
     {
-        userPreferences.timezone= this->tempTZ;
+        dataPrefs.place.timezone= this->tempTZ;
         initPlace();
         bl.configStates();
         bl.mainState.updateDayValues = true;   
@@ -255,8 +256,8 @@ void SetLonCustomState::showStateScreen()
     // Serial.println("");
     // Serial.println("==================================");
     // Serial.println("showStateScreen");
-    // Serial.print("userPreferences.nz_long: ");
-    // Serial.println(userPreferences.nz_long);
+    // Serial.print("dataPrefs.place.nz_long: ");
+    // Serial.println(dataPrefs.place.nz_long);
     // Serial.print("lon: ");
     // if (lonPre <0) { Serial.print("-"); }
     // else { Serial.print("+"); }
@@ -279,7 +280,7 @@ void SetLonCustomState::menuAction()
         double_t lon = lonInt;
         lon += double(lonFrac)/100;
         lon *= lonPre;
-        userPreferences.nz_long= lon;
+        dataPrefs.place.nz_long= lon;
         printUpdateSucc();
     }
     this->changed=false;
@@ -410,7 +411,7 @@ void SetLatCustomState::menuAction()
         double_t lat = latInt;
         lat += double(latFrac)/100;
         lat *= latPre;
-        userPreferences.nz_lat= lat;
+        dataPrefs.place.nz_lat= lat;
         printUpdateSucc();
     }
     this->changed=false;
@@ -504,18 +505,18 @@ void SetCustomState::printUpdateSucc()
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbuwb  ifsgn"); 
     globalchangedOfek = false;
     initPlace();
-    userPreferences.ofek= 0;
+    dataPrefs.place.ofek= 0;
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
 void SetOfekState::printUpdateSucc()
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");
-    userPreferences.nerot= places[userPreferences.ofek].nerot;
-    userPreferences.homa= places[userPreferences.ofek].homa;
+    dataPrefs.zmanim.nerot= places[dataPrefs.place.ofek].nerot;
+    dataPrefs.place.homa= places[dataPrefs.place.ofek].homa;
     initPlace();
-    if(places[userPreferences.ofek].hul) { userPreferences.nz_hul= 1; userPreferences.hul = 1; }
-    if(!places[userPreferences.ofek].hul) { userPreferences.nz_hul= 0;  userPreferences.hul = 0; }
+    if(places[dataPrefs.place.ofek].hul) { dataPrefs.place.nz_hul= 1; dataPrefs.minhagim.hul = 1; }
+    if(!places[dataPrefs.place.ofek].hul) { dataPrefs.place.nz_hul= 0;  dataPrefs.minhagim.hul = 0; }
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }

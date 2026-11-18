@@ -1,4 +1,5 @@
 #include "DB.h"
+#include "Preferences/DataPrefs.h"
 
 DB db;
 
@@ -158,17 +159,17 @@ void DB::LoadDayValues(const LoaziDate& date, int days, const Place* place)
         LoadChaiValues(date, place->luchotChai); 
         // Serial.println("LoadChaiValues done.");
     }
-    if(place->orHachaim != nullptr && userPreferences.shita == 0) 
+    if(place->orHachaim != nullptr && dataPrefs.zmanim.shita == 0) 
     { 
         LoadOrValues(date, place->orHachaim); 
         // Serial.println("LoadOrValues done.");
     }
-    if(place->kiseRahamim != nullptr && userPreferences.shita == 1) 
+    if(place->kiseRahamim != nullptr && dataPrefs.zmanim.shita == 1) 
     { 
         LoadKiseValues(date, place->kiseRahamim); 
         // Serial.println("LoadKiseValues done.");
     }
-    if(userPreferences.shita == 6) 
+    if(dataPrefs.zmanim.shita == 6) 
     { 
         LoadTucValues(date, Tucazinsky_db); 
         // Serial.println("LoadTucValues done.");

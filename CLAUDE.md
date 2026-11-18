@@ -63,10 +63,11 @@ but the content differs in many places.
 
 **Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
 in JC6416 (through 2a.2.10: `count_deps.py` counts view access; `dependencies.md` regenerated
-with `tools/gen_deps_doc.py` as the baseline for the replication). Production 7.08 is synced into
-this repo. Next: replicate 2a.1 to JC4020. Then, in order: the rest of 2a.1–2a.2 to JC4020 and
-JC6432 (progress per step in `refactor-log.md`, measured against `dependencies.md` §10;
-regenerate `dependencies.md` at the end); then 2a.3 in all three models.
+with `tools/gen_deps_doc.py` as the baseline for the replication) and in JC4020 (2a.1, 2a.2.1–2a.2.5;
+verification rules in `refactor-log.md`). Production 7.08 is synced into this repo. Next: 2a.1–2a.2
+in JC6432 (progress per step in `refactor-log.md`, measured against `dependencies.md` §10;
+regenerate `dependencies.md` at the end). Before that, decide the classification of the JC6432-only
+`colorIvri`, `colorLoazi` and `colorParashaV`. Then 2a.3 in all three models.
 No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
 stay identical.
 
