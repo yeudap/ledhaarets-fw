@@ -1,10 +1,11 @@
 #include "States.h"
+#include "Preferences/DisplayPrefs.h"
 
 
 void SetBrightnessState::showStateScreen() { brightnessScreen.setBrightness(this->brightTemp); }
 void SetBrightnessState::menuAction() 
 { 
-    this->brightTemp = userPreferences.brightness;
+    this->brightTemp = displayPrefs.brightness;
     dma_display->setBrightness8(this->brightTemp); 
 }
 void SetBrightnessState::upAction() 
@@ -28,6 +29,6 @@ void SetBrightnessState::downAction()
 void SetBrightnessState::okAction() 
 {
     dma_display->setBrightness8(this->brightTemp);
-    userPreferences.brightness= this->brightTemp;
+    displayPrefs.brightness= this->brightTemp;
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohhubha  ifsgn");
 }

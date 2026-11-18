@@ -758,6 +758,34 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     - `git diff --stat`: 9 files, 66 insertions, 57 deletions (57 replaced lines + 9 includes).
       `git ls-files --eol`: all 9 files `w/crlf`, as before.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.3** (JC6432) — Display:
+  - `userPreferences.<field>` → `displayPrefs.<field>` for `brightness`, `colorUp`, `colorMiddle`,
+    `colorBottomT`, `colorBottomV`, `colorYom`, `colorParasha`, `colorIluy`, `clockFont` and the
+    JC6432 colors `colorIvri`, `colorLoazi`, `colorParashaV`: 64 occurrences on 56 lines in
+    `src/Logic.cpp` (20), `src/States/ColorState.cpp` (20), `src/Screens/RegsScreen.cpp` (16),
+    `src/States/FontState.cpp` (3), `src/main.cpp` (2), `src/States/BrightnessState.cpp` (2),
+    `src/States/MainState.cpp` (1), plus `#include "Preferences/DisplayPrefs.h"` in each. Same
+    files as 2a.2.3 (JC6416; 55 occurrences); the three JC6432 colors add 9 (`Logic` 3,
+    `ColorState` 6). No commented-out lines in this layer.
+  - Edits made with the editor tool only: whole-file `replace_all` in `ColorState.cpp`,
+    `FontState.cpp` and `BrightnessState.cpp` (every remaining `userPreferences.` access is a Display
+    field); per-field elsewhere, `colorParashaV` before `colorParasha` (prefix).
+  - **Verification** (reference: the 2a.2.2 (JC6432) candidate build, source tree of `abda574`):
+    - `pio run -d JC6432` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,072,400 bytes before and after (delta 0). RAM 61,924 and Flash 2,065,825
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256) and
+      32 in the trailer (two ranges; one byte happens to match).
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 847 → 847, each consumer's sum
+      unchanged. Moved to `DisplayPrefs`: `Logic` 20, `ColorState` 20, `RegsScreen` 16, `FontState`
+      3, `main` 2, `BrightnessState` 2, `MainState` 1 (64); `ColorState` and `BrightnessState` no
+      longer reference `UserPreferences`. All other edges unchanged.
+    - `grep`: none of the 12 fields remains as `userPreferences.<field>` outside `Preferences/`;
+      `displayPrefs.` 64 times; `displayPrefs.colorParashaV` 3 (`Logic` 1, `ColorState` 2).
+    - `git diff --stat`: 7 files, 63 insertions, 56 deletions (56 replaced lines + 7 includes).
+      `git ls-files --eol`: all 7 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 

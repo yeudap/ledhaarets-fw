@@ -2,6 +2,7 @@
 #include "DB/Place.h"
 #include "BLE/TextCommandHandler.h"
 #include "Preferences/PresentationPrefs.h"
+#include "Preferences/DisplayPrefs.h"
 
 MainScreen mainScreen;
 MenuScreen menuScreen;
@@ -38,25 +39,25 @@ void Logic::init()
 }
 void Logic::configStates()
 {
-    mainScreen.colorUp = color_list[userPreferences.colorUp];
-    mainScreen.colorMiddle = color_list[userPreferences.colorMiddle];
-    mainScreen.colorBottomT = color_list[userPreferences.colorBottomT];
-    mainScreen.colorBottomV = color_list[userPreferences.colorBottomV];
-    mainScreen.colorYom = color_list[userPreferences.colorYom];
-    mainScreen.colorIvri = color_list[userPreferences.colorIvri];
-    mainScreen.colorLoazi = color_list[userPreferences.colorLoazi];
-    mainScreen.colorParasha = color_list[userPreferences.colorParasha];
-    mainScreen.colorParashaV = color_list[userPreferences.colorParashaV];
-    mainScreen.colorIluy = color_list[userPreferences.colorIluy];
-    mainScreen.clockFont = font_list[userPreferences.clockFont];
+    mainScreen.colorUp = color_list[displayPrefs.colorUp];
+    mainScreen.colorMiddle = color_list[displayPrefs.colorMiddle];
+    mainScreen.colorBottomT = color_list[displayPrefs.colorBottomT];
+    mainScreen.colorBottomV = color_list[displayPrefs.colorBottomV];
+    mainScreen.colorYom = color_list[displayPrefs.colorYom];
+    mainScreen.colorIvri = color_list[displayPrefs.colorIvri];
+    mainScreen.colorLoazi = color_list[displayPrefs.colorLoazi];
+    mainScreen.colorParasha = color_list[displayPrefs.colorParasha];
+    mainScreen.colorParashaV = color_list[displayPrefs.colorParashaV];
+    mainScreen.colorIluy = color_list[displayPrefs.colorIluy];
+    mainScreen.clockFont = font_list[displayPrefs.clockFont];
     mainState.setText();
-    this->setColorUpLine.colorTemp = userPreferences.colorUp;
-    this->setColorMiddleLine.colorTemp = userPreferences.colorMiddle;
-    this->setColorBottomTLine.colorTemp = userPreferences.colorBottomT;
-    this->setColorBottomVLine.colorTemp = userPreferences.colorBottomV;
-    this->setColorYomLine.colorTemp = userPreferences.colorYom;
-    this->setColorParashaLine.colorTemp = userPreferences.colorParasha;
-    this->setColorIluyLine.colorTemp = userPreferences.colorIluy;
+    this->setColorUpLine.colorTemp = displayPrefs.colorUp;
+    this->setColorMiddleLine.colorTemp = displayPrefs.colorMiddle;
+    this->setColorBottomTLine.colorTemp = displayPrefs.colorBottomT;
+    this->setColorBottomVLine.colorTemp = displayPrefs.colorBottomV;
+    this->setColorYomLine.colorTemp = displayPrefs.colorYom;
+    this->setColorParashaLine.colorTemp = displayPrefs.colorParasha;
+    this->setColorIluyLine.colorTemp = displayPrefs.colorIluy;
     mainState.intervalTimeSet = userPreferences.intervalTime;
     mainState.intervalInfoSet = userPreferences.intervalInfo;
     mainState.intervalNameSet = userPreferences.intervalIluy;
@@ -64,7 +65,7 @@ void Logic::configStates()
     mainState.initInfoSetFuncList();
     mainState.showTimeToNetz = userPreferences.netzClk != 0;
     mainState.numOfValidTexts = handleGetTextCount().data1;
-    this->setBrightnessState.brightTemp = userPreferences.brightness;
+    this->setBrightnessState.brightTemp = displayPrefs.brightness;
     this->setOfekState.ofekTemp = userPreferences.ofek;
     this->showTime.showTemp = 1;
     this->setZrihaState.zrihaTemp = userPreferences.zriha;
@@ -84,7 +85,7 @@ void Logic::configStates()
     this->setTohenIluyStateKezevSet.kezevTemp = userPreferences.intervalIluy;
     this->setTohenTimeStateKezevSet.kezevTemp = userPreferences.intervalTime;
     this->minhagNerotSetState.nerotTemp = userPreferences.nerot;
-    this->setFontState.fontTemp = userPreferences.clockFont;
+    this->setFontState.fontTemp = displayPrefs.clockFont;
     this->setTohenBottomLineNetzSet.netzTemp = userPreferences.netzClk;
     this->minhagShanimSetState.shanimTemp = userPreferences.shanim;
     this->setShaonKaiz.kaizTemp = userPreferences.shaonKaiz;

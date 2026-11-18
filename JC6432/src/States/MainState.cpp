@@ -2,6 +2,7 @@
 #include "DB/DB.h"
 #include "BLE/TextCommandHandler.h"
 #include "Preferences/PresentationPrefs.h"
+#include "Preferences/DisplayPrefs.h"
 
 extern Place* place;
 extern DayInfo dayInfo;
@@ -62,7 +63,7 @@ void MainState::showStateScreen()
     flagTimeSetChanged=false;
     flagNameSetChanged=false;
     flagInfoSetChanged=false;
-    if(userPreferences.clockFont == 0) { morphing=true;}
+    if(displayPrefs.clockFont == 0) { morphing=true;}
 }
 void MainState::stateLoop()
 {

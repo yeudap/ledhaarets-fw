@@ -1,4 +1,5 @@
 #include "Logic.h"
+#include "Preferences/DisplayPrefs.h"
 
 extern Logic bl;
 
@@ -106,7 +107,7 @@ void ColorIluyLine::stateLoop()
 void SetColorUpLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorUpLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorUp;
+    this->colorTemp = displayPrefs.colorUp;
 }
 void SetColorUpLine::upAction() 
 {
@@ -120,14 +121,14 @@ void SetColorUpLine::downAction()
 }
 void SetColorUpLine::okAction() 
 {
-    userPreferences.colorUp= this->colorTemp;
+    displayPrefs.colorUp= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
 void SetColorMiddleLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorMiddleLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorMiddle;
+    this->colorTemp = displayPrefs.colorMiddle;
 }
 void SetColorMiddleLine::upAction() 
 {
@@ -141,14 +142,14 @@ void SetColorMiddleLine::downAction()
 }
 void SetColorMiddleLine::okAction() 
 {
-    userPreferences.colorMiddle= this->colorTemp;
+    displayPrefs.colorMiddle= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
 void SetColorBottomTLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorBottomTLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorBottomT;
+    this->colorTemp = displayPrefs.colorBottomT;
 }
 void SetColorBottomTLine::upAction() 
 {
@@ -162,14 +163,14 @@ void SetColorBottomTLine::downAction()
 }
 void SetColorBottomTLine::okAction() 
 {
-    userPreferences.colorBottomT= this->colorTemp;
+    displayPrefs.colorBottomT= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
 void SetColorBottomVLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorBottomVLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorBottomV;
+    this->colorTemp = displayPrefs.colorBottomV;
 }
 void SetColorBottomVLine::upAction() 
 {
@@ -183,7 +184,7 @@ void SetColorBottomVLine::downAction()
 }
 void SetColorBottomVLine::okAction() 
 {
-    userPreferences.colorBottomV= this->colorTemp;
+    displayPrefs.colorBottomV= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
@@ -191,7 +192,7 @@ void SetColorBottomVLine::okAction()
 void SetColorYomLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorYomLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorYom;
+    this->colorTemp = displayPrefs.colorYom;
 }
 void SetColorYomLine::upAction() 
 {
@@ -205,7 +206,7 @@ void SetColorYomLine::downAction()
 }
 void SetColorYomLine::okAction() 
 {
-    userPreferences.colorYom= this->colorTemp;
+    displayPrefs.colorYom= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
@@ -213,7 +214,7 @@ void SetColorYomLine::okAction()
 void SetColorIvriLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorIvriLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorIvri;
+    this->colorTemp = displayPrefs.colorIvri;
 }
 void SetColorIvriLine::upAction() 
 {
@@ -227,7 +228,7 @@ void SetColorIvriLine::downAction()
 }
 void SetColorIvriLine::okAction() 
 {
-    userPreferences.colorIvri= this->colorTemp;
+    displayPrefs.colorIvri= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
@@ -235,7 +236,7 @@ void SetColorIvriLine::okAction()
 void SetColorLoaziLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorLoaziLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorLoazi;
+    this->colorTemp = displayPrefs.colorLoazi;
 }
 void SetColorLoaziLine::upAction() 
 {
@@ -249,7 +250,7 @@ void SetColorLoaziLine::downAction()
 }
 void SetColorLoaziLine::okAction() 
 {
-    userPreferences.colorLoazi= this->colorTemp;
+    displayPrefs.colorLoazi= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
@@ -257,7 +258,7 @@ void SetColorLoaziLine::okAction()
 void SetColorParashaLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorParashaLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorParasha;
+    this->colorTemp = displayPrefs.colorParasha;
 }
 void SetColorParashaLine::upAction() 
 {
@@ -271,7 +272,7 @@ void SetColorParashaLine::downAction()
 }
 void SetColorParashaLine::okAction() 
 {
-    userPreferences.colorParasha= this->colorTemp;
+    displayPrefs.colorParasha= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
@@ -279,7 +280,7 @@ void SetColorParashaLine::okAction()
 void SetColorParashaVLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorParashaVLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorParashaV;
+    this->colorTemp = displayPrefs.colorParashaV;
 }
 void SetColorParashaVLine::upAction() 
 {
@@ -293,7 +294,7 @@ void SetColorParashaVLine::downAction()
 }
 void SetColorParashaVLine::okAction() 
 {
-    userPreferences.colorParashaV = this->colorTemp;
+    displayPrefs.colorParashaV = this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }
@@ -301,7 +302,7 @@ void SetColorParashaVLine::okAction()
 void SetColorIluyLine::showStateScreen() { colorScreen.setColor(this->colorTemp); }
 void SetColorIluyLine::menuAction() 
 { 
-    this->colorTemp = userPreferences.colorIluy;
+    this->colorTemp = displayPrefs.colorIluy;
 }
 void SetColorIluyLine::upAction() 
 {
@@ -315,7 +316,7 @@ void SetColorIluyLine::downAction()
 }
 void SetColorIluyLine::okAction() 
 {
-    userPreferences.colorIluy= this->colorTemp;
+    displayPrefs.colorIluy= this->colorTemp;
     bl.configStates();
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohgcm  ifsgn");
 }

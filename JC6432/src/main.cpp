@@ -2,6 +2,7 @@
 #include "DB/DB.h"
 #include "Logic.h"
 #include "Preferences/SystemPrefs.h"
+#include "Preferences/DisplayPrefs.h"
 
 extern ButtonCommand currentButtonCommand;
 extern MenuCommand currentMenuCommand;
@@ -27,7 +28,7 @@ void setup()
   strings.setStringsHeb();
   logoScreen.printScreen();
   setupPreferences();
-  int i = userPreferences.brightness;
+  int i = displayPrefs.brightness;
   for (i; i > 0; i--)
   {
     dma_display->setBrightness8(i);
@@ -38,7 +39,7 @@ void setup()
     dma_display->setBrightness8(i);
     delay(5);
   }
-  dma_display->setBrightness8(userPreferences.brightness);
+  dma_display->setBrightness8(displayPrefs.brightness);
   validate_rtc();
   validate_time();
   initPlace();
