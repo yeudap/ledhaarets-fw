@@ -27,7 +27,8 @@ name longer than 15 characters (NVS limit: NVS_KEY_NAME_MAX_SIZE is 16 including
 in the lists or in the NVS log.
 
 Baselines: docs/contracts/prefs/<model>.txt (LF). They are written only by `write` (CLAUDE.md,
-exception to the editor-tools rule).
+exception to the editor-tools rule). `check` reads a CRLF working copy (core.autocrlf, after a
+checkout) as LF.
 
 Usage (Python 3.8+, no packages needed; run from the repo root, Git Bash):
 
@@ -198,7 +199,7 @@ def main(argv):
             new = contract(m, None, cxx)
             try:
                 with open(base_path(m), encoding='utf-8', newline='') as f:
-                    old = f.read()
+                    old = f.read().replace('\r\n', '\n')   # CRLF after a checkout (autocrlf)
             except FileNotFoundError:
                 old = ''
             if old == new:
