@@ -703,6 +703,29 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     `Screens/MainScreen.cpp:91` reads `dateFormat` from Presentation, a cross-layer coupling for the
     layer-isolation stage; not changed in 2a.
   - **Clock test:** not needed; the image is byte-identical.
+- **2a.2** (JC6432) — replication of 2a.2, same rule, layer order and verification as 2a.2 (JC4020)
+  (sub-steps 2a.2.1–2a.2.5; the `CoreService` `isZeetPref` lines move with Data). Expected
+  `TextCommandHandler → UserContent`: 7 (no commented-out `textPrefs` line in JC6432). The three
+  JC6432 colors move with Display, `screen` with Presentation (`layout`).
+- **2a.2.1** (JC6432) — System: `userPreferences.bt` → `systemPrefs.bt`, 6 places:
+  `src/States/ConfigState.cpp` (5) and `src/main.cpp` (1), plus `#include "Preferences/SystemPrefs.h"`
+  after the last existing include in both files. Same as 2a.2.1 (JC6416).
+  - Edits made with the editor tool only (per-field `replace_all`).
+  - **Verification** (reference: the 2a.1 (JC6432) candidate build, source tree of `2dcc4e5`):
+    - `pio run -d JC6432` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,072,400 bytes before and after (delta 0). RAM 61,924 and Flash 2,065,825
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 31 bytes in `app_desc` (ELF SHA-256; one
+      byte happens to match) and 33 in the trailer.
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 847 → 847; `ConfigState` 9
+      (`SystemPrefs` 5, `UserPreferences` 4), `main` 4 (`SystemPrefs` 1, `UserPreferences` 3);
+      all other edges unchanged.
+    - `grep`: no `userPreferences.bt` outside `Preferences/`; `systemPrefs.bt` 6 times.
+    - `git diff --stat`: 2 files, 8 insertions, 6 deletions (6 replaced lines + 2 includes).
+      `git ls-files --eol`: both `w/crlf`, as before.
+  - F20: "Models" line updated (JC6432 has views since 2a.1).
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 
@@ -1010,7 +1033,7 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   Git touches it".
 - **Status:** no action needed — working copy only; the index is LF for all files, and a fresh
   checkout makes the views CRLF like the rest.
-- **Models:** JC6416, JC4020. JC6432 has no views yet.
+- **Models:** JC6416, JC4020, JC6432 (all three since 2a.1 in each).
 
 ### F21 — JC4020: live debug print of a condition text in `MainStateTimeSets.cpp`
 

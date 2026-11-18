@@ -1,6 +1,7 @@
 #include "Hardware.h"
 #include "DB/DB.h"
 #include "Logic.h"
+#include "Preferences/SystemPrefs.h"
 
 extern ButtonCommand currentButtonCommand;
 extern MenuCommand currentMenuCommand;
@@ -57,7 +58,7 @@ void setup()
   Serial.println("setup done.");
   Serial.print("SWversion: ");
   Serial.println(Metadata::SWversion);
-  if(userPreferences.bt == 1) initBluetooth();
+  if(systemPrefs.bt == 1) initBluetooth();
   // userPreferences.printAllValues();
   sleep(1);
   // dumpMem("Main");
