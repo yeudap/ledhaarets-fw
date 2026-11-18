@@ -823,6 +823,61 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     - `git diff --stat`: 10 files, 236 insertions, 226 deletions (226 replaced lines + 10
       includes). `git ls-files --eol`: all 10 files `w/crlf`, as before.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.5** (JC6432) — Data (last layer; includes the `CoreService` `isZeetPref` lines):
+  - `userPreferences.<field>` → `dataPrefs.place.<field>`, `dataPrefs.zmanim.<field>` and
+    `dataPrefs.minhagim.<field>` for the 26 Data fields: 408 occurrences (place 91, zmanim 245,
+    minhagim 72) on 352 lines in 17 files: `src/DB/Shita.cpp` (144), `src/States/MinhagState.cpp`
+    (48), `src/Screens/RegsScreen.cpp` (42), `src/States/OfekState.cpp` (41), `src/DB/DayInfo.cpp`
+    (40), `src/Logic.cpp` (19), `src/DB/Place.cpp` (19), `src/States/EdotState.cpp` (17),
+    `src/States/MainStateInfoSets1.cpp` (7), `src/States/MainStateInfoSets2.cpp` (7),
+    `src/DB/Omer.cpp` (6), `src/States/SetClockState.cpp` (5), `src/BLE/CoreService.cpp` (4),
+    `src/DB/DB.cpp` (3), `src/States/ShitaState.cpp` (3), `src/States/MainStateTimeSets.cpp` (2),
+    `src/States/MainState.cpp` (1), plus `#include "Preferences/DataPrefs.h"` after the last
+    existing include in each.
+  - Same files and per-file counts as 2a.2.5 + 2a.2.7 (JC6416), except the `MainStateInfoSets`
+    split (7 + 7; JC6416 7). Commented-out debug lines replaced, label text included, as in JC6416:
+    `src/DB/Place.cpp:127-132` and `src/States/OfekState.cpp:260-261`.
+  - Edits made with the editor tool only, as in 2a.2.5 (JC4020): whole-file `replace_all` into the
+    file's main group, then per-field `replace_all` for the fields of the other groups, in files
+    whose remaining accesses are all Data (`DB.cpp`, `Omer.cpp`, `ShitaState.cpp`,
+    `SetClockState.cpp`, `MainStateTimeSets.cpp`: one group; `DayInfo.cpp`, `Place.cpp`,
+    `Shita.cpp`, `Logic.cpp`, `RegsScreen.cpp`, `EdotState.cpp`, `MinhagState.cpp`,
+    `OfekState.cpp`, `MainStateInfoSets1/2.cpp`: with corrections); per-field in `CoreService.cpp`
+    (registry members and a comment) and `MainState.cpp`.
+  - **Verification** (reference: the 2a.2.4 (JC6432) candidate build, source tree of `bb40ec0`):
+    - `pio run -d JC6432` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,072,400 bytes before and after (delta 0). RAM 61,924 and Flash 2,065,825
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256) and
+      33 in the trailer.
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 847 → 847, each consumer's sum
+      unchanged; 400 references moved to `DataPrefs` (the 8 in commented-out lines are not
+      counted). All other edges unchanged.
+    - `grep`: none of the 26 fields remains as `userPreferences.<field>` outside `Preferences/`,
+      comments included; every `dataPrefs.<group>.<field>` uses the group the field belongs to
+      (script check).
+    - `git diff --stat`: 17 files, 369 insertions, 352 deletions (352 replaced lines + 17
+      includes). `git ls-files --eol`: all 17 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
+  - **End of 2a.2 (JC6432):** `grep "userPreferences\s*\."` outside `Preferences/` finds only:
+    - Registry members:
+      - `resetSimplePrefs` — `src/States/ConfigState.cpp:81`, `:143`.
+      - `resetTextPrefs` — `src/States/ConfigState.cpp:101`, `:142`.
+      - `simplePrefs` — `src/BLE/CoreService.cpp:563`, `:710`.
+      - `allPrefs` — `src/BLE/CoreService.cpp:644`.
+      - `printAllValues` — `src/main.cpp:63`, commented out.
+    - A Hebrew comment that ends with the word: `src/BLE/CoreService.cpp:614`. Not an access.
+    - Same list as at the end of 2a.2 (JC6416).
+    - **Replication progress** (`dependencies.md` §10, consumers only): 847 references before 2a.2
+      and after it, equal for each of the 29 consumers. By target after 2a.2: `DataPrefs` 400,
+      `LogicPrefs` 258, `DisplayPrefs` 64 (the §10 rows `DisplayPrefs` 55 + JC6432 colors 9),
+      `PresentationPrefs` 62, `UserContent` 7, `SystemPrefs` 6, `UserPreferences` direct 50
+      (§10: 57; the 7 `textPrefs` references of `TextCommandHandler` moved to `UserContent`).
+  - **End of 2a.1–2a.2:** all three models access preferences through the layer views; only the
+    registry members remain on `userPreferences`.
+  - `CLAUDE.md`: stage line — 2a.1–2a.2 done in all three models; next: regenerate
+    `dependencies.md`, then 2a.3.
 
 ## Planned for next production release
 

@@ -1,5 +1,6 @@
 #include "States.h"
 #include "Preferences/LogicPrefs.h"
+#include "Preferences/DataPrefs.h"
 extern DayInfo dayInfo;
 extern DayInfo dayInfoTomorrow;
 
@@ -94,7 +95,7 @@ void MainState::infoSet_2_RegularDay()
                     else if(isTimeInRange(Zman(13,1),Zman(23,59))) { str =  strings.moridHatal; }
                     else { str = strings.mashivHaruah; }
                 }
-                else if((dayInfo.isSimchatTora && userPreferences.hul==0) || (dayInfo.isShminiAzeret))
+                else if((dayInfo.isSimchatTora && dataPrefs.minhagim.hul==0) || (dayInfo.isShminiAzeret))
                 {
                     if(isTimeInRange(Zman(5,0),Zman(13,0))) { str =  strings.mashivHaruahMimusaf; }
                     else if(isTimeInRange(Zman(13,1),Zman(23,59))) { str = strings.mashivHaruah; }
@@ -446,7 +447,7 @@ void MainState::infoSet_2_Purim()
 bool MainState::flaginfoSet_2_Purim()
 {
     bool f = logicPrefs.moadim==1;
-    f = f && ((userPreferences.homa==1 && dayInfo.isShushanPurim)||(userPreferences.homa==0 && dayInfo.isPurim));
+    f = f && ((dataPrefs.place.homa==1 && dayInfo.isShushanPurim)||(dataPrefs.place.homa==0 && dayInfo.isPurim));
     return f || showAll2;
 }
 // דף היומי ירושלמי
@@ -474,7 +475,7 @@ void MainState::infoSet_2_Haftara()
 bool MainState::flaginfoSet_2_Haftara()
 {
     bool f = dayInfo.isShabat || dayInfo.isHag || dayInfo.isYomKipur || dayInfo.isTishaBeav;
-    f = f || (dayInfo.isZom && (userPreferences.eda == ASHKENAZ || userPreferences.eda == CHABAD || userPreferences.eda == SFARAD));
+    f = f || (dayInfo.isZom && (dataPrefs.minhagim.eda == ASHKENAZ || dataPrefs.minhagim.eda == CHABAD || dataPrefs.minhagim.eda == SFARAD));
     f = f || (logicPrefs.showIsraeli==1 && dayInfo.isAzmaut);
     f = f && logicPrefs.haftara==1;
     return f || showAll2;
@@ -513,7 +514,7 @@ void MainState::infoSet_2_Chabad()
 }
 bool MainState::flaginfoSet_2_Chabad()
 {
-    bool f = userPreferences.eda==6;
+    bool f = dataPrefs.minhagim.eda==6;
     f = f && dayInfo.isYomChabad;
     return f || showAll2;
 }

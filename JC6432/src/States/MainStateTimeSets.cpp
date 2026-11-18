@@ -1,5 +1,6 @@
 #include "States.h"
 #include "Preferences/LogicPrefs.h"
+#include "Preferences/DataPrefs.h"
 extern DayInfo dayInfo;
 
 
@@ -63,7 +64,7 @@ void MainState::timeSetSozShma()
     mainScreen.update(mainScreen.zmanRightDown, dayInfo.sofZmanShmaMga, txtZmanV);
     mainScreen.update(mainScreen.zmanMiddleUp, strings.sofZman, txtZmanT);
     mainScreen.update(mainScreen.zmanMiddleDown, strings.ks, txtZmanT);
-    if(userPreferences.eda==CHABAD) { mainScreen.update(mainScreen.zmanLeftUp, strings.adhaz, txtZmanT); }
+    if(dataPrefs.minhagim.eda==CHABAD) { mainScreen.update(mainScreen.zmanLeftUp, strings.adhaz, txtZmanT); }
     else { mainScreen.update(mainScreen.zmanLeftUp, strings.gra, txtZmanT); }
     mainScreen.update(mainScreen.zmanLeftDown, dayInfo.sofZmanShmaGra, txtZmanV);
 }
@@ -86,7 +87,7 @@ void MainState::timeSetSozTfila()
     mainScreen.update(mainScreen.zmanRightDown, dayInfo.sofZmanTfilaMga, txtZmanV);
     mainScreen.update(mainScreen.zmanMiddleUp, strings.sofZman, txtZmanT);
     mainScreen.update(mainScreen.zmanMiddleDown, strings.tfila, txtZmanT);
-    if(userPreferences.eda==CHABAD) { mainScreen.update(mainScreen.zmanLeftUp, strings.adhaz, txtZmanT); }
+    if(dataPrefs.minhagim.eda==CHABAD) { mainScreen.update(mainScreen.zmanLeftUp, strings.adhaz, txtZmanT); }
     else{ mainScreen.update(mainScreen.zmanLeftUp, strings.gra, txtZmanT); }
     mainScreen.update(mainScreen.zmanLeftDown, dayInfo.sofZmanTfilaGra, txtZmanV);
 }

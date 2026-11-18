@@ -11,6 +11,7 @@
 #include "TextCommandHandler.h"
 #include "Logic.h"
 #include "Preferences/UserPreferences.h"
+#include "Preferences/DataPrefs.h"
 
 extern bool            deviceConnected;
 extern UserPreferences userPreferences;
@@ -651,10 +652,10 @@ static void handlePref(const uint8_t* payload, size_t len)
                     }
 
                     // בדיקת טווח לפני שהערך נכנס להעדפה: ערך מחוץ לטווח היה גורם לקריאה מחוץ למערך
-                    bool isZeetPref = (pref == &userPreferences.zeetCochavim ||
-                                       pref == &userPreferences.rabenuTam ||
-                                       pref == &userPreferences.zeetShabat ||
-                                       pref == &userPreferences.zeetZom);
+                    bool isZeetPref = (pref == &dataPrefs.zmanim.zeetCochavim ||
+                                       pref == &dataPrefs.zmanim.rabenuTam ||
+                                       pref == &dataPrefs.zmanim.zeetShabat ||
+                                       pref == &dataPrefs.zmanim.zeetZom);
                     if ((pref->getIndex() == 4 && (valueLen < 1 || valueStart[0] >= numOfShitot)) ||
                         (pref->getIndex() == 6 && (valueLen < 1 || valueStart[0] >= numOfOfeks)) ||
                         (isZeetPref && (valueLen < 1 || valueStart[0] > numOfZeetCochavin)))

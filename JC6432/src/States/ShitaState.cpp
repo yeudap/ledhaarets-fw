@@ -1,6 +1,7 @@
 #include "States.h"
 #include "Logic.h"
 #include "DB\Shita.h"
+#include "Preferences/DataPrefs.h"
 
 extern UserPreferences userPreferences;
 extern Logic bl;
@@ -16,7 +17,7 @@ void ShitaState::showStateScreen()
 }
 void ShitaState::menuAction() 
 { 
-    this->shitaTemp = userPreferences.shita;
+    this->shitaTemp = dataPrefs.zmanim.shita;
 }
 void ShitaState::upAction() 
 {
@@ -30,12 +31,12 @@ void ShitaState::downAction()
 }
 void ShitaState::okAction() 
 {
-    userPreferences.shita= this->shitaTemp;
+    dataPrefs.zmanim.shita= this->shitaTemp;
     setShita();
 }
 void ShitaState::setShita() 
 {
-    shitot[userPreferences.shita]->setDefault();
+    shitot[dataPrefs.zmanim.shita]->setDefault();
     bl.configStates();
     bl.mainState.updateDayValues = true;
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");

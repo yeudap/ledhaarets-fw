@@ -1,4 +1,5 @@
 #include "Shita.h"
+#include "Preferences/DataPrefs.h"
 extern UserPreferences userPreferences;
 extern Place* place;
 
@@ -54,7 +55,7 @@ void orHachaim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaa
     minhaGdola = calcMinhaG(s, hatsot, zrihaA, shkiaaA).round();
     minhaKtana = calcTimeZmaniot(zrihaA, zrihaA, shkiaaA, 9.5*60).ceil();
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, zeet).ceil();
-    shabatIn = shkiaaA.ceil() - userPreferences.nerot;
+    shabatIn = shkiaaA.ceil() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaA, shkiaaA).ceil() +1;
     tzomIn = alotHashahar;
     tzomOut = calcZeetZom(s, zrihaA, shkiaaA).ceil();
@@ -64,19 +65,19 @@ void orHachaim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaa
 }
 void orHachaim::setDefault()
 {
-    userPreferences.zriha= 2;        // הנראית
-    userPreferences.shkiaa= 3;       // אסטרונומית
-    userPreferences.zeetCochavim= 2; // 13.5 זמניות
-    userPreferences.rabenuTam= 21;   // 72 זמניות
-    userPreferences.zmanTalit= 5;    // 66 זמניות
-    userPreferences.alotHashahar= 2; // 72 זמניות
-    userPreferences.sozksMga= 2;     // עלות השחר 72
-    userPreferences.soztMga= 2;      // עלות השחר 72
-    userPreferences.minhaG= 3;       // 30 לחומרא
-    userPreferences.plagMinha= 1;    // הגר"א
-    userPreferences.zeetShabat= 14;  // 30 קבועות
-    userPreferences.zeetZom= 2;      // 13.5 זמניות
-    if(place->orHachaim) { userPreferences.nerot= 0; }
+    dataPrefs.zmanim.zriha= 2;        // הנראית
+    dataPrefs.zmanim.shkiaa= 3;       // אסטרונומית
+    dataPrefs.zmanim.zeetCochavim= 2; // 13.5 זמניות
+    dataPrefs.zmanim.rabenuTam= 21;   // 72 זמניות
+    dataPrefs.zmanim.zmanTalit= 5;    // 66 זמניות
+    dataPrefs.zmanim.alotHashahar= 2; // 72 זמניות
+    dataPrefs.zmanim.sozksMga= 2;     // עלות השחר 72
+    dataPrefs.zmanim.soztMga= 2;      // עלות השחר 72
+    dataPrefs.zmanim.minhaG= 3;       // 30 לחומרא
+    dataPrefs.zmanim.plagMinha= 1;    // הגר"א
+    dataPrefs.zmanim.zeetShabat= 14;  // 30 קבועות
+    dataPrefs.zmanim.zeetZom= 2;      // 13.5 זמניות
+    if(place->orHachaim) { dataPrefs.zmanim.nerot= 0; }
 }
 
 void kiseRachamim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -98,7 +99,7 @@ void kiseRachamim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shk
     minhaGdola = calcMinhaG(s, hatsot, zrihaM, shkiaaM).round();
     minhaKtana = calcTimeZmaniot(zrihaM, zrihaM, shkiaaM, 9.5*60).ceil();
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, shkiaaM).round();
-    shabatIn = shkiaaM.ceil() - userPreferences.nerot;
+    shabatIn = shkiaaM.ceil() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaM, shkiaaM).ceil();
     tzomIn = alot72.floor();
     tzomOut = calcZeetZom(s, zrihaA, shkiaaA).ceil();
@@ -108,19 +109,19 @@ void kiseRachamim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shk
 }
 void kiseRachamim::setDefault()
 {
-    userPreferences.zriha= 2;        // הנראית
-    userPreferences.shkiaa= 3;       // אסטרונומית
-    userPreferences.zeetCochavim= 7; // 4.61 מעלות
-    userPreferences.rabenuTam= 20;   // 72 קבועות
-    userPreferences.zmanTalit= 4;    // 60 קבועות
-    userPreferences.alotHashahar= 4; // 16.013 מעלות
-    userPreferences.sozksMga= 2;     // עלות השחר 72
-    userPreferences.soztMga= 2;      // עלות השחר 72
-    userPreferences.minhaG= 1;       // 30 קבועות
-    userPreferences.plagMinha= 1;    // הגר"א
-    userPreferences.zeetShabat= 16;  // 8.5 מעלות
-    userPreferences.zeetZom= 10;     // 20 קבועות
-    if(place->kiseRahamim) { userPreferences.nerot= 0; }
+    dataPrefs.zmanim.zriha= 2;        // הנראית
+    dataPrefs.zmanim.shkiaa= 3;       // אסטרונומית
+    dataPrefs.zmanim.zeetCochavim= 7; // 4.61 מעלות
+    dataPrefs.zmanim.rabenuTam= 20;   // 72 קבועות
+    dataPrefs.zmanim.zmanTalit= 4;    // 60 קבועות
+    dataPrefs.zmanim.alotHashahar= 4; // 16.013 מעלות
+    dataPrefs.zmanim.sozksMga= 2;     // עלות השחר 72
+    dataPrefs.zmanim.soztMga= 2;      // עלות השחר 72
+    dataPrefs.zmanim.minhaG= 1;       // 30 קבועות
+    dataPrefs.zmanim.plagMinha= 1;    // הגר"א
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 מעלות
+    dataPrefs.zmanim.zeetZom= 10;     // 20 קבועות
+    if(place->kiseRahamim) { dataPrefs.zmanim.nerot= 0; }
 }
 
 void chazonShamaim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -141,7 +142,7 @@ void chazonShamaim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman sh
     minhaKtana = calcTimeZmaniot(zrihaM, zrihaM, shkiaaM, 9.5*60).ceil();
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, shkiaaM).ceil();
     tzetHacochavim = calcZeetCochavim(s, zrihaM, shkiaaM).ceil();
-    shabatIn = shkiaaA.round() - userPreferences.nerot;
+    shabatIn = shkiaaA.round() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaM, shkiaaM).ceil();
     rabenuTam = calcRabenuTam(s, zrihaA, shkiaaA).round();
     tzomIn = alotHashahar;
@@ -152,18 +153,18 @@ void chazonShamaim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman sh
 }
 void chazonShamaim::setDefault()
 {
-    userPreferences.zriha= 1;        // מישורית
-    userPreferences.shkiaa= 3;       // אסטרונומית
-    userPreferences.zeetCochavim= 8; // 4.725 במעלות
-    userPreferences.rabenuTam= 20;   // 72 קבועות
-    userPreferences.zmanTalit= 10;   // 11.5 מעלות
-    userPreferences.alotHashahar= 4; // 16.013 במעלות
-    userPreferences.sozksMga= 1;     // עלות השחר 90
-    userPreferences.soztMga= 1;      // עלות השחר 90
-    userPreferences.minhaG= 3;       // 30 לחומרא
-    userPreferences.plagMinha= 1;    // הגר"א
-    userPreferences.zeetShabat= 16;  // 8.5 במעלות
-    userPreferences.zeetZom= 13;     // 6.45 במעלות
+    dataPrefs.zmanim.zriha= 1;        // מישורית
+    dataPrefs.zmanim.shkiaa= 3;       // אסטרונומית
+    dataPrefs.zmanim.zeetCochavim= 8; // 4.725 במעלות
+    dataPrefs.zmanim.rabenuTam= 20;   // 72 קבועות
+    dataPrefs.zmanim.zmanTalit= 10;   // 11.5 מעלות
+    dataPrefs.zmanim.alotHashahar= 4; // 16.013 במעלות
+    dataPrefs.zmanim.sozksMga= 1;     // עלות השחר 90
+    dataPrefs.zmanim.soztMga= 1;      // עלות השחר 90
+    dataPrefs.zmanim.minhaG= 3;       // 30 לחומרא
+    dataPrefs.zmanim.plagMinha= 1;    // הגר"א
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 במעלות
+    dataPrefs.zmanim.zeetZom= 13;     // 6.45 במעלות
 }
 
 void yeshiva::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -185,7 +186,7 @@ void yeshiva::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM,
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, shkiaaM).floor();
     tzetHacochavim = calcZeetCochavim(s, zrihaM, shkiaaM).ceil();
     rabenuTam = calcRabenuTam(s, zrihaM, shkiaaM).round();
-    shabatIn = shkiaaM.ceil() - userPreferences.nerot;
+    shabatIn = shkiaaM.ceil() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaM, shkiaaM).floor();
     tzomIn = alot72.floor();
     tzomOut = tzetHacochavim;
@@ -195,18 +196,18 @@ void yeshiva::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM,
 }
 void yeshiva::setDefault()
 {
-    userPreferences.zriha= 2;        // הנראית
-    userPreferences.shkiaa= 1;       // מישורית
-    userPreferences.zeetCochavim= 6; // 18 לחומרא
-    userPreferences.rabenuTam= 20;   // 72 קבועות
-    userPreferences.zmanTalit= 1;    // 45 קבועות
-    userPreferences.alotHashahar= 1; // 72 קבועות
-    userPreferences.sozksMga= 2;     // עלות השחר 72
-    userPreferences.soztMga= 2;      // עלות השחר 72
-    userPreferences.minhaG= 3;       // 30 לחומרא
-    userPreferences.plagMinha= 1;    // הגר"א
-    userPreferences.zeetShabat= 16;  // 8.5 במעלות
-    userPreferences.zeetZom= 6;      // 18 לחומרא
+    dataPrefs.zmanim.zriha= 2;        // הנראית
+    dataPrefs.zmanim.shkiaa= 1;       // מישורית
+    dataPrefs.zmanim.zeetCochavim= 6; // 18 לחומרא
+    dataPrefs.zmanim.rabenuTam= 20;   // 72 קבועות
+    dataPrefs.zmanim.zmanTalit= 1;    // 45 קבועות
+    dataPrefs.zmanim.alotHashahar= 1; // 72 קבועות
+    dataPrefs.zmanim.sozksMga= 2;     // עלות השחר 72
+    dataPrefs.zmanim.soztMga= 2;      // עלות השחר 72
+    dataPrefs.zmanim.minhaG= 3;       // 30 לחומרא
+    dataPrefs.zmanim.plagMinha= 1;    // הגר"א
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 במעלות
+    dataPrefs.zmanim.zeetZom= 6;      // 18 לחומרא
 }
 
 void habad::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -228,7 +229,7 @@ void habad::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Z
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, shkiaaN).ceil();
     tzetHacochavim = calcZeetCochavim(s, zrihaM, shkiaaM).ceil();
     rabenuTam = calcRabenuTam(s, zrihaM, shkiaaM).round();
-    shabatIn = shkiaaA.ceil() - userPreferences.nerot;
+    shabatIn = shkiaaA.ceil() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaM, shkiaaM).floor();
     tzomIn = alot72.floor();
     tzomOut = tzetHacochavim;
@@ -238,18 +239,18 @@ void habad::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Z
 }
 void habad::setDefault()
 {
-    userPreferences.zriha= 3;        // אסטרונומית
-    userPreferences.shkiaa= 2;       // הנראית
-    userPreferences.zeetCochavim= 12;// 6 במעלות
-    userPreferences.rabenuTam= 21;   // 72 זמניות
-    userPreferences.zmanTalit= 10;   // 11.5 במעלות
-    userPreferences.alotHashahar= 7; // 25.95 במעלות
-    userPreferences.sozksMga= 2;     // עלות השחר 72
-    userPreferences.soztMga= 2;      // עלות השחר 72
-    userPreferences.minhaG= 2;       // 30 זמניות
-    userPreferences.plagMinha= 1;    // הגר"א
-    userPreferences.zeetShabat= 16;  // 8.5 במעלות
-    userPreferences.zeetZom= 13;     // 6.45 במעלות
+    dataPrefs.zmanim.zriha= 3;        // אסטרונומית
+    dataPrefs.zmanim.shkiaa= 2;       // הנראית
+    dataPrefs.zmanim.zeetCochavim= 12;// 6 במעלות
+    dataPrefs.zmanim.rabenuTam= 21;   // 72 זמניות
+    dataPrefs.zmanim.zmanTalit= 10;   // 11.5 במעלות
+    dataPrefs.zmanim.alotHashahar= 7; // 25.95 במעלות
+    dataPrefs.zmanim.sozksMga= 2;     // עלות השחר 72
+    dataPrefs.zmanim.soztMga= 2;      // עלות השחר 72
+    dataPrefs.zmanim.minhaG= 2;       // 30 זמניות
+    dataPrefs.zmanim.plagMinha= 1;    // הגר"א
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 במעלות
+    dataPrefs.zmanim.zeetZom= 13;     // 6.45 במעלות
 }
 
 void habad1::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -275,7 +276,7 @@ void habad1::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, 
     plagHaminha = calcPlag(s, zrihaA, shkiaaA, shkiaaA).ceil();
     tzetHacochavim = zeet90.ceil();
     rabenuTam = calcRabenuTam(s, zrihaA, shkiaaA).round();
-    shabatIn = shkiaaA.ceil() - userPreferences.nerot;
+    shabatIn = shkiaaA.ceil() - dataPrefs.zmanim.nerot;
     shabatOut = tzetHacochavim.ceil()+4;
     tzomIn = alot90.floor();
     tzomOut = tzetHacochavim.ceil();
@@ -285,18 +286,18 @@ void habad1::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, 
 }
 void habad1::setDefault()
 {
-    userPreferences.zriha= 3;        // אסטרונומית
-    userPreferences.shkiaa= 3;       // אסטרונומית
-    userPreferences.zeetCochavim= 12;// 6 במעלות
-    userPreferences.rabenuTam= 21;   // 72 זמניות
-    userPreferences.zmanTalit= 10;   // 11.5 במעלות
-    userPreferences.alotHashahar= 7; // 25.95 במעלות
-    userPreferences.sozksMga= 2;     // עלות השחר 72
-    userPreferences.soztMga= 2;      // עלות השחר 72
-    userPreferences.minhaG= 2;       // 30 זמניות
-    userPreferences.plagMinha= 1;    // הגר"א
-    userPreferences.zeetShabat= 16;  // 8.5 במעלות
-    userPreferences.zeetZom= 13;     // 6.45 במעלות
+    dataPrefs.zmanim.zriha= 3;        // אסטרונומית
+    dataPrefs.zmanim.shkiaa= 3;       // אסטרונומית
+    dataPrefs.zmanim.zeetCochavim= 12;// 6 במעלות
+    dataPrefs.zmanim.rabenuTam= 21;   // 72 זמניות
+    dataPrefs.zmanim.zmanTalit= 10;   // 11.5 במעלות
+    dataPrefs.zmanim.alotHashahar= 7; // 25.95 במעלות
+    dataPrefs.zmanim.sozksMga= 2;     // עלות השחר 72
+    dataPrefs.zmanim.soztMga= 2;      // עלות השחר 72
+    dataPrefs.zmanim.minhaG= 2;       // 30 זמניות
+    dataPrefs.zmanim.plagMinha= 1;    // הגר"א
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 במעלות
+    dataPrefs.zmanim.zeetZom= 13;     // 6.45 במעלות
 }
 
 void tucazinsky::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -317,7 +318,7 @@ void tucazinsky::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkia
     minhaKtana = calcTimeZmaniot(zrihaM, zrihaM, shkiaaM, 9.5*60).ceil();
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, shkiaaM).ceil();
     tzetHacochavim = calcZeetCochavim(s, zrihaM, shkiaaM).ceil();
-    shabatIn = shkiaaA.round() - userPreferences.nerot;
+    shabatIn = shkiaaA.round() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaM, shkiaaM).ceil();
     rabenuTam = calcRabenuTam(s, zrihaA, shkiaaA).round();
     tzomIn = alotHashahar;
@@ -328,18 +329,18 @@ void tucazinsky::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkia
 }
 void tucazinsky::setDefault()
 {
-    userPreferences.zriha= 2;        // הנראית
-    userPreferences.shkiaa= 3;       // אסטרונומית
-    userPreferences.zeetCochavim= 8; // 4.725 במעלות
-    userPreferences.rabenuTam= 20;   // 72 קבועות
-    userPreferences.zmanTalit= 10;   // 11.5 מעלות
-    userPreferences.alotHashahar= 6; // 19.75 במעלות
-    userPreferences.sozksMga= 1;     // עלות השחר 90
-    userPreferences.soztMga= 1;      // עלות השחר 90
-    userPreferences.minhaG= 3;       // 30 לחומרא
-    userPreferences.plagMinha= 1;    // הגר"א
-    userPreferences.zeetShabat= 16;  // 8.5 במעלות
-    userPreferences.zeetZom= 13;     // 6.45 במעלות
+    dataPrefs.zmanim.zriha= 2;        // הנראית
+    dataPrefs.zmanim.shkiaa= 3;       // אסטרונומית
+    dataPrefs.zmanim.zeetCochavim= 8; // 4.725 במעלות
+    dataPrefs.zmanim.rabenuTam= 20;   // 72 קבועות
+    dataPrefs.zmanim.zmanTalit= 10;   // 11.5 מעלות
+    dataPrefs.zmanim.alotHashahar= 6; // 19.75 במעלות
+    dataPrefs.zmanim.sozksMga= 1;     // עלות השחר 90
+    dataPrefs.zmanim.soztMga= 1;      // עלות השחר 90
+    dataPrefs.zmanim.minhaG= 3;       // 30 לחומרא
+    dataPrefs.zmanim.plagMinha= 1;    // הגר"א
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 במעלות
+    dataPrefs.zmanim.zeetZom= 13;     // 6.45 במעלות
 }
 
 void benIshHai::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -360,7 +361,7 @@ void benIshHai::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaa
     minhaKtana = calcTimeZmaniot(zrihaM, zrihaM, shkiaaM, 9.5*60).ceil();
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, shkiaaM).ceil();
     tzetHacochavim = calcZeetCochavim(s, zrihaM, shkiaaM).ceil();
-    shabatIn = shkiaaA.round() - userPreferences.nerot;
+    shabatIn = shkiaaA.round() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaM, shkiaaM).ceil();
     rabenuTam = calcRabenuTam(s, zrihaA, shkiaaA).round();
     tzomIn = alotHashahar;
@@ -371,18 +372,18 @@ void benIshHai::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaa
 }
 void benIshHai::setDefault()
 {
-    userPreferences.zriha= 2;        // הנראית
-    userPreferences.shkiaa= 3;       // אסטרונומית
-    userPreferences.zeetCochavim= 13;// 6.45 במעלות
-    userPreferences.rabenuTam= 20;   // 72 קבועות
-    userPreferences.zmanTalit= 10;   // 11.5 מעלות
-    userPreferences.alotHashahar= 6; // 19.75 במעלות
-    userPreferences.sozksMga= 3;     // מעשה ניסים
-    userPreferences.soztMga= 3;      // מעשה ניסים
-    userPreferences.minhaG= 3;       // 30 לחומרא
-    userPreferences.plagMinha= 2;    // מעשה ניסים
-    userPreferences.zeetShabat= 16;  // 8.5 במעלות
-    userPreferences.zeetZom= 14;     // 6.45 במעלות
+    dataPrefs.zmanim.zriha= 2;        // הנראית
+    dataPrefs.zmanim.shkiaa= 3;       // אסטרונומית
+    dataPrefs.zmanim.zeetCochavim= 13;// 6.45 במעלות
+    dataPrefs.zmanim.rabenuTam= 20;   // 72 קבועות
+    dataPrefs.zmanim.zmanTalit= 10;   // 11.5 מעלות
+    dataPrefs.zmanim.alotHashahar= 6; // 19.75 במעלות
+    dataPrefs.zmanim.sozksMga= 3;     // מעשה ניסים
+    dataPrefs.zmanim.soztMga= 3;      // מעשה ניסים
+    dataPrefs.zmanim.minhaG= 3;       // 30 לחומרא
+    dataPrefs.zmanim.plagMinha= 2;    // מעשה ניסים
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 במעלות
+    dataPrefs.zmanim.zeetZom= 14;     // 6.45 במעלות
 }
 
 void myZmanim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -403,7 +404,7 @@ void myZmanim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM
     minhaKtana = calcTimeZmaniot(zrihaM, zrihaM, shkiaaM, 9.5*60).floor();
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, shkiaaM).ceil();
     tzetHacochavim = calcZeetCochavim(s, zrihaM, shkiaaM).ceil();
-    shabatIn = shkiaaA.round() - userPreferences.nerot;
+    shabatIn = shkiaaA.round() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaM, shkiaaM).ceil();
     rabenuTam = calcRabenuTam(s, zrihaM, shkiaaM).ceil();
     tzomIn = alotHashahar;
@@ -414,19 +415,19 @@ void myZmanim::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM
 }
 void myZmanim::setDefault()
 {
-    userPreferences.zriha= 3;        // אסטרונומית
-    userPreferences.shkiaa= 3;       // אסטרונומית
-    userPreferences.zeetCochavim= 16;// 8.5 במעלות
-    userPreferences.rabenuTam= 20;   // 72 קבועות
-    if(userPreferences.nz_hul == 1) userPreferences.zmanTalit= 7;   // 10.2 מעלות
-    else userPreferences.zmanTalit= 10;   // 11.5 מעלות
-    userPreferences.alotHashahar= 5; // 16.1 במעלות
-    userPreferences.sozksMga= 2;     // עלות השחר 72
-    userPreferences.soztMga= 2;      // עלות השחר 72
-    userPreferences.minhaG= 3;       // 30 לחומרא
-    userPreferences.plagMinha= 1;    // הגר"א
-    userPreferences.zeetShabat= 16;  // 8.5 במעלות
-    userPreferences.zeetZom= 13;     // 6.45 במעלות
+    dataPrefs.zmanim.zriha= 3;        // אסטרונומית
+    dataPrefs.zmanim.shkiaa= 3;       // אסטרונומית
+    dataPrefs.zmanim.zeetCochavim= 16;// 8.5 במעלות
+    dataPrefs.zmanim.rabenuTam= 20;   // 72 קבועות
+    if(dataPrefs.place.nz_hul == 1) dataPrefs.zmanim.zmanTalit= 7;   // 10.2 מעלות
+    else dataPrefs.zmanim.zmanTalit= 10;   // 11.5 מעלות
+    dataPrefs.zmanim.alotHashahar= 5; // 16.1 במעלות
+    dataPrefs.zmanim.sozksMga= 2;     // עלות השחר 72
+    dataPrefs.zmanim.soztMga= 2;      // עלות השחר 72
+    dataPrefs.zmanim.minhaG= 3;       // 30 לחומרא
+    dataPrefs.zmanim.plagMinha= 1;    // הגר"א
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 במעלות
+    dataPrefs.zmanim.zeetZom= 13;     // 6.45 במעלות
 }
 
 void pozen::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Zman zrihaN, Zman shkiaaN)
@@ -448,7 +449,7 @@ void pozen::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Z
     minhaKtana = calcTimeZmaniot(zrihaM, zrihaM, shkiaaM, 9.5*60).ceil();
     plagHaminha = calcPlag(s, zrihaM, shkiaaM, zeet13_5zmaniot).ceil();
     tzetHacochavim = calcZeetCochavim(s, zrihaM, shkiaaM).ceil();
-    shabatIn = shkiaaM.floor() - userPreferences.nerot;
+    shabatIn = shkiaaM.floor() - dataPrefs.zmanim.nerot;
     shabatOut = calcZeetShabat(s, zrihaM, shkiaaM).ceil();
     rabenuTam = calcRabenuTam(s, zrihaM, shkiaaM).ceil();
     tzomIn = alotHashahar;
@@ -459,36 +460,36 @@ void pozen::calc(Sun* s, Zman zrihaA, Zman shkiaaA, Zman zrihaM, Zman shkiaaM, Z
 }
 void pozen::setDefault()
 {
-    userPreferences.zriha= 1;        // מישורית
-    userPreferences.shkiaa= 1;       // מישורית
-    userPreferences.zeetCochavim= 28;// 7.08 במעלות
-    userPreferences.rabenuTam= 24;   // 16.1 במעלות
-    userPreferences.zmanTalit= 9;    // 11 מעלות
-    userPreferences.alotHashahar= 5; // 16.1 במעלות
-    userPreferences.sozksMga= 2;     // עלות השחר 72
-    userPreferences.soztMga= 2;      // עלות השחר 72
-    userPreferences.minhaG= 3;       // 30 לחומרא
-    userPreferences.plagMinha= 1;    // גר"א
-    userPreferences.zeetShabat= 16;  // 8.5 במעלות
-    userPreferences.zeetZom= 28;     // 7.08 במעלות
+    dataPrefs.zmanim.zriha= 1;        // מישורית
+    dataPrefs.zmanim.shkiaa= 1;       // מישורית
+    dataPrefs.zmanim.zeetCochavim= 28;// 7.08 במעלות
+    dataPrefs.zmanim.rabenuTam= 24;   // 16.1 במעלות
+    dataPrefs.zmanim.zmanTalit= 9;    // 11 מעלות
+    dataPrefs.zmanim.alotHashahar= 5; // 16.1 במעלות
+    dataPrefs.zmanim.sozksMga= 2;     // עלות השחר 72
+    dataPrefs.zmanim.soztMga= 2;      // עלות השחר 72
+    dataPrefs.zmanim.minhaG= 3;       // 30 לחומרא
+    dataPrefs.zmanim.plagMinha= 1;    // גר"א
+    dataPrefs.zmanim.zeetShabat= 16;  // 8.5 במעלות
+    dataPrefs.zmanim.zeetZom= 28;     // 7.08 במעלות
 }
 
 
 Zman Shita::calcZeetCochavim(Sun* s, Zman zriha, Zman shkiaa)
 {
-    return zeetCochavimMethods(userPreferences.zeetCochavim, s, zriha, shkiaa);
+    return zeetCochavimMethods(dataPrefs.zmanim.zeetCochavim, s, zriha, shkiaa);
 }
 Zman Shita::calcRabenuTam(Sun* s, Zman zriha, Zman shkiaa)
 {
-    return zeetCochavimMethods(userPreferences.rabenuTam, s, zriha, shkiaa);
+    return zeetCochavimMethods(dataPrefs.zmanim.rabenuTam, s, zriha, shkiaa);
 }
 Zman Shita::calcZeetShabat(Sun* s, Zman zriha, Zman shkiaa)
 {
-    return zeetCochavimMethods(userPreferences.zeetShabat, s, zriha, shkiaa);
+    return zeetCochavimMethods(dataPrefs.zmanim.zeetShabat, s, zriha, shkiaa);
 }
 Zman Shita::calcZeetZom(Sun* s, Zman zriha, Zman shkiaa)
 {
-    return zeetCochavimMethods(userPreferences.zeetZom, s, zriha, shkiaa);
+    return zeetCochavimMethods(dataPrefs.zmanim.zeetZom, s, zriha, shkiaa);
 }
 Zman Shita::zeetCochavimMethods(uint8_t choose, Sun* s, Zman zriha, Zman shkiaa)
 {
@@ -587,7 +588,7 @@ Zman Shita::zeetCochavimMethods(uint8_t choose, Sun* s, Zman zriha, Zman shkiaa)
 }
 Zman Shita::calcTalit(Sun* s, Zman alot, Zman zriha, Zman shkiaa)
 {
-    return zmanTalitMethods(userPreferences.zmanTalit, s, alot, zriha, shkiaa);
+    return zmanTalitMethods(dataPrefs.zmanim.zmanTalit, s, alot, zriha, shkiaa);
 }
 Zman Shita::zmanTalitMethods(uint8_t choose, Sun* s, Zman alot, Zman zriha, Zman shkiaa)
 {
@@ -632,7 +633,7 @@ Zman Shita::zmanTalitMethods(uint8_t choose, Sun* s, Zman alot, Zman zriha, Zman
 }
 Zman Shita::calcAlot(Sun* s, Zman zriha, Zman shkiaa)
 {
-    return alotMethods(userPreferences.alotHashahar, s, zriha, shkiaa);
+    return alotMethods(dataPrefs.zmanim.alotHashahar, s, zriha, shkiaa);
 }
 Zman Shita::alotMethods(uint8_t choose, Sun* s, Zman zriha, Zman shkiaa)
 {
@@ -668,7 +669,7 @@ Zman Shita::alotMethods(uint8_t choose, Sun* s, Zman zriha, Zman shkiaa)
 }
 Zman Shita::calcsozksMga(Sun* s, Zman alot90, Zman zeet90, Zman alot72, Zman zeet72, Zman zrihaA, Zman shkiaaA, Zman zrihaN, Zman shkiaaN)
 {
-    return sozksMgaMethods(userPreferences.sozksMga, s, alot90, zeet90, alot72, zeet72, zrihaA, shkiaaA, zrihaN, shkiaaN);
+    return sozksMgaMethods(dataPrefs.zmanim.sozksMga, s, alot90, zeet90, alot72, zeet72, zrihaA, shkiaaA, zrihaN, shkiaaN);
 }
 Zman Shita::sozksMgaMethods(uint8_t choose, Sun* s, Zman alot90, Zman zeet90, Zman alot72, Zman zeet72, Zman zrihaA, Zman shkiaaA, Zman zrihaN, Zman shkiaaN)
 {
@@ -700,7 +701,7 @@ Zman Shita::sozksMgaMethods(uint8_t choose, Sun* s, Zman alot90, Zman zeet90, Zm
 }
 Zman Shita::calcsoztMga(Sun* s, Zman alot90, Zman zeet90, Zman alot72, Zman zeet72, Zman zrihaA, Zman shkiaaA, Zman zrihaN, Zman shkiaaN)
 {
-    return soztMgaMethods(userPreferences.soztMga, s, alot90, zeet90, alot72, zeet72, zrihaA, shkiaaA, zrihaN, shkiaaN);
+    return soztMgaMethods(dataPrefs.zmanim.soztMga, s, alot90, zeet90, alot72, zeet72, zrihaA, shkiaaA, zrihaN, shkiaaN);
 }
 Zman Shita::soztMgaMethods(uint8_t choose, Sun* s, Zman alot90, Zman zeet90, Zman alot72, Zman zeet72, Zman zrihaA, Zman shkiaaA, Zman zrihaN, Zman shkiaaN)
 {
@@ -732,7 +733,7 @@ Zman Shita::soztMgaMethods(uint8_t choose, Sun* s, Zman alot90, Zman zeet90, Zma
 }
 Zman Shita::calcPlag(Sun* s, Zman startDay, Zman endDay, Zman ref)
 {
-    return plagMethods(userPreferences.plagMinha, s, startDay, endDay, ref);
+    return plagMethods(dataPrefs.zmanim.plagMinha, s, startDay, endDay, ref);
 }
 Zman Shita::plagMethods(uint8_t choose, Sun* s, Zman startDay, Zman endDay, Zman ref)
 {
@@ -761,7 +762,7 @@ Zman Shita::plagMethods(uint8_t choose, Sun* s, Zman startDay, Zman endDay, Zman
 }
 Zman Shita::calcMinhaG(Sun* s, Zman hazot, Zman zriha, Zman shkiaa)
 {
-    return minhaGMethods(userPreferences.minhaG, s, hazot, zriha, shkiaa);
+    return minhaGMethods(dataPrefs.zmanim.minhaG, s, hazot, zriha, shkiaa);
 }
 Zman Shita::minhaGMethods(uint8_t choose, Sun* s, Zman hazot, Zman zriha, Zman shkiaa)
 {
