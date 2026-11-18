@@ -373,6 +373,47 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     | Total | 784 | 820 | 847 |
 
     Replication progress is logged per step: before, after, and the sum per consumer.
+- **2a.2.10** — tools before the replication:
+  - **`tools/count_deps.py`:** `EXCLUDE['Preferences/DataPrefs'] = {'place', 'zmanim'}`: the struct
+    fields `PlacePrefs place;` / `ZmanimPrefs zmanim;` (`DataPrefs.h:56-57`) are no longer counted
+    as references to the global `place` (`DB/Place`) and the array `zmanim` (`DB/Shita`). Same
+    mechanism as the existing manual exclusions. Docstring: the "374 edges" validation now names
+    the previous map (`dependencies.md` at `e7f8efb`); the exclusion and its validation added.
+    - **Regression** (tool at `72b432e` vs new): text and `--json` identical on JC4020 and JC6432
+      at `72b432e` and on JC6416 at `e76aaea`. On JC6416 at `72b432e`: 423 → 421 edges,
+      7,166 → 7,164 references; the only differences are the two edges gone
+      (`DataPrefs → DB/Place` `place` 1, `→ DB/Shita` `zmanim` 1).
+  - **`tools/gen_deps_doc.py`** (new): the generator of the marked blocks of `dependencies.md`
+    (§4 edges, §9 includes, A.1–A.4), from the scratchpad script of 2a.2.9, without the
+    name-collision override (no longer needed). Modes: `print <block>`, `write` (marked blocks only,
+    CRLF; refuses a document that is not pure CRLF or lacks a marker), `check` (blocks up to date,
+    §4 total line, §3 graph / threshold table and the A.2 total row against A.1; exit code 1 on a
+    mismatch), `report` (helper data for the hand-written sections), `selfcheck`. Writes no
+    bytecode. JC6416 only (fixed row lists, stops on a missing or new unit). The script for the
+    §5 / §6 group numbers stays out of `tools/` (owner's decision).
+    - **`selfcheck`:** `git archive 9c75812` into a temporary folder, compared with the document at
+      `e7f8efb`: OK. §4: 374 rows, #, from, to, references and mark identical; examples in another
+      tie order in 94 rows; identifier count differs only in the two known edges. A.2, A.3
+      identical; A.1 only `Prefs → States` `inc`; A.4 only the unit names in parentheses and the
+      `UserPreferences` include. These are the allowed differences, encoded in the script.
+  - **`CLAUDE.md`:** working rules — exception to "edit only with the editor tools": `gen_deps_doc.py
+    write` may rewrite only the marked blocks of `dependencies.md`, with CRLF. Stage line: next is
+    replicating 2a.1 to JC4020.
+  - **`dependencies.md` regenerated** (`write`, then hand edits with the editor tool; `check` OK,
+    421 edges, 7,164 references). Diff against `72b432e`, classified by a scratchpad script:
+    - Generated blocks: §4 rows 369–370 (`DataPrefs → DB/Place`, `→ DB/Shita`) removed, rows
+      371–423 renumbered (53 rows, `#` column only); A.1 `Prefs → DB` 2 → empty; A.4
+      `Preferences/DataPrefs` loses `DB 2`. §9, A.2, A.3 identical.
+    - Hand-written, all following from the exclusion: §1 the collision moves from "known tool
+      limitations" to "manual exclusions"; §1 totals 421 / 7,164; §1 "updating the document" names
+      the generator and drops the collisions from the mark rule; §3 threshold row `Prefs → DB`
+      removed; §4 legend "name collision" removed and total line 421 / 7,164; §5.5 "from
+      Preferences 2" removed; §5.6 graph edge `DATA → DB` and its note removed; §7.1 "not
+      included" note removed; A.1 note on `Prefs → DB` removed.
+    - One more hand edit, not in the approved list: §1 base line, "counted with the tool of 2a.2.8
+      (`bc7d1b5`)" → "the tool of 2a.2.10", which the exclusion made wrong.
+    - `git ls-files --eol`: `w/crlf`, no bare LF or CR.
+  - No firmware source changed; no build.
 
 ## Planned for next production release
 

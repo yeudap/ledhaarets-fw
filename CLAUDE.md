@@ -62,11 +62,11 @@ but the content differs in many places.
 ## Stages
 
 **Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
-in JC6416 (through 2a.2.9: `count_deps.py` counts view access; `dependencies.md` regenerated as
-the baseline for the replication). Production 7.08 is synced into this repo. Next, in order:
-replicate 2a.1–2a.2 to JC4020 and JC6432 (progress per step in `refactor-log.md`, measured
-against `dependencies.md` §10; regenerate `dependencies.md` at the end); then 2a.3 in all three
-models.
+in JC6416 (through 2a.2.10: `count_deps.py` counts view access; `dependencies.md` regenerated
+with `tools/gen_deps_doc.py` as the baseline for the replication). Production 7.08 is synced into
+this repo. Next: replicate 2a.1 to JC4020. Then, in order: the rest of 2a.1–2a.2 to JC4020 and
+JC6432 (progress per step in `refactor-log.md`, measured against `dependencies.md` §10;
+regenerate `dependencies.md` at the end); then 2a.3 in all three models.
 No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
 stay identical.
 
@@ -111,6 +111,9 @@ Only the user changes the current stage.
 - A production hotfix reported by the user is ported as its own step, labeled "hotfix port".
 - Edit files only with the editor tools, not `sed` or scripts. Keep the existing line endings
   (source files are CRLF in the working copy); check with `git ls-files --eol` after every step.
+  Exception: `tools/gen_deps_doc.py write` may rewrite only the blocks between the
+  `<!-- generated:<name>:begin/end -->` markers in `docs/architecture/dependencies.md`, with CRLF.
+  Everything else in that file, and every other file, is edited with the editor tools.
 
 ## Verification after every step
 

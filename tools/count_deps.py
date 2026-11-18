@@ -12,7 +12,8 @@ Implements the counting rules of docs/architecture/dependencies.md §1:
   * access chains (bl.mainState.numOfValidTexts) count once per unit they touch; a method call
     counts toward the unit that implements the method;
   * manual exclusions: local shadowing of `now` / `place`, Place::orHachaim vs class orHachaim,
-    Metadata counted only through `Metadata::`;
+    Metadata counted only through `Metadata::`, the `DataPrefs` fields `place` / `zmanim` vs the
+    global `place` (DB/Place) and the array `zmanim` (DB/Shita);
   * free functions defined only in a .cpp (not declared in any header) are internal to it;
   * access through a preference view (stage 2a; units in VIEW_UNITS, e.g. `dataPrefs.zmanim.shita`)
     counts once toward the view unit (`Preferences/DataPrefs`), with the chain up to the
@@ -21,13 +22,18 @@ Implements the counting rules of docs/architecture/dependencies.md §1:
     are recognized only in the view units.
 
 The parser is heuristic (regex + brace matching, no preprocessor, no real C++ front end).
-Validation: on JC6416 at commit 9c75812 it reproduces all 374 edges of dependencies.md §4 with
-the exact reference counts (6,747 in total); the identifier count matches in 372 of them.
+Validation: on JC6416 at commit 9c75812 it reproduces all 374 edges of the previous map
+(dependencies.md §4 at commit e7f8efb) with the exact reference counts (6,747 in total); the
+identifier count matches in 372 of them.
 After the view support (2a.2.8): output identical to the previous version on trees without views
 (JC4020 and JC6432 at e7f8efb, JC6416 at e76aaea). On JC6416 at e7f8efb, per consumer and per
 preference, references to UserPreferences plus the views equal the previous version's references
 to UserPreferences at c6882d6 (before 2a.2), except the 7.08 changes (`dayIndex` -1, four F11
 reads +4).
+After the DataPrefs name-collision exclusions (2a.2.10): output identical to the previous version
+on JC4020 and JC6432 at 72b432e and on JC6416 at e76aaea; on JC6416 at 72b432e the only change is
+that `Preferences/DataPrefs -> DB/Place` and `-> DB/Shita` (1 reference each) are gone.
+The generated blocks of dependencies.md are written from this output by tools/gen_deps_doc.py.
 It is tuned to this code base. Its main use is comparing two trees (before / after a production
 sync) with --compare. --includes is a rough helper (include edges with no reference behind them).
 
@@ -527,6 +533,9 @@ EXCLUDE = {
     'DB/DB': {'place'},
     'DB/Sun': {'place'},
     'DB/Place': {'orHachaim', 'kiseRachamim'},
+    # struct fields `PlacePrefs place;` / `ZmanimPrefs zmanim;` (DataPrefs.h), not the global
+    # `place` (DB/Place) or the array `zmanim` (DB/Shita)
+    'Preferences/DataPrefs': {'place', 'zmanim'},
 }
 
 

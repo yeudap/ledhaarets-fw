@@ -7,7 +7,7 @@
 
 ## 1. בסיס ושיטה
 
-**בסיס:** פרויקט `JC6416`, העץ `src/` כמו שהוא ב-commit `7b60c79`: פרודקשן 7.08, ואחרי 2a.2 (הגישה להעדפות עוברת דרך ה-views). העץ לא השתנה מאז. מספרי השורות במסמך נכונים ל-commit הזה. הספירה נעשתה בכלי של 2a.2.8 (`bc7d1b5`). הבדלים ב-JC4020 וב-JC6432 מופיעים רק כהערות, בסעיף 10.
+**בסיס:** פרויקט `JC6416`, העץ `src/` כמו שהוא ב-commit `7b60c79`: פרודקשן 7.08, ואחרי 2a.2 (הגישה להעדפות עוברת דרך ה-views). העץ לא השתנה מאז. מספרי השורות במסמך נכונים ל-commit הזה. הספירה נעשתה בכלי של 2a.2.10 (ההחרגה של `DataPrefs`). הבדלים ב-JC4020 וב-JC6432 מופיעים רק כהערות, בסעיף 10.
 תמונת המצב הקודמת (`9c75812`, 7.04, וסעיף הדלתא של 7.06–7.07) נמצאת ב-git, ב-commit `e7f8efb`.
 
 ### יחידה
@@ -55,16 +55,16 @@
 - התנגשויות שמות:
   - `Place::orHachaim` מול המחלקה `orHachaim`.
   - `Strings::model` ופרמטר `model` מול `Metadata::model`. Metadata נספר רק דרך `Metadata::`.
+  - השדות `place` ו-`zmanim` של `DataPrefs` (`DataPrefs.h:56-57`) מול הגלובלי `place` (`DB/Place`) והמערך `zmanim` (`DB/Shita`). מוחרג מ-2a.2.10.
 - פונקציות עזר ב-`.cpp` שאף כותרת לא מצהירה עליהן נחשבות פנימיות לקובץ. דוגמאות: `getZriha()` ב-`MinhagState.cpp`, `loaziStr()` ב-`SetTochenTimeState.cpp`.
 
 ### מגבלות ידועות של הכלי (לא הוחרגו)
 
-- **התנגשות שם ב-`DataPrefs`:** השדות `place` ו-`zmanim` של `DataPrefs` (`DataPrefs.h:56-57`) נספרים כהפניות לגלובלי `place` (`DB/Place`) ולמערך `zmanim` (`DB/Shita`), הפניה אחת לכל אחד. זו לא תלות. הקשתות מופיעות בטבלאות שנוצרות מהכלי, ומסומנות ב-§4 "התנגשות שם".
 - **includes בסוגריים משולשים** (`#include <States/States.h>`) לא מזוהים. שניים כאלה רלוונטיים (`UserPreferences.cpp:3`, `Bluetooth.cpp:5`). הם מופיעים ביד ב-§9, ולא בנספח.
 
 ### אימות
 
-הספירה נעשתה בסקריפט קריאה-בלבד. הסקריפט המקורי לא נשמר. הוא נכתב מחדש לפי הכללים שלמעלה, ונשמר ב-[tools/count_deps.py](../../tools/count_deps.py). הוראות שימוש בראש הקובץ. על `9c75812` הוא שחזר את כל 374 הקשתות של המפה הקודמת עם אותו מספר הפניות בדיוק (6,747). מספר המזהים היה זהה ב-372 קשתות, ובשתיים (`MainStateInfoSets→DayInfo`, `MainState→DayInfo`) הוא היה שונה בגלל תוויות של שרשראות עמוקות. על הבסיס הנוכחי: 423 קשתות, 7,166 הפניות.
+הספירה נעשתה בסקריפט קריאה-בלבד. הסקריפט המקורי לא נשמר. הוא נכתב מחדש לפי הכללים שלמעלה, ונשמר ב-[tools/count_deps.py](../../tools/count_deps.py). הוראות שימוש בראש הקובץ. על `9c75812` הוא שחזר את כל 374 הקשתות של המפה הקודמת עם אותו מספר הפניות בדיוק (6,747). מספר המזהים היה זהה ב-372 קשתות, ובשתיים (`MainStateInfoSets→DayInfo`, `MainState→DayInfo`) הוא היה שונה בגלל תוויות של שרשראות עמוקות. על הבסיס הנוכחי: 421 קשתות, 7,164 הפניות.
 
 חמשת התאים שנבדקו ידנית מול grep בספירה המקורית נבדקו שוב על הבסיס הנוכחי, והכלי נותן בהם את אותן תוצאות כמו grep:
 
@@ -77,7 +77,8 @@
 ### עדכון המסמך
 
 - **מתי:** יוצרים מחדש בכל סנכרון פרודקשן ובסוף כל תת-שלב שמשנה תלויות (למשל בסוף שכפול 2a). לא מוסיפים סעיף דלתא.
-- **בלוקים שנוצרים מהכלי:** הטבלה ב-§4, הרשימה ב-§9 וארבע המטריצות בנספח א'. כל אחד מהם נמצא בין סימנים `<!-- generated:<שם>:begin -->` ו-`<!-- generated:<שם>:end -->`, והתוכן שלו הוא הפלט של הכלי בלבד. עמודת "סימון" ב-§4 מחושבת מטבלת הרמות ב-§2, משתי הקשתות המכוונות שב-[notes.md](notes.md), ומשתי התנגשויות השם שלמעלה.
+- **בלוקים שנוצרים מהכלי:** הטבלה ב-§4, הרשימה ב-§9 וארבע המטריצות בנספח א'. כל אחד מהם נמצא בין סימנים `<!-- generated:<שם>:begin -->` ו-`<!-- generated:<שם>:end -->`, והתוכן שלו הוא הפלט של הכלי בלבד. עמודת "סימון" ב-§4 מחושבת מטבלת הרמות ב-§2 ומשתי הקשתות המכוונות שב-[notes.md](notes.md).
+- **המחולל:** [tools/gen_deps_doc.py](../../tools/gen_deps_doc.py). `write` כותב את הבלוקים שבין הסימנים, ורק אותם, עם CRLF. זו החריגה היחידה מהכלל "עריכה רק בכלי העורך" (CLAUDE.md). `check` בודק שהבלוקים מעודכנים, ושהסיכום ב-§4 והגרף והטבלה ב-§3 תואמים לנספח. `selfcheck` משחזר את המפה הקודמת מ-`9c75812`. הוראות שימוש בראש הקובץ.
 - **השאר נכתב ביד:** ההסברים, החלוקה לקבוצות, הגרפים והסיווגים. המספרים בהם נלקחים מאותו פלט.
 - **השוואה בין בסיס קודם לעץ הנוכחי:**
 
@@ -194,7 +195,6 @@ flowchart TD
 | `main → Prefs` | 4 | |
 | `Screens → Metadata` | 4 | |
 | `BLE → Metadata` | 3 | |
-| `Prefs → DB` | 2 | התנגשות שם בלבד (§1), לא תלות |
 | `main → CLK` | 2 | |
 | `Prefs → States` | 0 | include בלבד (`<States/States.h>`, לא מזוהה בכלי, §9) |
 | `HW → BLE` | 0 | include בלבד |
@@ -208,7 +208,6 @@ flowchart TD
 - **מכוון**: לפי [notes.md](notes.md).
 - **נגד הכיוון**: לפי טבלת הרמות בסעיף 2. פירוט בסעיף 7.
 - **צדדית**: קשת בין תצוגה לדומיין, שתיהן ברמה 3. פירוט בסעיף 7.
-- **התנגשות שם**: לא תלות. פירוט ב-§1, "מגבלות ידועות של הכלי".
 
 <div dir="ltr">
 
@@ -584,67 +583,65 @@ flowchart TD
 | 366 | `CLK/ClockRV3028` | `CLK/ClockDriver` | 1 | 1 | `ClockDriver` |  |
 | 367 | `DB/DayInfo` | `DB/Sun` | 1 | 1 | `Sun` |  |
 | 368 | `Logic` | `BLE/TextCommandHandler` | 1 | 1 | `handleGetTextCount` | נגד הכיוון |
-| 369 | `Preferences/DataPrefs` | `DB/Place` | 1 | 1 | `place` | התנגשות שם: השדה `place` (לא תלות) |
-| 370 | `Preferences/DataPrefs` | `DB/Shita` | 1 | 1 | `zmanim` | התנגשות שם: השדה `zmanim` (לא תלות) |
-| 371 | `Preferences/PrefsViews` | `Preferences/SystemPrefs` | 1 | 1 | `systemPrefs.bt` |  |
-| 372 | `Preferences/PrefsViews` | `Preferences/UserContent` | 1 | 1 | `userContent` |  |
-| 373 | `Screens/AboutScreen` | `Display` | 1 | 1 | `display` |  |
-| 374 | `Screens/AboutScreen` | `Metadata` | 1 | 1 | `Metadata` |  |
-| 375 | `Screens/BrightnessScreen` | `DB/Strings` | 1 | 1 | `strings.brightnessTitle` |  |
-| 376 | `Screens/BrightnessScreen` | `Display` | 1 | 1 | `display` |  |
-| 377 | `Screens/BrightnessScreen` | `Fonts` | 1 | 1 | `font7` |  |
-| 378 | `Screens/ColorScreen` | `DB/Strings` | 1 | 1 | `strings.colorsTitle` |  |
-| 379 | `Screens/ColorScreen` | `Display` | 1 | 1 | `display` |  |
-| 380 | `Screens/ColorScreen` | `Fonts` | 1 | 1 | `font7` |  |
-| 381 | `Screens/LogoScreen` | `Area` | 1 | 1 | `Area` |  |
-| 382 | `Screens/LogoScreen` | `Display` | 1 | 1 | `display` |  |
-| 383 | `Screens/LogoScreen` | `Fonts` | 1 | 1 | `logo` |  |
-| 384 | `Screens/MainScreen` | `DB/Zman` | 1 | 1 | `Zman` | צדדית |
-| 385 | `Screens/MainScreen` | `Display` | 1 | 1 | `display` |  |
-| 386 | `Screens/MenuScreen` | `DB/Zman` | 1 | 1 | `Zman` | צדדית |
-| 387 | `Screens/MenuScreen` | `Display` | 1 | 1 | `display` |  |
-| 388 | `Screens/RegsScreen` | `Display` | 1 | 1 | `display` |  |
-| 389 | `Screens/RegsScreen` | `Fonts` | 1 | 1 | `font6` |  |
-| 390 | `Screens/ResetScreen` | `Display` | 1 | 1 | `display` |  |
-| 391 | `Screens/SetClockScreen` | `DB/Strings` | 1 | 1 | `strings.kivunShaon` |  |
-| 392 | `Screens/SetClockScreen` | `Display` | 1 | 1 | `display` |  |
-| 393 | `Screens/TextScreen` | `Display` | 1 | 1 | `display` |  |
-| 394 | `Screens/VersionScreen` | `Display` | 1 | 1 | `display` |  |
-| 395 | `Screens/messageScreen` | `Display` | 1 | 1 | `display` |  |
-| 396 | `States/BrightnessState` | `Screens/BrightnessScreen` | 1 | 1 | `brightnessScreen.setBrightness` |  |
-| 397 | `States/BrightnessState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 398 | `States/ConfigState` | `Screens/AboutScreen` | 1 | 1 | `aboutScreen.printScreen` |  |
-| 399 | `States/ConfigState` | `Screens/RegsScreen` | 1 | 1 | `regsScreen.printScreen` |  |
-| 400 | `States/ConfigState` | `Screens/VersionScreen` | 1 | 1 | `versionScreen.printScreen` |  |
-| 401 | `States/FontState` | `Area` | 1 | 1 | `mainScreen.clockAll.addArrows` |  |
-| 402 | `States/FontState` | `Screens/MainScreen` | 1 | 1 | `mainScreen.printScreen` |  |
-| 403 | `States/FontState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 404 | `States/MainState` | `BLE/TextCommandHandler` | 1 | 1 | `getTextByIndex` | נגד הכיוון |
-| 405 | `States/MainState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
-| 406 | `States/MainState` | `Preferences/DataPrefs` | 1 | 1 | `dataPrefs.place.shaonKaiz` |  |
-| 407 | `States/MainState` | `Preferences/DisplayPrefs` | 1 | 1 | `displayPrefs.clockFont` |  |
-| 408 | `States/MainState` | `Preferences/LogicPrefs` | 1 | 1 | `logicPrefs.netzClk` |  |
-| 409 | `States/MainState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 410 | `States/MainStateTimeSets` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
-| 411 | `States/MainStateTimeSets` | `Preferences/PresentationPrefs` | 1 | 1 | `presentationPrefs.dateFormat` |  |
-| 412 | `States/MinhagState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.year` |  |
-| 413 | `States/SetClockState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
-| 414 | `States/ShitaState` | `DB/Strings` | 1 | 1 | `strings.shitaTitle` |  |
-| 415 | `States/ShitaState` | `Screens/MenuScreen` | 1 | 1 | `menuScreen.printMenu` |  |
-| 416 | `States/ShitaState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 417 | `main` | `BLE/Bluetooth` | 1 | 1 | `initBluetooth` |  |
-| 418 | `main` | `DB/Place` | 1 | 1 | `initPlace` |  |
-| 419 | `main` | `Preferences/SystemPrefs` | 1 | 1 | `systemPrefs.bt` |  |
-| 420 | `main` | `Preferences/UserPreferences` | 1 | 1 | `setupPreferences` |  |
-| 421 | `main` | `Screens/LogoScreen` | 1 | 1 | `logoScreen.printScreen` |  |
-| 422 | `main` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 423 | `main` | `States/MainState` | 1 | 1 | `bl.mainState.setNewDay` |  |
+| 369 | `Preferences/PrefsViews` | `Preferences/SystemPrefs` | 1 | 1 | `systemPrefs.bt` |  |
+| 370 | `Preferences/PrefsViews` | `Preferences/UserContent` | 1 | 1 | `userContent` |  |
+| 371 | `Screens/AboutScreen` | `Display` | 1 | 1 | `display` |  |
+| 372 | `Screens/AboutScreen` | `Metadata` | 1 | 1 | `Metadata` |  |
+| 373 | `Screens/BrightnessScreen` | `DB/Strings` | 1 | 1 | `strings.brightnessTitle` |  |
+| 374 | `Screens/BrightnessScreen` | `Display` | 1 | 1 | `display` |  |
+| 375 | `Screens/BrightnessScreen` | `Fonts` | 1 | 1 | `font7` |  |
+| 376 | `Screens/ColorScreen` | `DB/Strings` | 1 | 1 | `strings.colorsTitle` |  |
+| 377 | `Screens/ColorScreen` | `Display` | 1 | 1 | `display` |  |
+| 378 | `Screens/ColorScreen` | `Fonts` | 1 | 1 | `font7` |  |
+| 379 | `Screens/LogoScreen` | `Area` | 1 | 1 | `Area` |  |
+| 380 | `Screens/LogoScreen` | `Display` | 1 | 1 | `display` |  |
+| 381 | `Screens/LogoScreen` | `Fonts` | 1 | 1 | `logo` |  |
+| 382 | `Screens/MainScreen` | `DB/Zman` | 1 | 1 | `Zman` | צדדית |
+| 383 | `Screens/MainScreen` | `Display` | 1 | 1 | `display` |  |
+| 384 | `Screens/MenuScreen` | `DB/Zman` | 1 | 1 | `Zman` | צדדית |
+| 385 | `Screens/MenuScreen` | `Display` | 1 | 1 | `display` |  |
+| 386 | `Screens/RegsScreen` | `Display` | 1 | 1 | `display` |  |
+| 387 | `Screens/RegsScreen` | `Fonts` | 1 | 1 | `font6` |  |
+| 388 | `Screens/ResetScreen` | `Display` | 1 | 1 | `display` |  |
+| 389 | `Screens/SetClockScreen` | `DB/Strings` | 1 | 1 | `strings.kivunShaon` |  |
+| 390 | `Screens/SetClockScreen` | `Display` | 1 | 1 | `display` |  |
+| 391 | `Screens/TextScreen` | `Display` | 1 | 1 | `display` |  |
+| 392 | `Screens/VersionScreen` | `Display` | 1 | 1 | `display` |  |
+| 393 | `Screens/messageScreen` | `Display` | 1 | 1 | `display` |  |
+| 394 | `States/BrightnessState` | `Screens/BrightnessScreen` | 1 | 1 | `brightnessScreen.setBrightness` |  |
+| 395 | `States/BrightnessState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 396 | `States/ConfigState` | `Screens/AboutScreen` | 1 | 1 | `aboutScreen.printScreen` |  |
+| 397 | `States/ConfigState` | `Screens/RegsScreen` | 1 | 1 | `regsScreen.printScreen` |  |
+| 398 | `States/ConfigState` | `Screens/VersionScreen` | 1 | 1 | `versionScreen.printScreen` |  |
+| 399 | `States/FontState` | `Area` | 1 | 1 | `mainScreen.clockAll.addArrows` |  |
+| 400 | `States/FontState` | `Screens/MainScreen` | 1 | 1 | `mainScreen.printScreen` |  |
+| 401 | `States/FontState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 402 | `States/MainState` | `BLE/TextCommandHandler` | 1 | 1 | `getTextByIndex` | נגד הכיוון |
+| 403 | `States/MainState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
+| 404 | `States/MainState` | `Preferences/DataPrefs` | 1 | 1 | `dataPrefs.place.shaonKaiz` |  |
+| 405 | `States/MainState` | `Preferences/DisplayPrefs` | 1 | 1 | `displayPrefs.clockFont` |  |
+| 406 | `States/MainState` | `Preferences/LogicPrefs` | 1 | 1 | `logicPrefs.netzClk` |  |
+| 407 | `States/MainState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 408 | `States/MainStateTimeSets` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
+| 409 | `States/MainStateTimeSets` | `Preferences/PresentationPrefs` | 1 | 1 | `presentationPrefs.dateFormat` |  |
+| 410 | `States/MinhagState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.year` |  |
+| 411 | `States/SetClockState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
+| 412 | `States/ShitaState` | `DB/Strings` | 1 | 1 | `strings.shitaTitle` |  |
+| 413 | `States/ShitaState` | `Screens/MenuScreen` | 1 | 1 | `menuScreen.printMenu` |  |
+| 414 | `States/ShitaState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 415 | `main` | `BLE/Bluetooth` | 1 | 1 | `initBluetooth` |  |
+| 416 | `main` | `DB/Place` | 1 | 1 | `initPlace` |  |
+| 417 | `main` | `Preferences/SystemPrefs` | 1 | 1 | `systemPrefs.bt` |  |
+| 418 | `main` | `Preferences/UserPreferences` | 1 | 1 | `setupPreferences` |  |
+| 419 | `main` | `Screens/LogoScreen` | 1 | 1 | `logoScreen.printScreen` |  |
+| 420 | `main` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 421 | `main` | `States/MainState` | 1 | 1 | `bl.mainState.setNewDay` |  |
 
 <!-- generated:edges:end -->
 
 </div>
 
-סה"כ 423 קשתות, 7,166 הפניות.
+סה"כ 421 קשתות, 7,164 הפניות.
 
 ## 5. גרף לכל תיקייה (ג)
 
@@ -889,7 +886,6 @@ flowchart LR
 - מ-Logic 22: Place 12, DayInfo 10.
 - מ-CLK 17 (Zman) ומ-main 4 (Strings 3, Place 1).
 - מ-BLE 4: `CoreService` → Place 2 (`numOfOfeks`), Shita 2 (`numOfShitot`, `numOfZeetCochavin`).
-- מ-Preferences 2: התנגשות השם של `DataPrefs` (§1), לא תלות.
 
 ### 5.6 `Preferences/`
 
@@ -949,7 +945,6 @@ flowchart LR
   PV -->|72| VIEWS
   PV -->|72| PREFS
   PREFS -.->|include| XSTATES
-  DATA -.->|"2 · התנגשות שם"| XDB
 ```
 
 **לפי יעד:**
@@ -969,7 +964,6 @@ flowchart LR
 - כל הקשתות מ-Screens מגיעות מ-`RegsScreen`.
 - **מה שנשאר ישיר ל-`UserPreferences`** (50): הרישום (`userPreferences.simplePrefs` / `allPrefs`, שנספרים כ-`userPreferences`; `resetSimplePrefs`, `resetTextPrefs`), הטיפוסים `UserPreferences` ו-`UserPref` (הצהרות `extern` וחתימות), ו-`setupPreferences`. אין גישה ישירה לשדה של העדפה.
 - **view → `UserPreferences`:** הקישור של כל שדה ל-`userPreferences.<שדה>`, ועוד הטיפוסים. `PrefsViews` מפנה 72 פעמים ל-views ו-72 פעמים ל-`UserPreferences`: `static_assert` אחד לכל שדה (71 העדפות ועוד `userContent.textPrefs`).
-- `DataPrefs → DB` (2) היא התנגשות שם (§1), לא תלות.
 - `UserPreferences` עצמה לא מפנה לאף יחידה. יש לה רק include ל-`States/States.h` ב-`UserPreferences.cpp:3` (סוגריים משולשים, §9).
 
 ### 5.7 `Screens/`
@@ -1195,8 +1189,6 @@ flowchart LR
 | 16 | `BTN/ButtonLH1022` | `BLE/Commands` | חומרה → קלט | 8 | `ButtonCommand` | `ButtonLH1022.h:11`, `ButtonLH1022.cpp:11-23` |
 | 17 | `BTN/ButtonDriver` | `BLE/Commands` | חומרה → קלט | 1 | `ButtonCommand` | `ButtonDriver.h:4`, `:10` |
 
-לא נכללות: `Preferences/DataPrefs → DB/Place` ו-`→ DB/Shita` (שירותי מערכת → דומיין, הפניה אחת לכל אחת). אלה התנגשויות שם של השדות `place` ו-`zmanim` (§1), לא תלות.
-
 ### 7.2 קשתות מסומנות (מכוון)
 
 | מ- | אל | הפניות | סימון |
@@ -1337,7 +1329,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 | **Screens** |  |  |  |  |  | · | 723 | 42 | 120 |  | 12 | 4 |
 | **Render** |  |  |  |  |  |  | · |  |  |  | 29 |  |
 | **DB** |  |  |  |  |  |  |  | · | 221 |  |  |  |
-| **Prefs** |  |  |  |  |  |  |  | 2 | · |  |  |  |
+| **Prefs** |  |  |  |  |  |  |  |  | · |  |  |  |
 | **CLK** |  |  |  |  |  |  |  | 17 |  | · |  |  |
 | **HW** |  | inc | 4 |  |  |  |  |  |  | 4 | · | 4 |
 | **Meta** |  |  |  |  |  |  |  |  |  |  |  | · |
@@ -1348,7 +1340,6 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 
 `inc` = include בלבד, כמו שהכלי מזהה אותו (רק במירכאות). ב-DB נכללים `Strings` ו-`DataBase`. ב-Prefs נכללים ה-views ו-`PrefsViews`.
 - `Prefs → States` הוא include בלבד (`UserPreferences.cpp:3`), בסוגריים משולשים, ולכן לא מופיע כאן (§9).
-- `Prefs → DB` (2) הוא התנגשות שם, לא תלות (§1).
 
 ### א.2 קבצי States × נושא
 
@@ -1458,7 +1449,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 | Preferences/PresentationPrefs | (Prefs: UserPreferences 18) |
 | Preferences/DisplayPrefs | (Prefs: UserPreferences 20) |
 | Preferences/LogicPrefs | (Prefs: UserPreferences 56) |
-| Preferences/DataPrefs | DB 2, (Prefs: UserPreferences 54) |
+| Preferences/DataPrefs | (Prefs: UserPreferences 54) |
 | Preferences/PrefsViews | (Prefs 144) |
 
 <!-- generated:a4:end -->
