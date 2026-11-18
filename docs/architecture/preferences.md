@@ -321,7 +321,7 @@
   - התלויות בהעדפה ספציפית: `getIndex() == 6` ו-`getIndex() == 4`, גם בבדיקת הטווח וגם בהטמעה. בבדיקת הטווח BLE משתמש גם ב-`numOfShitot` (`DB/Shita.h`) וב-`numOfOfeks` (`DB/Place.cpp`), ובהטמעה ב-`bl.setCustomState`, `bl.setOfekState` ו-`bl.shitaState`.
 - **`States/ConfigState`:** `resetSimplePrefs` ו-`resetTextPrefs`, כל אחת משני מקומות: `SetResetPrefState`/`SetResetTextState` ו-`SetResetAllState` (מ-7.06).
 - **`BLE/TextCommandHandler`:** `textPrefs[i]` (7 מקומות).
-- **`Preferences/UserPreferences`:** `loadAll`, `saveAll`, `resetAll`, `printAll`, `getValueByKey`, `setValueByKey` ו-`getPref`. מתוכן רק `loadAll` נקרא (מתוך `setupPreferences`). השאר לא נקראות בשום מקום.
+- **`Preferences/UserPreferences`:** `loadAll` (נקרא מתוך `setupPreferences`), `resetSimplePrefs` ו-`resetTextPrefs` (מ-`ConfigState`). הפונקציות `saveAll`, `resetAll`, `printAll`, `getValueByKey`, `setValueByKey` ו-`getPref` לא נקראו בשום מקום, ונמחקו ב-2a.3.1.
 
 ## 8. הבדלים בין דגמים
 
@@ -359,6 +359,7 @@
 ## 9. תשובות והחלטות
 
 1. **`forceWrite`** → **רישום מרכזי.** נועד לאיפוס מרחוק: אם הערך שונה מ-0, `setup` מאפס את ההעדפות לברירות מחדל ומאפס גם את `forceWrite`. בפועל לא בשימוש. נשאר בטבלה לתאימות (`PREF_OP_READ`/`SYNC`).
+   - **בדיקה (2a.3.1):** `forceWrite` לא נקרא בשום מקום בקוד, בשלושת הדגמים. הוא נשאר רק בגלל חוזה ה-BLE (אינדקס 1).
 2. **`dayIndex`** → **נמחק ב-7.08.** נועד לשמור את אינדקס היום, כדי לשחזר את התאריך אחרי נפילת חשמל וסוללה. בפועל נכתב כל יום (`MainState::setNewDay`) ולא נקרא אף פעם. לא נכנס למבנה של שכבה, ונמחק בפרודקשן 7.08 בשלושת הדגמים (refactor-log F16). האינדקסים מפורשים, ולכן אינדקס 3 הוא חור ושום אינדקס אחר לא זז.
 3. **`safa`** → **הצגה.** לשימוש עתידי כשיתווספו שפות. לא בשימוש ב-JC, אבל בשימוש בדגמי BA ובדגמים אחרים.
 4. **`dateFormat`** → **הצגה.** הערך 8 (טקסט ריק) נוסף לבקשת לקוח שלא רצה תאריך לועזי. אחר כך הפריסה הותאמה להופעת התאריך הלועזי, ונבדקת מול הערך 8. כוונה עתידית: להפריד ל"הצג תאריך לועזי" ולפורמט התאריך. שיפור עתידי, לא לביצוע עכשיו.

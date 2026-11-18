@@ -1011,25 +1011,6 @@ public:
         // Serial.println("Finished loading preferences.");
     }
 
-    void saveAll()
-    {
-        Serial.println("Saving all user preferences...");
-        for (auto pref : allPrefs)
-        {
-            pref->save();
-        }
-        Serial.println("Finished saving preferences.");
-    }
-
-    void resetAll()
-    {
-        Serial.println("Resetting all preferences to default...");
-        for (auto pref : allPrefs)
-        {
-            pref->reset();
-        }
-        Serial.println("Finished resetting preferences.");
-    }
     // איפוס העדפות בלבד - לא נוגע בטקסטים
     void resetSimplePrefs()
     {
@@ -1046,80 +1027,6 @@ public:
         {
             pref->reset();
         }
-    }
-    void printAll()
-    {
-        Serial.println("Printing all user preferences:");
-        for (auto pref : allPrefs)
-        {
-            pref->print();
-        }
-    }
-
-    // Template function to update a value by key in a generic way
-    template <typename T>
-    bool setValueByKey(const char *key, T newValue)
-    {
-        for (auto pref : allPrefs)
-        {
-            if (strcmp(pref->getKey(), key) == 0)
-            {
-                UserPref<T> *p = dynamic_cast<UserPref<T> *>(pref);
-                if (p != nullptr)
-                {
-                    p->set(newValue);
-                    return true;
-                }
-                else
-                {
-                    Serial.print("Type mismatch for key: ");
-                    Serial.println(key);
-                    return false;
-                }
-            }
-        }
-        Serial.print("Key not found: ");
-        Serial.println(key);
-        return false;
-    }
-
-    // Template function to get a value by key in a generic way
-    template <typename T>
-    T getValueByKey(const char *key, T defaultValue)
-    {
-        for (auto pref : allPrefs)
-        {
-            if (strcmp(pref->getKey(), key) == 0)
-            {
-                UserPref<T> *p = dynamic_cast<UserPref<T> *>(pref);
-                if (p != nullptr)
-                {
-                    return p->getValue();
-                }
-                else
-                {
-                    Serial.print("Type mismatch for key: ");
-                    Serial.println(key);
-                    return defaultValue;
-                }
-            }
-        }
-        Serial.print("Key not found, returning default: ");
-        Serial.println(defaultValue);
-        return defaultValue;
-    }
-    // פונקציה חדשה לקבלת העדפה עם טיפוס ספציפי
-    template <typename T>
-    UserPref<T> *getPref(const char *key)
-    {
-        for (auto pref : allPrefs)
-        {
-            if (strcmp(pref->getKey(), key) == 0)
-            {
-                return dynamic_cast<UserPref<T> *>(pref);
-            }
-        }
-        return nullptr;
     }
 };
 void setupPreferences();

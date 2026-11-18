@@ -946,6 +946,33 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       file changed, so no build is needed.
   - `CLAUDE.md`: second exception to the editor-tools rule (`prefs_contract.py write`, baselines
     only).
+  - Follow-up commit: `check` reads a CRLF baseline as LF (`core.autocrlf=true` makes the
+    baselines CRLF in the working copy after a checkout). Tested on a CRLF copy of `JC6432.txt`.
+- **2a.3.1** (all models) — unused registry functions removed from
+  `src/Preferences/UserPreferences.h`:
+  - `saveAll`, `resetAll` (between `loadAll` and `resetSimplePrefs`), and `printAll`,
+    `setValueByKey`, `getValueByKey`, `getPref` (after `resetTextPrefs`, up to the end of the
+    class): 93 lines deleted per model, nothing else. `grep` in `src/`: none of them is called
+    (`setValueByKey` called `p->set`, which does not exist; the template was never instantiated).
+    `main.cpp:63` keeps the commented-out `printAllValues` (another name, never existed).
+  - Not touched (owner's decision): `UserPrefBase` / `UserPref`, including `isModified()` and
+    `print()` (`UserPreferences` itself has neither), the includes, and the remaining comments.
+    Remaining registry functions: `init`, `loadAll`, `resetSimplePrefs`, `resetTextPrefs`.
+  - **Verification** (reference: clean builds of `bd8f222`, `SOURCE_DATE_EPOCH=1763337600` in
+    reference and candidate):
+    - `pio run -d <model>` succeeds for all three; 0 compiler warnings before and after.
+    - `firmware.bin`: JC6416 2,060,800, JC4020 2,055,536, JC6432 2,072,400 bytes, before and after
+      (delta 0). RAM 61,100 / 61,132 / 61,924 and Flash 2,054,229 / 2,048,961 / 2,065,825 bytes,
+      unchanged.
+    - `tools/compare_bins.py`: "Only metadata differs" for all three. `objcopy --strip-debug`:
+      byte-identical. `nm -C --size-sort`: identical.
+    - `prefs_contract.py check`: OK for all three.
+    - `count_prefs.py`: identical. `count_deps.py --compare` (tree of `bd8f222` vs working tree):
+      no edge changed in any model, so every consumer sum is unchanged (784 / 820 / 847).
+    - `git diff --stat`: 3 files, 279 deletions. `git ls-files --eol`: `w/crlf`, as before.
+  - **Docs:** `preferences.md` §7 (remaining registry functions) and §9.1 (`forceWrite` is not read
+    anywhere; it stays because of the BLE contract, index 1). Recorded F22.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 
@@ -1267,3 +1294,21 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   (`docs/architecture/models-plan.md`). Until then it is a documented exception in the end-of-2a.2
   grep. Not changed in 2a.2 (changing it would change the image).
 - **Models:** JC4020 only.
+
+### F22 — `fromBytes<String>` is not bounded by the value length
+
+- **Where:** `src/Preferences/UserPreferences.h:334` (`UserPref<T>::fromBytes`, `T` = `String`):
+  `_value = String(reinterpret_cast<const char *>(&data[0]));`. Called only from `PREF_OP_WRITE`,
+  `src/BLE/CoreService.cpp:666`, with `valueStart` / `valueLen` (`:609`).
+- **What:** the string is read up to the first `'\0'`; `length` (`valueLen`) is not used for
+  `String`. A value that is not terminated within `valueLen` is read past it.
+- **Today:** the payload is `std::string raw = pCharacteristic->getValue()` (`CoreService.cpp:871-872`),
+  and `std::string::data()` is always followed by a `'\0'` (C++11). So with the current caller the
+  read stops at the end of the received bytes and does not leave the buffer. What remains: the
+  bound depends on that property of the caller (a caller that passes a buffer without a terminator,
+  e.g. a move to `NimBLEAttValue` or a zero-copy path, would read past the buffer), and a `'\0'`
+  inside the value silently truncates it. Such a write is possible only after authentication
+  (the gate in `onWrite`).
+- **Status:** open. To be fixed in a production release, together with F19 and F21. Not fixed in
+  this repo.
+- **Models:** same in all three.
