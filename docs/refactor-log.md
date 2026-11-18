@@ -557,6 +557,45 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     - `git diff --stat`: 7 files, 42 insertions, 35 deletions (35 replaced lines + 7 includes).
       `git ls-files --eol`: all 7 files `w/crlf`, as before.
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.4** (JC4020) — Logic:
+  - `userPreferences.<field>` → `logicPrefs.<field>` for the Logic fields used in JC4020: 254
+    occurrences on 220 lines in `src/States/SetTochenState.cpp` (120, JC4020 only),
+    `src/Screens/RegsScreen.cpp` (48), `src/States/MainStateInfoSets.cpp` (43),
+    `src/States/MainStateTimeSets.cpp` (36), `src/Logic.cpp` (4), `src/DB/DayInfo.cpp` (2),
+    `src/States/MainState.cpp` (1), plus `#include "Preferences/LogicPrefs.h"` in each. `loazi` has no
+    consumer in JC4020; `intervalIluy`, `intervalTime` and `intervalInfo` are read only by `RegsScreen`.
+    No commented-out lines in this layer. No line mixes a Logic field with another layer's field;
+    `eda`, `hul`, `homa` in `MainStateInfoSets.cpp` / `MainStateTimeSets.cpp` stay on
+    `userPreferences` (Data layer, next sub-step).
+  - Differences from 2a.2.4 (JC6416; 223 occurrences, 9 files): `SetTochenState` replaces
+    `SetTochenInfoState`, `SetTochenTimeState` and `SetInputText`; `interval` is used instead of the
+    three `interval*`; `yom`, `parasha`, `ZSZ`, `ZYS`, `ZPS` and `IPO` are used
+    (`MainStateInfoSets`, `MainStateTimeSets`); `Logic.cpp` reads 4 (JC6416: 8).
+  - Edits made with the editor tool only: whole-file `replace_all` in `SetTochenState.cpp`, where
+    after 2a.2.2 every `userPreferences.` access is a Logic field; per-field `replace_all` elsewhere
+    (`interval*` before `interval`, `ZSZ1` before `ZSZ`). The string literal in
+    `MainStateTimeSets.cpp` (now `:54`) is untouched (F21).
+  - **`SetTochenState.cpp` check** (approved addition): before the edit, 120 `userPreferences.`
+    accesses, all of them one of 23 fields that are all Logic in `preferences.md` §4; after the edit,
+    120 `logicPrefs.` and 0 `userPreferences.`. The parameter name `userPreferencesZman` (no dot) is
+    not affected.
+  - **Verification** (reference: the 2a.2.3 (JC4020) candidate build, source tree of `b7498c6`):
+    - `pio run -d JC4020` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,055,536 bytes before and after (delta 0). RAM 61,132 and Flash 2,048,961
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256) and
+      33 in the trailer.
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 820 → 820, each consumer's sum
+      unchanged. Moved to `LogicPrefs`: `SetTochenState` 120, `RegsScreen` 48, `MainStateInfoSets`
+      43, `MainStateTimeSets` 36, `Logic` 4, `DayInfo` 2, `MainState` 1 (254). All other edges
+      unchanged.
+    - `grep`: no Logic field remains as `userPreferences.<field>` outside `Preferences/`;
+      `logicPrefs.` 254 times.
+    - `git diff --stat`: 7 files, 227 insertions, 220 deletions (220 replaced lines + 7 includes).
+      `git ls-files --eol`: all 7 files `w/crlf`, as before.
+  - **Recorded:** F21 (documentation only, no code change).
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 
@@ -865,3 +904,16 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 - **Status:** no action needed — working copy only; the index is LF for all files, and a fresh
   checkout makes the views CRLF like the rest.
 - **Models:** JC6416, JC4020. JC6432 has no views yet.
+
+### F21 — JC4020: live debug print of a condition text in `MainStateTimeSets.cpp`
+
+- **What:** `src/States/MainStateTimeSets.cpp:54` (`:52` at `109bbb2`), inside the "zriha - yom -
+  shkiaa" screen, prints the text of the condition it is in:
+  `Serial.println("if(userPreferences.leil==1 && dayInfo.afterShkiaa)");`, followed by two more
+  `Serial.println` debug lines. Live code, not a comment.
+- **Impact:** debug output on Serial only. The string names `userPreferences.leil`, so it appears in
+  a grep for direct access although it is not an access.
+- **Status:** open. To be removed in a production release, in the same category as S3 / S5
+  (`docs/architecture/models-plan.md`). Until then it is a documented exception in the end-of-2a.2
+  grep. Not changed in 2a.2 (changing it would change the image).
+- **Models:** JC4020 only.

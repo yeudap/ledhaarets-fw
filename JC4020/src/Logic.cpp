@@ -2,6 +2,7 @@
 #include "DB/Place.h"
 #include "Preferences/PresentationPrefs.h"
 #include "Preferences/DisplayPrefs.h"
+#include "Preferences/LogicPrefs.h"
 
 MainScreen mainScreen;
 MenuScreen menuScreen;
@@ -42,8 +43,8 @@ void Logic::configStates()
     mainScreen.colorBottomT = color_list[displayPrefs.colorBottomT];
     mainScreen.colorBottomV = color_list[displayPrefs.colorBottomV];
     mainScreen.clockFont = font_list[displayPrefs.clockFont];
-    mainState.intervalTimeSet = userPreferences.interval;
-    mainState.showTimeToNetz = userPreferences.netzClk != 0;
+    mainState.intervalTimeSet = logicPrefs.interval;
+    mainState.showTimeToNetz = logicPrefs.netzClk != 0;
     mainState.setText();
     mainState.initTimeSetFuncList();
     this->setColorUpLine.colorTemp = displayPrefs.colorUp;
@@ -68,10 +69,10 @@ void Logic::configStates()
 	this->shitaState.shitaTemp = userPreferences.shita;
     this->setTohenUpLine.currentState = presentationPrefs.layout.upLine;
     this->setTohenMiddleLine.currentState = presentationPrefs.layout.middleLine;
-    this->setTohenBottomLineKezevSet.kezevTemp = userPreferences.interval;
+    this->setTohenBottomLineKezevSet.kezevTemp = logicPrefs.interval;
     this->minhagNerotSetState.nerotTemp = userPreferences.nerot;
     this->setFontState.fontTemp = displayPrefs.clockFont;
-    this->setTohenBottomLineNetzSet.netzTemp = userPreferences.netzClk;
+    this->setTohenBottomLineNetzSet.netzTemp = logicPrefs.netzClk;
     this->minhagShanimSetState.shanimTemp = userPreferences.shanim;
     this->setShaonKaiz.kaizTemp = userPreferences.shaonKaiz;
     this->setClkFormat.formatTemp = presentationPrefs.clockFormat;

@@ -2,6 +2,7 @@
 #include "DB/DB.h"
 #include "Preferences/PresentationPrefs.h"
 #include "Preferences/DisplayPrefs.h"
+#include "Preferences/LogicPrefs.h"
 
 extern Place* place;
 extern DayInfo dayInfo;
@@ -212,7 +213,7 @@ void MainState::setNewDay()
     DateTime nextShabat = now + TimeSpan(daysToShabat,0,0,0);
     dayInfo.nextShabat->initDay(idx+daysToShabat, &nextShabat, place);
     
-    startTimeToNetz = dateTimeToZman(zmanMinusDakot(dayInfo.getZriha(), userPreferences.netzClk));
+    startTimeToNetz = dateTimeToZman(zmanMinusDakot(dayInfo.getZriha(), logicPrefs.netzClk));
     netz = zmanToDateTime(dayInfo.getZriha()); // DateTime
 
     dayInfo.setNewDay();
