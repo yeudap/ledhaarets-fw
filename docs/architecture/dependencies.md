@@ -8,6 +8,7 @@
 ## 1. בסיס ושיטה
 
 **בסיס:** פרויקט `JC6416`, העץ `src/` כמו שהוא ב-commit `7b60c79`: פרודקשן 7.08, ואחרי 2a.2 (הגישה להעדפות עוברת דרך ה-views). העץ לא השתנה מאז. מספרי השורות במסמך נכונים ל-commit הזה. הספירה נעשתה בכלי של 2a.2.10 (ההחרגה של `DataPrefs`). הבדלים ב-JC4020 וב-JC6432 מופיעים רק כהערות, בסעיף 10.
+נוצר מחדש ב-`ae29f42`, אחרי השכפול של 2a.1–2a.2 ל-JC4020 ול-JC6432: `JC6416/src` לא השתנה מאז `7b60c79`, הבלוקים שנוצרים מהכלי עדכניים (`gen_deps_doc.py check`), וסעיף 10 נבדק מחדש מול שני הדגמים האחרים.
 תמונת המצב הקודמת (`9c75812`, 7.04, וסעיף הדלתא של 7.06–7.07) נמצאת ב-git, ב-commit `e7f8efb`.
 
 ### יחידה
@@ -1270,7 +1271,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 
 ## 10. הבדלים בין דגמים (הערות)
 
-הסעיף נבדק מול JC4020 ו-JC6432 כמו שהם ב-HEAD (פרודקשן 7.08, עדיין בלי views).
+הסעיף נבדק מול JC4020 ו-JC6432 כמו שהם ב-`ae29f42`: פרודקשן 7.08, אחרי 2a.1–2a.2. בשלושת הדגמים הגישה להעדפות עוברת דרך ה-views.
 
 ### JC4020
 
@@ -1288,26 +1289,27 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 - **MainStateInfoSets:** מפוצל ל-`MainStateInfoSets1.cpp` ול-`MainStateInfoSets2.cpp`.
 - **ההעדפה `screen`:** שולטת ב-`MainScreen::setScreen`, שנקרא מ-`Logic`, מ-`FontState`, מ-`SetClockState` ומ-`MainState` (לחיצה למעלה או למטה במסך הראשי).
 - **Fonts:** `Text.h` מכליל ארבעה פונטים נוספים.
+- **`Screens/MainScreen → Preferences/PresentationPrefs`** 1 (`presentationPrefs.dateFormat`, `MainScreen.cpp:92`): שכבת התצוגה קוראת העדפה ישירות. קשת כלפי מטה (3 → 4), ולכן לא ב-7.1. צימוד בין שכבות לשלב בידוד השכבות ([notes.md](notes.md), מודל הפריסה).
 
-### העדפות לפי דגם: תמונת מצב לפני שכפול 2a
+### העדפות לפי דגם: אחרי 2a.1–2a.2
 
-ב-JC6416 הגישה להעדפות עוברת דרך ה-views. ב-JC4020 וב-JC6432 היא עדיין ישירה (`userPreferences.<X>`), וכל גישה משויכת כאן ל-view ש-X שייך אליו ב-JC6416. נספרים רק צרכנים: יחידות ה-view, `PrefsViews` ו-`UserPreferences` לא נכללות. בכל תא: הפניות / צרכנים. ההתקדמות של השכפול נרשמת ב-[refactor-log.md](../refactor-log.md), בכל צעד: לפני, אחרי, וסכום לכל צרכן.
+בשלושת הדגמים הגישה להעדפות עוברת דרך ה-views. נספרים רק צרכנים: יחידות ה-view, `PrefsViews` ו-`UserPreferences` לא נכללות. בכל תא: הפניות / צרכנים. הפירוט לכל צעד, לפני ואחרי ולכל צרכן, נמצא ב-[refactor-log.md](../refactor-log.md) (2a.2 של כל דגם).
 
-| יעד | JC6416 (דרך view) | JC4020 (ישיר) | JC6432 (ישיר) |
+| יעד | JC6416 | JC4020 | JC6432 |
 | --- | --- | --- | --- |
 | `DataPrefs` | 393 / 15 | 393 / 15 | 400 / 16 |
 | `LogicPrefs` | 223 / 9 | 254 / 7 | 258 / 10 |
 | `PresentationPrefs` | 50 / 7 | 74 / 8 | 62 / 8 |
-| `DisplayPrefs` | 55 / 7 | 43 / 7 | 55 / 7 |
-| 3 הצבעים של JC6432 (`colorIvri`, `colorLoazi`, `colorParashaV`) | — | — | 9 / 3 |
+| `DisplayPrefs` | 55 / 7 | 43 / 7 | 64 / 7 |
 | `SystemPrefs` | 6 / 2 | 6 / 2 | 6 / 2 |
-| `UserContent` | 7 / 1 | ראו הערה | ראו הערה |
-| `UserPreferences` ישיר (רישום, טיפוסים, `userPreferences` בלי שדה) | 50 | 50 | 57 |
+| `UserContent` | 7 / 1 | 6 / 1 | 7 / 1 |
+| `UserPreferences` ישיר | 50 / 16 | 44 / 14 | 50 / 16 |
 | **סה"כ** | **784** | **820** | **847** |
 
-- **`UserContent` ב-JC4020 וב-JC6432:** `userPreferences.textPrefs` נספר כ-`userPreferences` בלי שדה (§1), ולכן הוא כלול בשורה של `UserPreferences` ישיר, יחד עם הרישום (`simplePrefs`, `allPrefs`). במדידת השכפול הוא מופרד לפי צרכן (`TextCommandHandler`).
-- **הצבעים של JC6432:** השכבה המוצעת שלהם היא תצוגה ([preferences.md](preferences.md) §8). הם לא נמצאים ב-`DisplayPrefs` של JC6416, ולכן הם בשורה נפרדת.
-- **מה ייחשב שכפול נכון:** לכל דגם ולכל צרכן, הספירה עוברת מ"ישיר" ל-view, והסכום לא משתנה.
+- **הסכומים לא השתנו בשכפול:** 820 ב-JC4020 ו-847 ב-JC6432, כמו בתמונת המצב שלפני השכפול (`3c02e13`), והסכום של כל צרכן זהה. ההבדל היחיד הוא בחלוקה: הגישה עברה מ-`UserPreferences` ל-views.
+- **`UserPreferences` ישיר** בשלושת הדגמים: חברי הרישום (`resetSimplePrefs`, `resetTextPrefs` ב-`ConfigState`; `simplePrefs`, `allPrefs` ב-`CoreService`, שנספרים כ-`userPreferences` כי השרשרת לא נעקבת לתוך `std::vector`), ההצהרות `extern UserPreferences userPreferences;`, הטיפוסים `UserPref` ו-`UserPreferences`, ו-`setupPreferences` (`main`). אין גישה ישירה לשדה של העדפה.
+- **`UserContent` ב-JC4020:** 6 ולא 7, כי אחת משבע הגישות של `TextCommandHandler` נמצאת בבלוק המוער של F3, והכלי לא סופר הערות.
+- **`DisplayPrefs` ב-JC6432** כולל את שלושת הצבעים של הדגם (`colorIvri`, `colorLoazi`, `colorParashaV`, בסוף המבנה לפי האינדקס): 9 הפניות משני צרכנים, `Logic` 3 ו-`ColorState` 6. בתמונת המצב הקודמת הם הופיעו בשורה נפרדת כ-"9 / 3", ומספר הצרכנים שם היה שגוי.
 
 ## נספח א' — מטריצות
 

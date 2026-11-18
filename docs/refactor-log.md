@@ -878,6 +878,24 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     registry members remain on `userPreferences`.
   - `CLAUDE.md`: stage line — 2a.1–2a.2 done in all three models; next: regenerate
     `dependencies.md`, then 2a.3.
+- **docs: `dependencies.md` regenerated after 2a.2 in all models** (rule in its §1):
+  - `JC6416/src` unchanged since `7b60c79` (`git diff --stat` empty), so §2–§9 and the generated
+    blocks stay as they are: `gen_deps_doc.py check` OK (421 edges, 7,164 references).
+  - §1: base line notes the regeneration at `ae29f42`.
+  - §10 re-checked against JC4020 and JC6432 at `ae29f42`: the model notes still hold (missing /
+    extra units, the JC4020 `TextCommandHandler` edges 2 and 3, edges 2–4 of §7.1 absent in
+    JC4020); added `Screens/MainScreen → Preferences/PresentationPrefs` 1 in JC6432. The table
+    "before the replication of 2a" replaced by "after 2a.1–2a.2", from `count_deps.py`.
+  - **Checks:** consumer sums JC6416 784, JC4020 820, JC6432 847, unchanged. Direct access to
+    `UserPreferences` in every model only from registry members, `extern` declarations, the
+    `UserPref` / `UserPreferences` types and `setupPreferences` (script over the edge labels). The
+    §10 discrepancy is gone: the JC6432 colors are inside `DisplayPrefs`, 9 references from 2
+    consumers. A second run of `count_deps.py`, `count_prefs.py` (all three models) and
+    `gen_deps_doc.py print` gives identical output. `git ls-files --eol`: `w/crlf`, no bare LF
+    or CR.
+  - Not changed: `notes.md` cites `MainScreen.cpp:91` (correct at 2a.1 (JC6432)); the line is
+    `:92` since the include of 2a.2.2.
+  - `CLAUDE.md`: stage line — next is 2a.3, planned with the owner before any execution.
 
 ## Planned for next production release
 
