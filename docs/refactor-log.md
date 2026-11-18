@@ -973,6 +973,70 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - **Docs:** `preferences.md` §7 (remaining registry functions) and §9.1 (`forceWrite` is not read
     anywhere; it stays because of the BLE contract, index 1). Recorded F22.
   - **Clock test:** not needed; compiled code identical.
+- **2a.3.2** (JC6416, JC4020) — one preference table for all models. **Contract change**
+  (owner's decision; documented, not in the field until this repo becomes production):
+  - `src/Preferences/UserPreferences.h`: members `colorIvri`, `colorLoazi`, `colorParashaV` after
+    `IORT`; in the constructor, between `IORT` and `screen`, `colorIvri` (72, default 6),
+    `colorLoazi` (73, 1), `colorParashaV` (74, 6), each with `// 1-7`, as in JC6432; `screen`
+    72 → 75, `bt` 73 → 76; the three `simplePrefs.push_back` after `IORT`. Existing defaults and
+    the `screen` comment (per-model meaning) unchanged.
+  - `src/Preferences/DisplayPrefs.h` (3 fields, 3 initializers) and `PrefsViews.cpp`
+    (3 `static_assert`): now byte-identical to JC6432 in both models. JC6432 not changed.
+  - **Whitespace (cosmetic):** the two separator lines after `colorIvri` / `colorLoazi` are empty
+    in JC6416 / JC4020; in JC6432 they hold 24 spaces. The editor tool does not write
+    whitespace-only lines, and a script edit is not allowed. Two whitespace-only differences that
+    already existed are left as they are (the line before `colorIvri`: 24 vs 48 spaces; a blank
+    line before `{` in JC6416 / JC4020).
+  - **Verification** (reference: the 2a.3.1 candidate builds, clean builds of the tree of
+    `9f9c39e`, `SOURCE_DATE_EPOCH=1763337600` in both):
+    - `pio run -d JC6416` / `-d JC4020` succeed; 0 compiler warnings before and after.
+    - JC6416: `firmware.bin` 2,060,800 → 2,061,040 (+240); RAM 61,100 → 61,172 (+72); Flash
+      2,054,229 → 2,054,457 (+228). JC4020: 2,055,536 → 2,055,760 (+224); RAM 61,132 → 61,204
+      (+72); Flash 2,048,961 → 2,049,181 (+220). RAM: 3 `UserPref<uint8_t>` objects of 24 bytes.
+      The image fits the OTA slot as before (31.3%).
+    - `prefs_contract.py print` against the 2a.3.0 baselines, JC6416 and JC4020 (same diff):
+      exactly 3 new entries (`colorIvri` 72 / 6, `colorLoazi` 73 / 1, `colorParashaV` 74 / 6) in
+      `simplePrefs`, `allPrefs` and `nvs-load` (`getUChar`, after `IORT`), and the indexes of
+      `screen` (75) and `bt` (76); counts 75 / 50 / 125 / 126. Nothing else. JC6432 unchanged.
+      The JC6416 output against JC6432 differs only in the defaults of `colorYom`, `colorParasha`,
+      `leil` and `screen`. Baselines rewritten with `write`; `check` OK for all three.
+    - `diff -w` of `UserPreferences.h`, JC6432 vs JC6416 / JC4020: only the defaults of
+      `colorYom`, `colorParasha`, `leil`, `screen`, the `screen` comment and the existing blank
+      line before `{`. JC6416 and JC4020 `UserPreferences.h` byte-identical.
+    - `count_prefs.py`: identical. `count_deps.py --compare` (tree of `9f9c39e`): only edges of the
+      view units changed — `DisplayPrefs -> UserPreferences` +6, `PrefsViews -> DisplayPrefs` +3,
+      `PrefsViews -> UserPreferences` +3. Every consumer sum unchanged (784 / 820).
+    - Contract strings: UUIDs, namespaces (`clk`, `sec`, `sys`) and the advertisement prefix not
+      touched; keys: 3 added, none changed.
+    - `git ls-files --eol`: `UserPreferences.h` `w/crlf`, the views `w/lf` (F20), as before; no
+      mixed line endings (byte count).
+  - **Contract change, recorded:**
+    - **NVS:** existing keys and types unchanged; the index is not stored in NVS. The 3 new keys
+      are not written at boot (load only reads). They are written by a BLE `PREF_OP_WRITE` of one
+      of them, and by a reset from the menu: `resetSimplePrefs` (`SetResetPrefState`,
+      `SetResetAllState`) calls `reset()` → `save()` for every `simplePrefs` entry. 3 more u8
+      entries in `clk`.
+    - **BLE (JC6416, JC4020):** `PREF_OP_SYNC` sends 75 / 76 instead of 72 / 73 for `screen` /
+      `bt`, and 72–74 when a color differs from its default. `PREF_OP_READ` / `PREF_OP_WRITE`
+      accept the 3 keys (before: `INVALID_KEY`). Nothing reads them on these models.
+    - **App:** per the owner, the table in `preference_constants.dart` ends at `IORT` (71) and
+      `getDefinitionByIndex` returns null for an unknown index; no effect on the app.
+    - **Clock test in 2a.3.5:**
+      - JC6416 / JC4020: SYNC returns 75 when `screen` differs from its default, 76 when `bt` is
+        off.
+      - READ of `colorIvri` returns 6.
+      - "Reset settings", then reboot: no change on the display.
+      - A clock with 7.08 NVS keeps all its settings after the update.
+      - JC6416: BLE write `colorIvri` = 3, then SYNC sends 72; the app keeps working without error
+        (`getDefinitionByIndex` returns null); then reset.
+      - JC6432: confirm explicitly that SYNC sends 72–76 when they differ from the defaults (as
+        today).
+  - **Docs:** `preferences.md` §2, §3, §4 (rows 72–76), §8 (`MainScreen.cpp:92`);
+    `ble.md` §7 item 1 and §8 "In this repo since 2a.3.2" (the 7.08 snapshot kept); `notes.md`
+    (`MainScreen.cpp:92`; direction "colors per area" in the layout model); F2 status; "Planned for
+    next production release" (sync note).
+  - `CLAUDE.md`: stage line — 2a.3.0–2a.3.2 done; next 2a.3.3 (ownership in JC6416), then stop
+    for review with the owner.
 
 ## Planned for next production release
 
@@ -982,6 +1046,11 @@ F8, F11 and F16 were done in production 7.08.
 | Finding | Change |
 |---|---|
 | F13 | Fix the `stamp_app_desc.py` docstring (no `HARDWARE_VERSION` build flag). The script comes from `ledhaarets-build`; the fix is made there, not in the production projects |
+
+**Sync note (from 2a.3.2):** `src/Preferences/UserPreferences.h` in this repo differs from
+production in all three models (2a.3.1 in all, the unified table in JC6416 / JC4020). The next
+production release touches this file (F22), so a patch conflict is expected there at the sync, and
+JC4020 and JC6432 also move to syncing through a patch.
 
 ## Findings
 
@@ -1017,6 +1086,8 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   by the user): the app's preference map ends at index 71 (`IORT`) and does not define 72–76,
   so there is currently no actual collision between models.
 - **Models:** JC6432 differs; JC6416 and JC4020 are identical.
+- **Status:** resolved in this repo by 2a.3.2 (one table for all models, as in JC6432; defaults
+  stay per model). Remains in production (7.08) until this repo is released.
 
 ### F3 — JC4020: TEXT write and display over BLE are disabled
 

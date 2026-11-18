@@ -36,7 +36,7 @@
 
 | namespace | מי מנהל | תוכן | גישה מ-BLE |
 | --- | --- | --- | --- |
-| `clk` | `UserPreferences` ([UserPreferences.cpp:9](../../JC6416/src/Preferences/UserPreferences.cpp#L9)) | 122 העדפות: 72 ב-`simplePrefs` (אינדקסים 1-73, ו-3 חור מ-7.08) ו-50 טקסטים ב-`textPrefs` | `PREF_OP_*` לפי מפתח, ו-`TEXT_OP_*` לפי מיקום ב-`textPrefs` |
+| `clk` | `UserPreferences` ([UserPreferences.cpp:9](../../JC6416/src/Preferences/UserPreferences.cpp#L9)) | 125 העדפות: 75 ב-`simplePrefs` (אינדקסים 1-76, ו-3 חור מ-7.08) ו-50 טקסטים ב-`textPrefs`. עד 2a.3.2: 122, ‏72 ב-`simplePrefs`, אינדקסים 1-73 | `PREF_OP_*` לפי מפתח, ו-`TEXT_OP_*` לפי מיקום ב-`textPrefs` |
 | `sec` | `AuthManager` ([Authmanager.cpp:11-13](../../JC6416/src/BLE/Authmanager.cpp#L11-L13)) | `pin` (u16), `trusted` (blob של 48B) | `pin` דרך `PREF_OP_WRITE` בלבד, כ-special-case ([CoreService.cpp:616-640](../../JC6416/src/BLE/CoreService.cpp#L616-L640)). `trusted` רק דרך `AUTH_OP_REGISTER` |
 | `sys` | `CoreService` ([CoreService.cpp:731-749](../../JC6416/src/BLE/CoreService.cpp#L731-L749)) | `dev_name` (string) | `SYS_OP_SET_NAME` |
 
@@ -54,7 +54,7 @@
 | נתונים | 26 | **רשומת מקום (9):** `ofek`, `textPlace`, `nz_lat`, `nz_long`, `nz_height`, `nz_hul`, `timezone`, `shaonKaiz`, `homa` · **שיטה (14):** `shita`, 12 שיטות חישוב (`zriha` … `zeetZom`), `nerot` · **מנהגים (3):** `eda`, `hul`, `shanim` |
 | לוגיקה | 27 | `netzClk`, 4×`interval*`, 10 בחירות "מה מוצג" (`dafHayomi` … `showIsraeli`), 12 בחירות "מה ומתי" (`TAZ` … `IORT`) |
 | הצגה | 8 | `safa`, `dateFormat`, `clockFormat`, `timeFormat`, `leil` · **פריסה (3):** `middleLine`, `upLine`, `screen` |
-| תצוגה | 9 | `brightness`, 7×`color*`, `clockFont`. ב-JC6432 עוד 3 צבעים |
+| תצוגה | 12 | `brightness`, 7×`color*`, `clockFont`, ועוד 3 צבעים: `colorIvri`, `colorLoazi`, `colorParashaV`. הם בשימוש רק ב-JC6432, ומ-2a.3.2 הם בטבלה של כל הדגמים |
 | מערכת | 1 + 1 | `bt`; ב-`sys`: `dev_name` |
 | רישום מרכזי | 1 | `forceWrite` |
 | אבטחה | 2 | ב-`sec`: `pin`, `trusted` |
@@ -143,8 +143,11 @@
 | 69 | `ZPS` | U8 | `0` | — | — | **לוגיקה** | מה מוצג ומתי. בשימוש רק ב-JC4020 |
 | 70 | `IPO` | U8 | `2` | — | — | **לוגיקה** | מה מוצג ומתי. בשימוש רק ב-JC4020 |
 | 71 | `IORT` | U8 | `2` | MainStateInfoSets 4 | SetTochenInfoState r4/w2 | **לוגיקה** | מה מוצג ומתי |
-| 72 | `screen` | U8 | `1` | — | — | **הצגה · פריסה** | בחירת הפריסה: חלוקת האזורים של המסך הראשי. בשימוש רק ב-JC6432 (9.7) |
-| 73 | `bt` | U8 | `1` | main 1 | ConfigState r4/w1 | **מערכת** | הפעלת BLE |
+| 72 | `colorIvri` | U8 | `6` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432. בטבלה מ-2a.3.2 |
+| 73 | `colorLoazi` | U8 | `1` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432. בטבלה מ-2a.3.2 |
+| 74 | `colorParashaV` | U8 | `6` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432. בטבלה מ-2a.3.2 |
+| 75 | `screen` | U8 | `1` | — | — | **הצגה · פריסה** | בחירת הפריסה: חלוקת האזורים של המסך הראשי. בשימוש רק ב-JC6432 (9.7). עד 2a.3.2 אינדקס 72 |
+| 76 | `bt` | U8 | `1` | main 1 | ConfigState r4/w1 | **מערכת** | הפעלת BLE. עד 2a.3.2 אינדקס 73 |
 
 **תוכן אישי (`textInput1` … `textInput50`):**
 
@@ -327,8 +330,8 @@
 
 ### JC4020
 
-- **הגדרות:** 72 ההגדרות זהות ל-JC6416: מפתח, אינדקס, טיפוס וברירת מחדל.
-- **views של שכבות (2a.1):** זהים ל-JC6416: אותם מבנים, שדות וסדר. אין שדה ייחודי לדגם.
+- **הגדרות:** 75 ההגדרות זהות ל-JC6416: מפתח, אינדקס, טיפוס וברירת מחדל (עד 2a.3.2: 72).
+- **views של שכבות (2a.1):** זהים ל-JC6416: אותם מבנים, שדות וסדר. אין שדה ייחודי לדגם. מ-2a.3.2 `DisplayPrefs.h` ו-`PrefsViews.cpp` זהים בשלושת הדגמים.
 - **שימוש:**
   - `middleLine` ו-`upLine` בשימוש. עורכים: `SetTochenState` ו-`Logic (temp)`. ל-`middleLine` יש צרכן, `MainState` (4). ל-`upLine` אין צרכן.
   - `interval` מחליף את `intervalIluy`, `intervalTime` ו-`intervalInfo`. צרכן: `Logic`, שמזין את `mainState.intervalTimeSet`. עורך: `SetTochenState`. שלוש ההעדפות האחרות לא בשימוש.
@@ -341,20 +344,20 @@
 
 ### JC6432
 
-- **ברירות מחדל שונות:** `colorYom` = 1, `colorParasha` = 1, `leil` = 1 (F9).
-- **3 העדפות נוספות:**
+- **ברירות מחדל שונות:** `colorYom` = 1, `colorParasha` = 1, `leil` = 1 (F9), `screen` = 2.
+- **הטבלה (מ-2a.3.2):** אותן העדפות ואותם אינדקסים כמו ב-JC6416 וב-JC4020. ההבדל היחיד בטבלה הוא ברירות המחדל שלמעלה. לפני 2a.3.2, ל-JC6432 בלבד היו 3 צבעים נוספים, ו-`screen`/`bt` היו בו 75/76 במקום 72/73 (F2).
+- **3 צבעים בשימוש רק כאן:**
   - `colorIvri` (72, ברירת מחדל 6)
   - `colorLoazi` (73, ברירת מחדל 1)
   - `colorParashaV` (74, ברירת מחדל 6)
-  - צרכן: `Logic` → `mainScreen`. עורך: `ColorState`. שכבה מוצעת: **תצוגה**.
-- **אינדקסים שזזו:** `screen` = 75 (ברירת מחדל 2), `bt` = 76 (F2).
+  - צרכן: `Logic` → `mainScreen`. עורך: `ColorState`. שכבה מוצעת: **תצוגה**. ב-JC6416 וב-JC4020 הם בטבלה, בלי צרכן ובלי עורך.
 - **`screen` בשימוש** (שכבה: הצגה · פריסה):
   - צרכנים: `Logic` (`mainScreen.setScreen`), `FontState`, `SetClockState` (`setScreen`), `MainState`.
   - `MainState` גם כותב אותו ב-`upAction`/`downAction` של המסך הראשי. כלומר, לחיצה למעלה או למטה במסך הראשי מחליפה את המסך ושומרת את הבחירה.
-- **`dateFormat`:** נקרא גם ב-`Screens/MainScreen.cpp:91`, כלומר שכבת התצוגה קוראת העדפה ישירות. הפריסה משתנה כשאין תאריך לועזי.
+- **`dateFormat`:** נקרא גם ב-`Screens/MainScreen.cpp:92`, כלומר שכבת התצוגה קוראת העדפה ישירות. הפריסה משתנה כשאין תאריך לועזי.
 - **`loazi`:** יש לו עורך ואין לו צרכן.
 - **`MainStateInfoSets`:** מפוצל ל-`…1.cpp` ול-`…2.cpp`. הצרכנים של `tfila`, `moadim`, `IORT` ושאר בחירות התוכן מתחלקים בין שני הקבצים.
-- **views (2a.1):** like JC6416; `DisplayPrefs` adds `colorIvri`, `colorLoazi`, `colorParashaV` at the end (index order); `screen` in `layout`.
+- **views (2a.1):** like JC6416; `DisplayPrefs` adds `colorIvri`, `colorLoazi`, `colorParashaV` at the end (index order); `screen` in `layout`. Since 2a.3.2 the JC6416 and JC4020 views have the same 3 fields.
 
 ## 9. תשובות והחלטות
 

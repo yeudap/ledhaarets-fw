@@ -34,7 +34,9 @@ contract depends on (`SetCustomState::printUpdateSucc`, `SetOfekState::printUpda
 (compared function by function). Their line numbers differ by 1–3 lines between models.
 
 **Model differences in the BLE contract** (details in §6.3 and §8):
-1. **JC6432:** preference indexes 72–76 differ (§8). See refactor-log F2.
+1. **JC6432:** preference indexes 72–76 differ (§8). See refactor-log F2. In the field (7.08) only:
+   in this repo the table is the same in all three models since 2a.3.2 (§8, "In this repo since
+   2a.3.2").
 2. **JC4020:** TEXT domain has 0 slots and write/display are disabled (§6.3). See refactor-log F3.
 
 Everything else in this document is identical in all three models.
@@ -525,3 +527,32 @@ reported by the user):
   (`dayIndex` removed, index 3 is a gap). The highest index is unchanged: 73 / 76.
 
 Refactor-log: F2.
+
+### In this repo since 2a.3.2 — one table for all models (not in the field)
+
+The table above is the contract of production 7.08 and stays the contract in the field until this
+repo is declared the new production. In this repo, step 2a.3.2 (owner's decision) gave JC6416 and
+JC4020 the JC6432 table:
+
+| Idx | Key | Type | Default JC6416 / JC4020 | Default JC6432 |
+|---|---|---|---|---|
+| 72 | `colorIvri` | U8 | 6 | 6 |
+| 73 | `colorLoazi` | U8 | 1 | 1 |
+| 74 | `colorParashaV` | U8 | 6 | 6 |
+| 75 | `screen` | U8 | 1 | **2** |
+| 76 | `bt` | U8 | 1 | 1 |
+
+- Same keys, types and indexes in all three models; defaults stay per model (`colorYom`,
+  `colorParasha`, `leil`, `screen`). `screen` keeps its per-model meaning. Snapshot of the table as
+  the code builds it: `docs/contracts/prefs/<model>.txt` (`tools/prefs_contract.py`).
+- **Change for JC6416 / JC4020 clocks:** `PREF_OP_SYNC` returns 75 / 76 instead of 72 / 73 for
+  `screen` / `bt`, and 72–74 when one of the three colors differs from its default.
+  `PREF_OP_READ` and `PREF_OP_WRITE` accept the keys `colorIvri`, `colorLoazi`, `colorParashaV`
+  (before: `INVALID_KEY`). On these models nothing reads the three colors.
+- **NVS:** existing keys and types unchanged; the index is not stored in NVS. The three new keys
+  are written only by a BLE write or by a reset from the menu (`resetSimplePrefs` saves every
+  entry of `simplePrefs`).
+- **App:** per the owner, `preference_constants.dart` ends at `IORT` (71) and
+  `getDefinitionByIndex` returns null for an unknown index, so the change has no effect on the app.
+  To be confirmed on a clock (2a.3.5).
+- Refactor-log: 2a.3.2, F2.

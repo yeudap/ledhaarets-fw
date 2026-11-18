@@ -92,6 +92,9 @@ static_assert(&displayPrefs.colorYom == &userPreferences.colorYom, "displayPrefs
 static_assert(&displayPrefs.colorParasha == &userPreferences.colorParasha, "displayPrefs.colorParasha");
 static_assert(&displayPrefs.colorIluy == &userPreferences.colorIluy, "displayPrefs.colorIluy");
 static_assert(&displayPrefs.clockFont == &userPreferences.clockFont, "displayPrefs.clockFont");
+static_assert(&displayPrefs.colorIvri == &userPreferences.colorIvri, "displayPrefs.colorIvri");
+static_assert(&displayPrefs.colorLoazi == &userPreferences.colorLoazi, "displayPrefs.colorLoazi");
+static_assert(&displayPrefs.colorParashaV == &userPreferences.colorParashaV, "displayPrefs.colorParashaV");
 
 // SystemPrefs
 static_assert(&systemPrefs.bt == &userPreferences.bt, "systemPrefs.bt");

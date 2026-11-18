@@ -20,6 +20,9 @@ struct DisplayPrefs
     UserPref<uint8_t> &colorParasha;
     UserPref<uint8_t> &colorIluy;
     UserPref<uint8_t> &clockFont;
+    UserPref<uint8_t> &colorIvri;
+    UserPref<uint8_t> &colorLoazi;
+    UserPref<uint8_t> &colorParashaV;
 };
 
 inline constexpr DisplayPrefs displayPrefs{
@@ -31,6 +34,9 @@ inline constexpr DisplayPrefs displayPrefs{
     userPreferences.colorYom,
     userPreferences.colorParasha,
     userPreferences.colorIluy,
-    userPreferences.clockFont};
+    userPreferences.clockFont,
+    userPreferences.colorIvri,
+    userPreferences.colorLoazi,
+    userPreferences.colorParashaV};
 
 #endif

@@ -66,8 +66,11 @@ in JC6416 (through 2a.2.10: `count_deps.py` counts view access; `dependencies.md
 with `tools/gen_deps_doc.py` as the baseline for the replication), in JC4020 and in JC6432 (2a.1,
 2a.2.1–2a.2.5 each; verification rules in `refactor-log.md`; the JC6432 colors `colorIvri`,
 `colorLoazi`, `colorParashaV` are in `DisplayPrefs`); `dependencies.md` regenerated after the
-replication. Production 7.08 is synced into this repo. Next: 2a.3 in all three models. 2a.3 is
-planned with the owner before any execution.
+replication. Production 7.08 is synced into this repo. 2a.3 is planned with the owner (decisions
+in `refactor-log.md`, "2a.3 — plan"); done: 2a.3.0 (contract tool `tools/prefs_contract.py`,
+baselines in `docs/contracts/prefs/`), 2a.3.1 (unused registry functions removed, all models),
+2a.3.2 (one preference table for all models, as in JC6432; documented contract change). Next:
+2a.3.3, move field ownership to the layer objects in JC6416, then stop for review with the owner.
 No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
 stay identical.
 

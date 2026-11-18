@@ -1,6 +1,6 @@
 # prefs contract: JC6416 (tools/prefs_contract.py)
 # columns: key, type tag (code), index, default, C++ type, namespace
-[simplePrefs] 72
+[simplePrefs] 75
 forceWrite	PT_U8(1)	1	0	uint8_t	clk
 textPlace	PT_STR(8)	2	"whaht otwun"	String	clk
 shita	PT_U8(1)	4	0	uint8_t	clk
@@ -71,8 +71,11 @@ ZYS	PT_U8(1)	68	3	uint8_t	clk
 ZPS	PT_U8(1)	69	0	uint8_t	clk
 IPO	PT_U8(1)	70	2	uint8_t	clk
 IORT	PT_U8(1)	71	2	uint8_t	clk
-screen	PT_U8(1)	72	1	uint8_t	clk
-bt	PT_U8(1)	73	1	uint8_t	clk
+colorIvri	PT_U8(1)	72	6	uint8_t	clk
+colorLoazi	PT_U8(1)	73	1	uint8_t	clk
+colorParashaV	PT_U8(1)	74	6	uint8_t	clk
+screen	PT_U8(1)	75	1	uint8_t	clk
+bt	PT_U8(1)	76	1	uint8_t	clk
 [textPrefs] 50
 textInput1	PT_STR(8)	0	""	String	clk
 textInput2	PT_STR(8)	0	""	String	clk
@@ -124,7 +127,7 @@ textInput47	PT_STR(8)	0	""	String	clk
 textInput48	PT_STR(8)	0	""	String	clk
 textInput49	PT_STR(8)	0	""	String	clk
 textInput50	PT_STR(8)	0	""	String	clk
-[allPrefs] 122
+[allPrefs] 125
 textInput1	PT_STR(8)	0	""	String	clk
 textInput2	PT_STR(8)	0	""	String	clk
 textInput3	PT_STR(8)	0	""	String	clk
@@ -245,9 +248,12 @@ ZYS	PT_U8(1)	68	3	uint8_t	clk
 ZPS	PT_U8(1)	69	0	uint8_t	clk
 IPO	PT_U8(1)	70	2	uint8_t	clk
 IORT	PT_U8(1)	71	2	uint8_t	clk
-screen	PT_U8(1)	72	1	uint8_t	clk
-bt	PT_U8(1)	73	1	uint8_t	clk
-[nvs-load] 123
+colorIvri	PT_U8(1)	72	6	uint8_t	clk
+colorLoazi	PT_U8(1)	73	1	uint8_t	clk
+colorParashaV	PT_U8(1)	74	6	uint8_t	clk
+screen	PT_U8(1)	75	1	uint8_t	clk
+bt	PT_U8(1)	76	1	uint8_t	clk
+[nvs-load] 126
 clk	begin		rw
 clk	getString	textInput1	""
 clk	getString	textInput2	""
@@ -369,6 +375,9 @@ clk	getUChar	ZYS	3
 clk	getUChar	ZPS	0
 clk	getUChar	IPO	2
 clk	getUChar	IORT	2
+clk	getUChar	colorIvri	6
+clk	getUChar	colorLoazi	1
+clk	getUChar	colorParashaV	6
 clk	getUChar	screen	1
 clk	getUChar	bt	1
 [serial] 0

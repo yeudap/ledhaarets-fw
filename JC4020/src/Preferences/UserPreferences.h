@@ -471,6 +471,9 @@ public:
     UserPref<uint8_t> ZPS;
     UserPref<uint8_t> IPO;
     UserPref<uint8_t> IORT;
+    UserPref<uint8_t> colorIvri;
+    UserPref<uint8_t> colorLoazi;
+    UserPref<uint8_t> colorParashaV;
     UserPref<uint8_t> screen;
     UserPref<uint8_t> bt;
 
@@ -832,14 +835,23 @@ public:
                         // 2. shishi shabat
                         // 3. all week
                         
-                        screen("screen", 1, PT_U8, 72, &prefs),
+                        colorIvri("colorIvri", 6, PT_U8, 72, &prefs),
+                        // 1-7
+
+                        colorLoazi("colorLoazi", 1, PT_U8, 73, &prefs),
+                        // 1-7
+
+                        colorParashaV("colorParashaV", 6, PT_U8, 74, &prefs),
+                        // 1-7
+
+                        screen("screen", 1, PT_U8, 75, &prefs),
                         // main screens
                         // 1. digit only
                         // 2. yom + ivri + loazi + digit
                         // 3. yom + loazi + digit
                         // 4. yom + ivri + digit
 
-                        bt("bt", 1, PT_U8, 73, &prefs)
+                        bt("bt", 1, PT_U8, 76, &prefs)
                         // bluetooth on/off
                         // 0. off
                         // 1. on
@@ -916,6 +928,9 @@ public:
         simplePrefs.push_back(&ZPS);
         simplePrefs.push_back(&IPO);
         simplePrefs.push_back(&IORT);
+        simplePrefs.push_back(&colorIvri);
+        simplePrefs.push_back(&colorLoazi);
+        simplePrefs.push_back(&colorParashaV);
         simplePrefs.push_back(&screen);
         simplePrefs.push_back(&bt);
 
