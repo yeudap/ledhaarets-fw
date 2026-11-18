@@ -4,7 +4,7 @@
 
 Refactor workspace for the ESP32 firmware of the LED Haarets clocks (JC6416, JC4020, JC6432).
 **This is not production.** Production firmware lives in separate projects at
-`C:\Users\yeuda\Dev\<model>_latest` (last field release: tag `v7.07`) and is built and published only by `ledhaarets-build/build_tool.py`. Nothing from
+`C:\Users\yeuda\Dev\<model>_latest` (last field release: tag `v7.08`) and is built and published only by `ledhaarets-build/build_tool.py`. Nothing from
 this repo reaches the field until the user explicitly declares it the new production.
 
 Always reply to the user in Hebrew, even when the code, tool output or recent messages are
@@ -62,9 +62,11 @@ but the content differs in many places.
 ## Stages
 
 **Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
-in JC6416 (through 2a.2.6). Next, in order: production release 7.08 (done by hand, outside this
-repo); sync 7.08 into this repo; replicate 2a.1–2a.2 to JC4020 and JC6432; then 2a.3 in all
-three models. No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
+in JC6416 (through 2a.2.7). Production 7.08 is synced into this repo. Next, in order:
+(a) `tools/count_deps.py` counts access through the layer views; (b) regenerate §2–10 of
+`docs/architecture/dependencies.md` and delete §11 (rule in §11.4), as the baseline for measuring
+the replication; then replicate 2a.1–2a.2 to JC4020 and JC6432; then 2a.3 in all three models.
+No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
 stay identical.
 
 - **0** — Baseline: contracts extraction, dependency map, preference classification.
