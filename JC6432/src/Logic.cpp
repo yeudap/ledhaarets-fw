@@ -1,6 +1,7 @@
 #include "Logic.h"
 #include "DB/Place.h"
 #include "BLE/TextCommandHandler.h"
+#include "Preferences/PresentationPrefs.h"
 
 MainScreen mainScreen;
 MenuScreen menuScreen;
@@ -87,8 +88,8 @@ void Logic::configStates()
     this->setTohenBottomLineNetzSet.netzTemp = userPreferences.netzClk;
     this->minhagShanimSetState.shanimTemp = userPreferences.shanim;
     this->setShaonKaiz.kaizTemp = userPreferences.shaonKaiz;
-    this->setClkFormat.formatTemp = userPreferences.clockFormat;
-    this->setDateFormat.formatTemp = userPreferences.dateFormat;
+    this->setClkFormat.formatTemp = presentationPrefs.clockFormat;
+    this->setDateFormat.formatTemp = presentationPrefs.dateFormat;
     this->setTimeZoneCustomState.tempTZ = userPreferences.timezone;
     this->setGovaCustomState.tempGova = userPreferences.nz_height;
     this->setLonPre.tempPre = lonPre;
@@ -97,7 +98,7 @@ void Logic::configStates()
     this->setLatPre.tempPre = latPre;
     this->setLatInt.tempInt = latInt;
     this->setLatFrac.tempFrac = latFrac;
-    mainScreen.setScreen(userPreferences.screen);
+    mainScreen.setScreen(presentationPrefs.layout.screen);
 }
 void Logic::initStates()
 {

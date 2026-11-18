@@ -1,6 +1,7 @@
 #include "States.h"
 #include "DB/DB.h"
 #include "BLE/TextCommandHandler.h"
+#include "Preferences/PresentationPrefs.h"
 
 extern Place* place;
 extern DayInfo dayInfo;
@@ -31,25 +32,25 @@ MainState::MainState()
 void MainState::initInfoSetFuncList()
 {
     stateIndexInfoSet = 0;
-    if(userPreferences.screen == 1) initInfoSetFuncList1();
-    if(userPreferences.screen == 2) initInfoSetFuncList2();
+    if(presentationPrefs.layout.screen == 1) initInfoSetFuncList1();
+    if(presentationPrefs.layout.screen == 2) initInfoSetFuncList2();
 }
 void MainState::upAction() 
 { 
-    int8_t curr = userPreferences.screen;
+    int8_t curr = presentationPrefs.layout.screen;
     int8_t next = curr%mainScreen.numOfMainScreens;
     next++;
-    userPreferences.screen = next;
+    presentationPrefs.layout.screen = next;
     initInfoSetFuncList();
     mainScreen.setScreen(next);
 }
 void MainState::downAction() 
 { 
-    int8_t curr = userPreferences.screen;
+    int8_t curr = presentationPrefs.layout.screen;
     int8_t next = curr+(mainScreen.numOfMainScreens-2);
     next = next%mainScreen.numOfMainScreens;
     next++;
-    userPreferences.screen = next;
+    presentationPrefs.layout.screen = next;
     initInfoSetFuncList();
     mainScreen.setScreen(next);
 }
@@ -191,15 +192,15 @@ void MainState::updateUpLine()
     updateHebDate();
     updateParashaValue();
     updateYom();
-    if(userPreferences.dateFormat != 8) updateLoaziDate();
-    if(!(userPreferences.dateFormat != 8 && userPreferences.screen == 2)) updateParashaTitle();
+    if(presentationPrefs.dateFormat != 8) updateLoaziDate();
+    if(!(presentationPrefs.dateFormat != 8 && presentationPrefs.layout.screen == 2)) updateParashaTitle();
 }
 void MainState::updateClockOnScreen()
 {
     if(morphing) 
     { 
         uint8_t _hour = now.hour();
-        if (userPreferences.clockFormat == 12)
+        if (presentationPrefs.clockFormat == 12)
         {
             if (_hour == 0 || _hour == 12) { _hour = 12; }
             else  { _hour %= 12; }
@@ -230,7 +231,7 @@ void MainState::checkTimeChanged()
         if(morphing) 
         { 
             uint8_t _hour = now.hour();
-            if (userPreferences.clockFormat == 12)
+            if (presentationPrefs.clockFormat == 12)
             {
                 if (_hour == 0 || _hour == 12) { _hour = 12; }
                 else  { _hour %= 12; }
@@ -311,7 +312,7 @@ void MainState::setNewDay()
 void MainState::updateHour()
 {
     uint8_t _hour = now.hour();
-    if (userPreferences.clockFormat == 12)
+    if (presentationPrefs.clockFormat == 12)
     {
         if (_hour == 0 || _hour == 12) { _hour = 12; }
         else  { _hour %= 12; }
@@ -360,7 +361,7 @@ void MainState::updateHebDate()
 void MainState::updateLoaziDate()
 {
     char loaziStr[30];
-    dayInfo.loaziDate.toString(loaziStr, userPreferences.dateFormat);
+    dayInfo.loaziDate.toString(loaziStr, presentationPrefs.dateFormat);
     mainScreen.updateLoaziDate(loaziStr);
 }
 void MainState::updateYom()

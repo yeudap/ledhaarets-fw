@@ -1,11 +1,12 @@
 #include "Logic.h"
+#include "Preferences/PresentationPrefs.h"
 
 extern Logic bl;
 extern GFXfont* font_list[numOfFonts];
 
 void SetFontState::showStateScreen() 
 {
-    mainScreen.setScreen(userPreferences.screen);
+    mainScreen.setScreen(presentationPrefs.layout.screen);
     mainScreen.printScreen();
     if(this->fontTemp == 0) { bl.mainState.morphing = true; }
     else { bl.mainState.morphing = false; }

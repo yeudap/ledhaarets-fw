@@ -726,6 +726,38 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       `git ls-files --eol`: both `w/crlf`, as before.
   - F20: "Models" line updated (JC6432 has views since 2a.1).
   - **Clock test:** not needed; compiled code identical.
+- **2a.2.2** (JC6432) — UserContent and Presentation:
+  - `userPreferences.textPrefs` → `userContent.textPrefs`, 7 places in
+    `src/BLE/TextCommandHandler.cpp`, plus `#include "Preferences/UserContent.h"`. Same as JC6416.
+  - `userPreferences.<field>` → `presentationPrefs.<field>` for `leil`, `dateFormat`,
+    `clockFormat`, `timeFormat`, and → `presentationPrefs.layout.<field>` for `middleLine`,
+    `upLine`, `screen`: 62 occurrences (14 of them `.layout.`) on 50 lines in 8 files:
+    `src/States/SetClockState.cpp` (27), `src/States/MainState.cpp` (13), `src/Screens/RegsScreen.cpp`
+    (12), `src/Logic.cpp` (3), `src/DB/Zman.cpp` (3), `src/DB/DayInfo.cpp` (2),
+    `src/Screens/MainScreen.cpp` (1), `src/States/FontState.cpp` (1), plus
+    `#include "Preferences/PresentationPrefs.h"` in each. `safa` has no consumer.
+  - Differences from 2a.2.2 (JC6416; 50 occurrences, 4 `.layout.`, 7 files): `layout.screen` is used
+    (10: `MainState` 7, two of them writes on up/down in the main screen; `Logic`, `FontState`,
+    `SetClockState` 1 each); `Screens/MainScreen.cpp:91` reads `dateFormat` (display layer reading
+    a preference, `notes.md`); `MainState` reads `dateFormat` 3 times and `MainStateTimeSets` not
+    at all. No commented-out lines in these two layers.
+  - Edits made with the editor tool only (per-field `replace_all`).
+  - **Verification** (reference: the 2a.2.1 (JC6432) candidate build, source tree of `fe1a932`):
+    - `pio run -d JC6432` succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,072,400 bytes before and after (delta 0). RAM 61,924 and Flash 2,065,825
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "Only metadata differs" — 32 bytes in `app_desc` (ELF SHA-256) and
+      33 in the trailer.
+    - `count_prefs.py`: identical. `count_deps.py`: consumer sum 847 → 847, each consumer's sum
+      unchanged. Moved: `TextCommandHandler` → `UserContent` 7; → `PresentationPrefs`:
+      `SetClockState` 27, `MainState` 13, `RegsScreen` 12, `Logic` 3, `Zman` 3, `DayInfo` 2,
+      `MainScreen` 1, `FontState` 1 (62). All other edges unchanged.
+    - `grep`: none of the 8 fields remains as `userPreferences.<field>` outside `Preferences/`;
+      `userContent.textPrefs` 7, `presentationPrefs.` 62.
+    - `git diff --stat`: 9 files, 66 insertions, 57 deletions (57 replaced lines + 9 includes).
+      `git ls-files --eol`: all 9 files `w/crlf`, as before.
+  - **Clock test:** not needed; compiled code identical.
 
 ## Planned for next production release
 

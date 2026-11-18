@@ -1,5 +1,6 @@
 #include "Screens.h"
 #include <pgmspace.h>
+#include "Preferences/PresentationPrefs.h"
 
 MainScreen::MainScreen() 
 {
@@ -88,7 +89,7 @@ void MainScreen::Small()
     parashaValue = new Area(w_zman, y_zmanDown, w_parasha, h_info, BLACK);
     parashaAll = new Area(w_zman, y_zmanUp, w_parasha, h_info*2, BLACK);
 
-    if(userPreferences.dateFormat != 8) yom = parashaTitle; // יש לועזי
+    if(presentationPrefs.dateFormat != 8) yom = parashaTitle; // יש לועזי
     else yom = loaziDate;
 
     zmanAll = new Area(0, y_zmanUp, w_zman, h_info*2, BLACK);

@@ -1,4 +1,5 @@
 #include "Screens.h"
+#include "Preferences/PresentationPrefs.h"
 extern UserPreferences userPreferences;
 
 RegsScreen::RegsScreen()
@@ -223,11 +224,11 @@ void RegsScreen::printValues()
     printValue(a3, (int)userPreferences.ofek, (int)userPreferences.ofek.getDefault());
     printValue(a4, (int)userPreferences.timezone, (int)userPreferences.timezone.getDefault());
     printValue(a5, (int)userPreferences.clockFont, (int)userPreferences.clockFont.getDefault());
-    printValue(a6, (int)userPreferences.dateFormat, (int)userPreferences.dateFormat.getDefault());
-    printValue(a7, (int)userPreferences.clockFormat, (int)userPreferences.clockFormat.getDefault());
+    printValue(a6, (int)presentationPrefs.dateFormat, (int)presentationPrefs.dateFormat.getDefault());
+    printValue(a7, (int)presentationPrefs.clockFormat, (int)presentationPrefs.clockFormat.getDefault());
     printValue(b1, (int)userPreferences.shaonKaiz, (int)userPreferences.shaonKaiz.getDefault());
-    printValue(b2, (int)userPreferences.middleLine, (int)userPreferences.middleLine.getDefault());
-    printValue(b3, (int)userPreferences.upLine, (int)userPreferences.upLine.getDefault());
+    printValue(b2, (int)presentationPrefs.layout.middleLine, (int)presentationPrefs.layout.middleLine.getDefault());
+    printValue(b3, (int)presentationPrefs.layout.upLine, (int)presentationPrefs.layout.upLine.getDefault());
     printValue(b4, (int)userPreferences.zriha, (int)userPreferences.zriha.getDefault());
     printValue(b5, (int)userPreferences.shkiaa, (int)userPreferences.shkiaa.getDefault());
     printValue(b6, (int)userPreferences.rabenuTam, (int)userPreferences.rabenuTam.getDefault());
@@ -239,8 +240,8 @@ void RegsScreen::printValues()
     printValue(c5, (int)userPreferences.zeetZom, (int)userPreferences.zeetZom.getDefault());
     printValue(c6, (int)userPreferences.nerot, (int)userPreferences.nerot.getDefault());
     printValue(c7, (int)userPreferences.hul, (int)userPreferences.hul.getDefault());
-    printValue(d1, (int)userPreferences.leil, (int)userPreferences.leil.getDefault());
-    printValue(d2, (int)userPreferences.leil, (int)userPreferences.leil.getDefault());
+    printValue(d1, (int)presentationPrefs.leil, (int)presentationPrefs.leil.getDefault());
+    printValue(d2, (int)presentationPrefs.leil, (int)presentationPrefs.leil.getDefault());
     printValue(d3, (int)userPreferences.dafHayomi, (int)userPreferences.dafHayomi.getDefault());
     printValue(d4, (int)userPreferences.yerushalmi, (int)userPreferences.yerushalmi.getDefault());
     printValue(d5, (int)userPreferences.yom, (int)userPreferences.yom.getDefault());
