@@ -309,6 +309,70 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       `PresentationPrefs` 8, `SystemPrefs` 1, `UserContent` 1), one per `static_assert` in
       `PrefsViews.cpp` (72: 71 preference fields + `userContent.textPrefs`). The message strings
       are not counted.
+- **2a.2.9** — `docs/architecture/dependencies.md` regenerated on the current JC6416 tree (step (b)):
+  - **Base:** `JC6416/src` at `7b60c79` (7.08 + 2a.2; unchanged since), counted with the tool of
+    2a.2.8 (`bc7d1b5`). 423 edges, 7,166 references (previous map: 374 / 6,747 at `9c75812`).
+  - **Generated blocks** (between `<!-- generated:<name>:begin/end -->` markers, written by a
+    scratchpad script with explicit CRLF; one-time approval for this file only, not a change to the
+    editing rule): §4 edge table, §9 include list, appendix A.1–A.4. The §4 "mark" column is
+    computed from the §2 level table, the two intended edges in `notes.md`, and the two name
+    collisions below.
+  - **Hand-written parts, kept and updated:** §1 (base; view units; view counting rule from 2a.2.8;
+    known tool limitations; spot checks re-run; "updating the document", with the rule moved from
+    §11.4 and reworded: regenerate at every production sync and at the end of every sub-stage that
+    changes dependencies, no delta section); §2 (views and `PrefsViews` at level 4 with
+    `UserPreferences`, owner's decision); §3, §5, §6 (structure kept, numbers from the tool; §5.6
+    rewritten with the views and a per-view table); §7 (line references re-checked on the base;
+    `ConfigState → Authmanager` = 2); §8 (locations re-checked; view globals, `hardwareModel` and
+    `Metadata::HWversion` added; `shitot[]` is `Shita*[10]`); §9 (hand notes under the generated
+    list); §10 (re-checked against JC4020 / JC6432 at HEAD; per-model preference table added).
+  - **§11 deleted.** §11.1 / §11.2 (new and stronger edges) are covered by the regenerated §4; the
+    "version" column is history and stays in git (`e7f8efb`). §11.3 items: §4, §7.1 and §9 parts
+    covered by regeneration; the §8 parts (`shitot[10]`, `hardwareModel`, `HWversion`) moved by
+    hand into §8. §11.4 moved into §1.
+  - **Generator validated** on `9c75812` with the previous tool against the previous document:
+    §4 identical in #, from, to, references and mark for all 374 rows; differences only in the
+    tie order of the examples (the tool sorts ties alphabetically) and in the identifier count of
+    the two edges already noted in §1. A.2 and A.3 identical. A.1 and A.4: the angle-bracket
+    include `Prefs → States` is missing (see below); A.4 shows the unit name whenever a topic has
+    a single intra target (uniform rule; the previous document did it in some rows only).
+  - **Found while regenerating (documented in §1, no code or tool change):**
+    - `Preferences/DataPrefs → DB/Place` and `→ DB/Shita` (1 each) are name collisions: the struct
+      fields `place` and `zmanim` (`DataPrefs.h:56-57`) match the global `place` and the array
+      `zmanim`. Marked "name collision" in §4, excluded from §7.1. A one-line addition to the
+      tool's `EXCLUDE` would remove them (separate step, if approved).
+    - The tool does not see `#include <...>`. Two such includes are relevant
+      (`UserPreferences.cpp:3`, `Bluetooth.cpp:5`); listed by hand in §9.
+    - §10, JC4020: `TextCommandHandler → Logic` (2, only `extern Logic bl;`) and `→ States/States.h`
+      (3, `numOfNameSets`) exist; the previous map said these edges do not exist. Corrected.
+    - §10, JC6432: `MainState` also calls `mainScreen.setScreen` (added).
+    - §5.8 referred to "appendix B"; corrected to appendix A, table A.2.
+  - **Verification** (scripts in the scratchpad):
+    - §4 rows identical to `count_deps.py` output except the mark column (423 rows); totals 423 /
+      7,166.
+    - §3: every topic edge ≥ 10 in the graph and every edge < 10 in the threshold table equals
+      A.1 (28 graph edges, 18 rows). A.2 totals equal the A.1 `States` row.
+    - The numbers of §5 and §6 come from a group script, validated on `9c75812`: it reproduces the
+      previous document's numbers (one exception kept as is: §6 "dayInfo/DayInfo 270" is the total
+      from all of `States`, unchanged).
+    - Line references in §7.1, §7.3 and §8 checked by grep on the base.
+    - Relative links resolve. `git ls-files --eol`: `w/crlf`, no bare LF or CR.
+  - **Per-model preference table (§10)**, the baseline for replicating 2a (references / consumers;
+    consumers only):
+
+    | Target | JC6416 (views) | JC4020 (direct) | JC6432 (direct) |
+    |---|---|---|---|
+    | `DataPrefs` | 393 / 15 | 393 / 15 | 400 / 16 |
+    | `LogicPrefs` | 223 / 9 | 254 / 7 | 258 / 10 |
+    | `PresentationPrefs` | 50 / 7 | 74 / 8 | 62 / 8 |
+    | `DisplayPrefs` | 55 / 7 | 43 / 7 | 55 / 7 |
+    | JC6432 extra colors | — | — | 9 / 3 |
+    | `SystemPrefs` | 6 / 2 | 6 / 2 | 6 / 2 |
+    | `UserContent` | 7 / 1 | in direct | in direct |
+    | `UserPreferences` direct | 50 | 50 | 57 |
+    | Total | 784 | 820 | 847 |
+
+    Replication progress is logged per step: before, after, and the sum per consumer.
 
 ## Planned for next production release
 

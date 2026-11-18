@@ -62,10 +62,11 @@ but the content differs in many places.
 ## Stages
 
 **Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
-in JC6416 (through 2a.2.7). Production 7.08 is synced into this repo. Next, in order:
-(a) `tools/count_deps.py` counts access through the layer views; (b) regenerate §2–10 of
-`docs/architecture/dependencies.md` and delete §11 (rule in §11.4), as the baseline for measuring
-the replication; then replicate 2a.1–2a.2 to JC4020 and JC6432; then 2a.3 in all three models.
+in JC6416 (through 2a.2.9: `count_deps.py` counts view access; `dependencies.md` regenerated as
+the baseline for the replication). Production 7.08 is synced into this repo. Next, in order:
+replicate 2a.1–2a.2 to JC4020 and JC6432 (progress per step in `refactor-log.md`, measured
+against `dependencies.md` §10; regenerate `dependencies.md` at the end); then 2a.3 in all three
+models.
 No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
 stay identical.
 
