@@ -414,6 +414,56 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       (`bc7d1b5`)" → "the tool of 2a.2.10", which the exclusion made wrong.
     - `git ls-files --eol`: `w/crlf`, no bare LF or CR.
   - No firmware source changed; no build.
+- **2a.1** (JC4020) — per-layer preference views, replicated from JC6416 (first replication step):
+  - **Mapping (before editing):** `JC4020/src/Preferences/UserPreferences.h` is byte-identical to
+    the JC6416 file at `d01dd0f` (port 7.08; same blob), and so is `UserPreferences.cpp`. No field
+    exists in only one model; no shared field differs in name, type, index or default. `textPrefs`
+    exists and is used (`TextCommandHandler` r6; F3 does not change this), so `UserContent` is the same.
+  - **Files:** `DataPrefs.h`, `LogicPrefs.h`, `PresentationPrefs.h`, `DisplayPrefs.h`,
+    `SystemPrefs.h`, `UserContent.h`, `PrefsViews.cpp` under `JC4020/src/Preferences/`,
+    byte-identical to the JC6416 files (`cmp`): same form, structs, field names and order as
+    2a.1 (JC6416); 72 `static_assert`s (71 fields + `userContent.textPrefs`). Written with the
+    editor tool; LF in the working copy, like the JC6416 views (owner's decision; F20).
+  - **Not in any struct:** `forceWrite` (central registry).
+  - **No consumer changes.** No existing file changed.
+  - **Verification rule for replicating 2a.1** (approved; applies to JC6432 too):
+    - Binary: `firmware.bin`, RAM and Flash unchanged; `nm -C --size-sort` identical; ELFs
+      identical after `objcopy --strip-debug`; `tools/compare_bins.py` reports "identical" or
+      "Only metadata differs".
+    - `tools/count_prefs.py`: output byte-identical (text and `--json`); it skips the view units.
+    - `tools/count_deps.py`: not identical, because the view units are new units. Every edge of
+      the base is unchanged (refs, ids, labels); the new edges start only in the view units and
+      `PrefsViews`, and each equals the matching edge in JC6416; the consumer sum (consumers →
+      `UserPreferences` and the views, `dependencies.md` §10) is unchanged, per consumer.
+    - Coverage: every `UserPreferences` field except `forceWrite` and `textInputN` is in exactly
+      one struct, the one of its layer in `preferences.md` §4, in BLE index order; `textInputN`
+      through `userContent.textPrefs`.
+  - **Verification** (reference: clean build of `3c02e13`, built before editing; both builds
+    clean, with `SOURCE_DATE_EPOCH=1763337600`):
+    - `pio run -d JC4020` (env `esp32dev`) succeeds; 0 compiler warnings before and after.
+    - `firmware.bin` 2,055,536 bytes before and after (delta 0). RAM 61,132 and Flash 2,048,961
+      bytes, unchanged.
+    - `nm -C --size-sort`: identical. `objcopy --strip-debug`: byte-identical.
+    - `tools/compare_bins.py`: "identical" (same md5). The full ELF is byte-identical too, so the
+      ELF SHA-256 in `app_desc` does not change. Cause: `PrefsViews.cpp.o` has no code or data,
+      and the linker (`--gc-sections`) drops it entirely, debug sections included (listed only
+      under "Discarded input sections" in `firmware.map`); no other file includes the view headers.
+    - `count_prefs.py`: identical (text and `--json`).
+    - `count_deps.py`: 350 → 363 edges, 6,825 → 7,125 references. No edge removed or changed. The
+      13 new edges (300 references) all equal JC6416: `PrefsViews → UserPreferences` 72,
+      `→ LogicPrefs` 27, `→ DataPrefs` 26, `→ DisplayPrefs` 9, `→ PresentationPrefs` 8,
+      `→ SystemPrefs` 1, `→ UserContent` 1; `→ UserPreferences` from `LogicPrefs` 56, `DataPrefs`
+      54, `DisplayPrefs` 20, `PresentationPrefs` 18, `SystemPrefs` 4, `UserContent` 4.
+    - Replication progress (`dependencies.md` §10): consumer sum 820 before and after, equal for
+      each of the 25 consumers; all accesses still direct (moved in 2a.2).
+    - Coverage script against `preferences.md` §4: 71 fields, each exactly once, each in the
+      struct of its layer, index order kept; `forceWrite` absent; `UserContent` refers to `textPrefs`.
+    - `git status`: only the 7 new files and the two documents. Keys, indexes, types, defaults,
+      load order and contract strings unchanged (`UserPreferences.*` untouched).
+    - `git ls-files --eol`: new files `w/lf`, like the JC6416 views.
+  - `preferences.md` §8: one line on the JC4020 views. `dependencies.md` is regenerated after
+    the replication to JC6432.
+  - **Clock test:** not needed; the image is byte-identical.
 
 ## Planned for next production release
 
@@ -710,3 +760,15 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   (`Authmanager.h:48`) still says that an all-zero `clientId` is never trusted.
 - **Status:** open. To be restored in a later production release. Not fixed in this repo.
 - **Models:** same in all three.
+
+### F20 — Layer view files are LF in the working copy
+
+- **What:** the 7 view files under `src/Preferences/` (`DataPrefs.h` … `PrefsViews.cpp`) are LF in
+  the working copy, in JC6416 (since `c6882d6`) and in JC4020 (2a.1). All other source files are
+  CRLF in the working copy (`core.autocrlf=true`; the index is LF for all). The editor tool writes
+  LF, and the files have not been checked out since they were created.
+- **Impact:** none on the build or the image. Git warns "LF will be replaced by CRLF the next time
+  Git touches it".
+- **Status:** no action needed — working copy only; the index is LF for all files, and a fresh
+  checkout makes the views CRLF like the rest.
+- **Models:** JC6416, JC4020. JC6432 has no views yet.

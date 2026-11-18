@@ -328,6 +328,7 @@
 ### JC4020
 
 - **הגדרות:** 72 ההגדרות זהות ל-JC6416: מפתח, אינדקס, טיפוס וברירת מחדל.
+- **views של שכבות (2a.1):** זהים ל-JC6416: אותם מבנים, שדות וסדר. אין שדה ייחודי לדגם.
 - **שימוש:**
   - `middleLine` ו-`upLine` בשימוש. עורכים: `SetTochenState` ו-`Logic (temp)`. ל-`middleLine` יש צרכן, `MainState` (4). ל-`upLine` אין צרכן.
   - `interval` מחליף את `intervalIluy`, `intervalTime` ו-`intervalInfo`. צרכן: `Logic`, שמזין את `mainState.intervalTimeSet`. עורך: `SetTochenState`. שלוש ההעדפות האחרות לא בשימוש.
