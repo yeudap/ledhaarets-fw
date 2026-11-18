@@ -1,5 +1,7 @@
 **Pending.** Based on commit `0e48b1a` (production 7.07). Re-run the comparison before writing models.md if a newer production version was synced.
 
+**7.08** (`d01dd0f`): deviations aligned in production are marked in the status column of §4 (S1, S2, S5, S9 aligned; S3 partly; S7 closed). Decision on Q2 recorded in §5. The comparison itself was not re-run.
+
 # תוכנית: `docs/architecture/models.md` — מפת הבדלים בין הדגמים
 
 ## הקשר
@@ -63,21 +65,21 @@
   יודגש שבפרויקט אחד טבלת ההעדפות חייבת להישאר לפי דגם.
 
 ### 4. רשימת סטיות והמלצה (סעיף 3 בבקשה)
-| # | סטייה | הדגם הנכון (המלצה) |
-|---|---|---|
-| S1 | `ClockRV3028`: ב-JC6416 יש `ensureBackupConfiguration` ו-`rtc.begin(Wire, true, false, false)`. ב-JC4020 וב-JC6432 יש `rtc.begin()` עם ברירות המחדל (`disableTrickleCharge`, `setBackupSwitchoverMode` בכל אתחול) | JC6416. דורש בדיקה על כרטיסי RV3028 של JC4020 ו-JC6432 |
-| S2 | `validate_time`: תאריך ברירת המחדל הוא 2025-01-01 ב-JC4020, ו-2026-09-01 ב-JC6416 וב-JC6432 | JC6416/JC6432 |
-| S3 | `Display.cpp` ב-JC6432: הדפסות debug ל-Serial, ו-`dumpMem` שלא נקרא | להסיר (כמו JC6416), להשאיר את פרמטרי החומרה |
-| S4 | הגלובלי `display`: מוגדר ב-`Area.cpp` ב-JC6416 וב-JC4020, וב-`Display.cpp` ב-JC6432 | JC6432 (`Display` = שכבת החומרה, notes.md) |
-| S5 | קוד debug בהערה: `DayInfo.cpp` ו-`main.cpp` (`rtc.adjust`) ב-JC6432 | JC6416 (בלי) |
-| S6 | קבצים יתומים: גופנים שלא נכללים (ב-JC6416 `number10/12/15/15d/28/33/35/35d/37`, `russian`; `number33` ב-JC4020) ו-`or_*` באותיות גדולות ב-JC6432 | להשאיר רק קבצים בשימוש. בלי השפעה על הבינארי |
-| S7 | כתיבת `dayIndex`: קיימת ב-JC6416, ובהערה או חסרה ב-JC4020 וב-JC6432 | להחליט יחד עם `preferences.md` 9.2. לא ליישר לפני כן |
-| S8 | רווחים בלבד: `Clock.h` ו-`ConfigState` (JC4020), `OfekState`, `platformio.ini` (JC6432) | כל אחד מהם. מתיישר מעצמו במיזוג |
-| S9 | `.gitignore` | JC6432 (המלא) |
+| # | סטייה | הדגם הנכון (המלצה) | סטטוס (7.08) |
+|---|---|---|---|
+| S1 | `ClockRV3028`: ב-JC6416 יש `ensureBackupConfiguration` ו-`rtc.begin(Wire, true, false, false)`. ב-JC4020 וב-JC6432 יש `rtc.begin()` עם ברירות המחדל (`disableTrickleCharge`, `setBackupSwitchoverMode` בכל אתחול) | JC6416. דורש בדיקה על כרטיסי RV3028 של JC4020 ו-JC6432 | **יושר ב-7.08.** `ClockRV3028.*` זהה בשלושת הדגמים |
+| S2 | `validate_time`: תאריך ברירת המחדל הוא 2025-01-01 ב-JC4020, ו-2026-09-01 ב-JC6416 וב-JC6432 | JC6416/JC6432 | **יושר ב-7.08.** `Clock.cpp` זהה בשלושת הדגמים |
+| S3 | `Display.cpp` ב-JC6432: הדפסות debug ל-Serial, ו-`dumpMem` שלא נקרא | להסיר (כמו JC6416), להשאיר את פרמטרי החומרה | **יושר חלקית ב-7.08.** ההדפסות הוסרו מ-`initDisplay`. `dumpMem` נשאר בכוונה, ככלי debug, כי ב-JC6432 הזיכרון צפוף |
+| S4 | הגלובלי `display`: מוגדר ב-`Area.cpp` ב-JC6416 וב-JC4020, וב-`Display.cpp` ב-JC6432 | JC6432 (`Display` = שכבת החומרה, notes.md) | פתוח |
+| S5 | קוד debug בהערה: `DayInfo.cpp` ו-`main.cpp` (`rtc.adjust`) ב-JC6432 | JC6416 (בלי) | **יושר ב-7.08** |
+| S6 | קבצים יתומים: גופנים שלא נכללים (ב-JC6416 `number10/12/15/15d/28/33/35/35d/37`, `russian`; `number33` ב-JC4020) ו-`or_*` באותיות גדולות ב-JC6432 | להשאיר רק קבצים בשימוש. בלי השפעה על הבינארי | פתוח |
+| S7 | כתיבת `dayIndex`: קיימת ב-JC6416, ובהערה או חסרה ב-JC4020 וב-JC6432 | להחליט יחד עם `preferences.md` 9.2. לא ליישר לפני כן | **נסגר ב-7.08.** `dayIndex` נמחק בשלושת הדגמים (F16) |
+| S8 | רווחים בלבד: `Clock.h` ו-`ConfigState` (JC4020), `OfekState`, `platformio.ini` (JC6432) | כל אחד מהם. מתיישר מעצמו במיזוג | פתוח |
+| S9 | `.gitignore` | JC6432 (המלא) | **יושר ב-7.08.** התוכן זהה בשלושת הדגמים |
 
 ### 5. לא ברור — שאלות אליך
 - Q1: `LoaziDate.h` ב-JC6432: שנה בשתי ספרות בכל הפורמטים, ופורמט 3 הוא חודש/יום. כלומר ערך `dateFormat` מציג משהו אחר בכל דגם. האם זה מכוון (מקום) או סטייה? ההערות בקובץ לא עודכנו.
-- Q2: `DayInfo.cpp`: נוסח "שנים למדינת ישראל" מול "ה-N למדינת ישראל", ו"לחורבן" מול "לחורבן בית שני". איזה נוסח נכון, או שזה מכוון לפי רוחב?
+- Q2: `DayInfo.cpp`: נוסח "שנים למדינת ישראל" מול "ה-N למדינת ישראל", ו"לחורבן" מול "לחורבן בית שני". איזה נוסח נכון, או שזה מכוון לפי רוחב? **החלטה (7.08):** להשאיר את הנוסח הנוכחי, ולהחליט כשנחזור למפת ההבדלים.
 - Q3: Morphing: ב-JC6416 וב-JC4020 הציור הטקסטואלי של הספרות לא נחסם בזמן morphing. ב-JC6432 הוא נחסם (`if(!morphing)`). תיקון שצריך להעביר, או הבדל שנובע מהגופן?
 - Q4: פריסה Big ב-JC6432: `flaginfoSet_1_Omer` לא בודק `tfila`, ו-`HagYaaleVeyavoHalel` לא מוצג בימי צום. מכוון?
 - Q5: ב-`flaginfoSet_1_Omer1` (JC6432) השורה `f && dayInfo.omer >= 7;` לא משפיעה על כלום. נראה כמו באג, מועמד ל-Finding.

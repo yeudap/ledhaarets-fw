@@ -1,9 +1,13 @@
 # BLE contract (Core service)
 
-Snapshot of the BLE protocol as implemented in production **7.07** (repo commit `dcd2cdb`,
+Snapshot of the BLE protocol as implemented in production **7.08** (repo commit `d01dd0f`,
 see [../baseline.md](../baseline.md)). This is the contract in the field. First snapshot: commit
-`e9c7639` (7.03); the 7.05–7.07 changes are in §5.3 and §6.5. OTA service is documented
+`e9c7639` (7.03); the 7.05–7.08 changes are in §5.3 and §6.5. OTA service is documented
 in [ota.md](ota.md), the advertisement in [advertisement.md](advertisement.md).
+
+**Line numbers still refer to `dcd2cdb` (7.07)**, unless a line says otherwise. 7.08 removed
+`dayIndex` from `UserPreferences.h` and added the zeet range check to `CoreService.cpp`, so lines
+after those places are shifted by a few lines in 7.08.
 
 Line numbers refer to `JC6416/src/...` unless stated otherwise. Where a file is identical in
 all three models (verified by md5), the same line numbers apply to JC4020 and JC6432.
@@ -283,20 +287,26 @@ Time data (7 B, `TIME_DATA_SIZE`):
 |---|---|---|---|
 | 0x01 `PREF_OP_READ` | `[05][01][key\0]` (≥4 B) | `[type][value bytes]` | `simplePrefs` only (`:562`) |
 | 0x02 `PREF_OP_WRITE` | `[05][02][type][key\0][value bytes]` (≥5 B) | — | `allPrefs` (= `textPrefs` + `simplePrefs`, `:643`) + special key `"pin"` |
-| 0x03 `PREF_OP_SYNC` | `[05][03]` | `[count][index…]` for every `simplePrefs` entry whose value ≠ default | `simplePrefs` (`:704`) |
+| 0x03 `PREF_OP_SYNC` | `[05][03]` | `[count][index…]` for every `simplePrefs` entry whose value ≠ default. Since 7.08 never contains index 3 (§8) | `simplePrefs` (`:704`) |
 
 WRITE checks, in order:
 
 1. No `\0` after key → `INVALID_KEY`.
 2. Type ≠ declared type → `TYPE_MISMATCH`.
-3. **Range check (since 7.07, `:653-659`)**, before `fromBytes`, on the first value byte:
+3. **Range check (since 7.07, `:653-659`; zeet keys since 7.08, `:654-660` at `d01dd0f`)**,
+   before `fromBytes`, on the first value byte:
    - index 4 (`shita`): value ≥ `numOfShitot` (`DB/Shita.h:10`, 10 since 7.06) → `INVALID_VALUE`;
    - index 6 (`ofek`): value ≥ `numOfOfeks` (size of `places[]`, set in `initPlace`,
      `DB/Place.cpp:115`) → `INVALID_VALUE`;
-   - empty value for either key → `INVALID_VALUE`.
+   - `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom` (since 7.08): value >
+     `numOfZeetCochavin` (`DB/Shita.h:12`, 28) → `INVALID_VALUE`. The upper bound is allowed
+     (`>`, not `≥`), because `zeetMethod` has `numOfZeetCochavin + 1` rows (0–28). These four keys
+     are identified by preference address, not by index;
+   - empty value for any of these keys → `INVALID_VALUE`.
 
-   Nothing is written. The accepted range follows the firmware tables, so adding a shita or a
-   city widens it. Clocks before 7.07 accept any value (refactor-log F11).
+   Nothing is written. The accepted range follows the firmware tables, so adding a shita, a city
+   or a zeet method widens it. Clocks before 7.07 accept any value of `shita` / `ofek`, and clocks
+   before 7.08 any value of the four zeet keys (refactor-log F11).
 4. `fromBytes` failure (too short) → `INVALID_VALUE`.
 5. Unknown key → `INVALID_KEY`.
 
@@ -399,6 +409,11 @@ Changing a firmware default therefore changes what the app displays for clocks s
 default, and any mismatch between app and firmware defaults is visible to the user.
 Known mismatches: refactor-log F9 (marked † in the table below).
 
+**Index 3 is no longer sent (since 7.08).** SYNC returns `getIndex()` of the `simplePrefs` entries
+only (`CoreService.cpp:709-712` at `d01dd0f`), and since `dayIndex` was removed no entry has index
+3. Before 7.08, JC6416 returned 3 almost always, because `dayIndex` was written every day
+(refactor-log F16).
+
 Declarations: `UserPreferences.h` constructor, JC6416/JC4020 lines 487–846, JC6432 lines 490–856.
 JC4020 `UserPreferences.h` is byte-identical to JC6416. The `UserPref` template (lines 1–345,
 load/save/toBytes/fromBytes) is identical in all three.
@@ -410,7 +425,7 @@ reported by SYNC (JC6416 `:488-537`).
 |---|---|---|---|---|---|---|
 | 1 | forceWrite | U8 | 0 | 0 | 487 | 490 |
 | 2 | textPlace | STR | `"whaht otwun"` | same | 539 | 542 |
-| 3 | dayIndex | U8 | 1 | 1 | 542 | 545 |
+| 3 | — (gap; was `dayIndex`, removed in 7.08. READ / WRITE look up by key, and the key `dayIndex` is in neither `simplePrefs` nor `allPrefs`, so both return `INVALID_KEY`: `CoreService.cpp:581` / `:697` at `d01dd0f`. SYNC never returns 3, see above) | — | — | — | — | — |
 | 4 | shita | U8 | 0 | 0 | 545 | 548 |
 | 5 | eda | U8 | 1 | 1 | 555 | 558 |
 | 6 | ofek | U8 | 1 | 1 | 563 | 566 |
@@ -506,6 +521,7 @@ reported by the user):
 - Per the app source (`lib/config/preference_constants.dart`, as reported by the user) the app's
   map ends at 71 (`IORT`), so 72–76 are not currently mapped by the app and there is no collision
   in practice. Any future app mapping of 72+ must be per-model.
-- Simple-pref counts: JC6416/JC4020 73, JC6432 76 (`simplePrefs.push_back`).
+- Simple-pref counts: JC6416/JC4020 72, JC6432 75 (`simplePrefs.push_back`), since 7.08
+  (`dayIndex` removed, index 3 is a gap). The highest index is unchanged: 73 / 76.
 
 Refactor-log: F2.

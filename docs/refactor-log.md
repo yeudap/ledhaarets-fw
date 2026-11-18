@@ -20,6 +20,21 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
 - **Production port 7.07** (commit `dcd2cdb`) — full copy of production `v7.07` into all three
   models. Details in `docs/baseline.md`, Sync 3. `Preferences/` unchanged. Closed F12 and F14;
   F11 partly resolved; F8 updated; recorded F15.
+- **Production port 7.08** (commit `d01dd0f`) — mixed method: full copy of production `v7.08`
+  into JC4020 and JC6432, patch `v7.07..v7.08` into JC6416 (on top of 2a.1–2a.2). Details in
+  `docs/baseline.md`, Sync 4. `Preferences/`: `dayIndex` removed (index 3 is a gap); all other
+  keys, indexes, types and defaults unchanged. Closed F8, F11 and F16; F13 stays open (fix in
+  `ledhaarets-build`); recorded F19. The adaptation of the new JC6416 code to 2a is step 2a.2.7.
+  - **Build at `d01dd0f`** (clean `pio run`, env `esp32dev`; build only, no device operations):
+
+    | Model | `firmware.bin` | RAM | Flash | Compiler warnings |
+    |---|---|---|---|---|
+    | JC6416 | 2,060,800 | 61,100 | 2,054,229 | 0 |
+    | JC4020 | 2,055,536 | 61,132 | 2,048,961 | 0 |
+    | JC6432 | 2,072,400 | 61,924 | 2,065,825 | 0 |
+
+    JC6416 figures are from the 2a.2.7 reference build (same tree, `SOURCE_DATE_EPOCH` set);
+    JC4020 and JC6432 were built without it.
 
 ### Stage 2a — per-layer preference structs
 
@@ -259,18 +274,17 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
 
 ## Planned for next production release
 
-Decided by the owner. To be done in the production projects, then ported here with the next sync.
+Decided by the owner. To be done outside this repo, then ported here with the next sync.
+F8, F11 and F16 were done in production 7.08.
 
 | Finding | Change |
 |---|---|
-| F11 | `PREF_OP_WRITE`: range check of `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom` against `numOfZeetCochavin`, like the 7.07 check of `shita` / `ofek` |
-| F8 | Fix the factory-reset trigger comment in `Authmanager.h` / `Authmanager.cpp` |
-| F13 | Fix the `stamp_app_desc.py` docstring (no `HARDWARE_VERSION` build flag) |
-| F16 | Remove `dayIndex`: stop the write in `MainState::setNewDay` (JC6416), and remove the preference from `UserPreferences` in all three models, since indexes are explicit (index 3 stays a gap). Had indexes been positional, only the write would be stopped and the definition kept, to preserve index 3 |
+| F13 | Fix the `stamp_app_desc.py` docstring (no `HARDWARE_VERSION` build flag). The script comes from `ledhaarets-build`; the fix is made there, not in the production projects |
 
 ## Findings
 
-Line numbers in F1–F9 refer to commit `e9c7639`; from F10 on, to commit `dcd2cdb` (7.07).
+Line numbers in F1–F9 refer to commit `e9c7639`; in F10–F18, to commit `dcd2cdb` (7.07); from
+F19 on, to commit `d01dd0f` (7.08).
 Status updates inside older findings use `dcd2cdb` line numbers and say so.
 
 ### F1 — `metadata.cpp` includes `metadata.h`, file is `Metadata.h`
@@ -367,7 +381,10 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   `SetResetPassState::okAction` is now at `:116-125`. Both callers are menu states, same lines in
   all three models. The comment in `Authmanager.h` / `Authmanager.cpp` is unchanged, so the
   mismatch remains.
-- **Status:** comment fix planned for the next production release. Open, planned.
+- **Status:** fixed in production 7.08 (`d01dd0f` line numbers: `src/BLE/Authmanager.h:22-24`,
+  `src/BLE/Authmanager.cpp:137-138`): the comment now says that BACK+OK for 2 seconds opens the
+  settings menu, and from there `SetResetPassState` or `SetResetAllState`. Same in all three
+  models. Closed. (The same edit lost an unrelated comment line: F19.)
 
 ### F9 — Preference defaults differ between the app and the firmware
 
@@ -425,11 +442,13 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   - Since 7.07, out-of-range BLE writes of `shita` and `ofek` are rejected with
     `CORE_ERR_INVALID_VALUE` before `fromBytes` (`src/BLE/CoreService.cpp:653-659`,
     `docs/contracts/ble.md` §6.5).
-  - `zeetCochavim` (and `rabenuTam`, `zeetShabat`, `zeetZom`) are not yet checked against
-    `numOfZeetCochavin`. A BLE range check for all four is planned for the next production
-    release. Open, planned.
+  - Since 7.08, out-of-range BLE writes of `zeetCochavim`, `rabenuTam`, `zeetShabat` and
+    `zeetZom` (value > `numOfZeetCochavin`) are rejected with `CORE_ERR_INVALID_VALUE` before
+    `fromBytes`. The four keys are identified by preference address
+    (`src/BLE/CoreService.cpp:654-660` at `d01dd0f`; through `dataPrefs.zmanim` since 2a.2.7).
   - Rollback to an older version: decided not to block it in the app, because it is a manual,
     deliberate install.
+  - Closed (7.08).
 - **Models:** same in all three (`Shita.h`, `Shita.cpp` identical).
 
 ### F12 — `hardwareModel` defined `inline` only in JC6432
@@ -451,7 +470,8 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   - Also `docs/architecture/dependencies.md:419` and `docs/architecture/notes.md:65`.
 - **Status:**
   - `CLAUDE.md` is being updated now.
-  - The docstring fix is planned for the next production release.
+  - The docstring fix was not part of 7.08. `stamp_app_desc.py` comes from `ledhaarets-build`,
+    and the fix will be made there, separately.
   - `environment.md` is a snapshot and is updated only at the next export.
   - `dependencies.md` and `notes.md` are being updated with the 7.07 docs sync.
   - Open, planned.
@@ -505,7 +525,10 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   `lib/config/preference_constants.dart`, `lib/models/app_preferences.dart:13`): `dayIndex` is
   defined at index 3 and not used beyond the definition. After the removal `SYNC` does not
   return 3, and the app does not request it. Safe with existing app versions.
-- **Status:** removal planned for the next production release. Open, planned.
+- **Status:** removed in production 7.08 in all three models: the definition, the
+  `simplePrefs.push_back`, and the write in `MainState::setNewDay` (JC6416; the commented-out
+  write in JC6432 too). Index 3 is a gap; no other index moved. The NVS key stays in `clk` as an
+  orphan entry. Closed.
 - **Models:** only JC6416 writes it. JC6432 has the write commented out
   (`src/States/MainState.cpp:310`); JC4020 does not write it. The definition (index 3) is the
   same in all three.
@@ -532,3 +555,15 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   every up/down press.
 - **Status:** documentation only (owner's decision). No code change.
 - **Models:** same in all three (JC6416 / JC4020 `:229`, `:243`; JC6432 `:230`, `:244`).
+
+### F19 — `Authmanager.h`: a principle comment was lost in 7.08
+
+- **Where:** `src/BLE/Authmanager.h`, the principles block (`:20-24`).
+- **What:** when the F8 comment block was replaced in 7.08, the line
+  "clientId שכולו אפסים לעולם אינו מהימן (מגן מהתאמה מקרית ל-slot ריק)" was deleted by mistake.
+- **Impact:** none. The comment was informative only. The protection is in the code:
+  `_isAllZero` in `AuthManager::isTrusted` (`src/BLE/Authmanager.cpp:69-70`), in `addTrusted`
+  (`:104`) and in `registerSessionClient` (`:88`). The member comment of `isTrusted`
+  (`Authmanager.h:48`) still says that an all-zero `clientId` is never trusted.
+- **Status:** open. To be restored in a later production release. Not fixed in this repo.
+- **Models:** same in all three.

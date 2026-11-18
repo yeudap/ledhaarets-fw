@@ -61,3 +61,38 @@ Changes in 7.07:
 - JC4020 `main.cpp`: formatting aligned with the other models.
 
 `Preferences/` unchanged. `stamp_app_desc.py` docstring fix (F13) not yet in production.
+
+## Sync 4: production 7.08
+
+| Model  | Tag     | Commit    |
+|--------|---------|-----------|
+| JC6416 | `v7.08` | `09a6c82` |
+| JC4020 | `v7.08` | `bbceb47` |
+| JC6432 | `v7.08` | `b75d6a7` |
+
+Repo commit: `d01dd0f`. Method: mixed.
+- JC4020 and JC6432: full copy (no refactor work exists yet in these models).
+- JC6416: patch (`git diff v7.07..v7.08`), applied on top of 2a.1–2a.2. The new code was then
+  adapted to the 2a views in a separate step, 2a.2.7 (`7b60c79`).
+
+Changes in 7.08:
+- F16: `dayIndex` removed in all three models: the definition, the `simplePrefs.push_back`, and the
+  write in `MainState::setNewDay` (JC6416; the commented-out write in JC6432). Index 3 becomes a gap.
+- F11: `PREF_OP_WRITE` range check for `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom`:
+  value > `numOfZeetCochavin` returns `CORE_ERR_INVALID_VALUE`. The four keys are identified by
+  preference address.
+- F8: factory-reset comment in `Authmanager.h` / `Authmanager.cpp` fixed (BACK+OK for 2 seconds
+  opens the settings menu). The replaced block in `Authmanager.h` also lost an unrelated line (F19).
+- S1: `ClockRV3028` with `ensureBackupConfiguration` copied from JC6416 to JC4020 and JC6432.
+- S2: JC4020 `validate_time` default date aligned with the other models (2026-09-01).
+- S3 (partial): JC6432 `initDisplay` debug prints removed. `dumpMem` kept on purpose, as a debug
+  tool, because memory is tight on JC6432.
+- S5: commented-out debug code removed in JC6432 (`DayInfo.cpp`, `main.cpp`).
+- S9: uniform `.gitignore`.
+- `PROJECT_VER` 7.07 → 7.08.
+
+`Preferences/`: `dayIndex` removed. All other keys, indexes, types and defaults unchanged. The NVS
+key `dayIndex` stays in `clk` as an orphan entry.
+
+Not in 7.08: F13. `stamp_app_desc.py` comes from `ledhaarets-build`, and the docstring is fixed
+there separately.
