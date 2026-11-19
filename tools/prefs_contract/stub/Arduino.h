@@ -18,6 +18,7 @@ class String
 public:
     String() {}
     String(const char *c) : _s(c ? c : "") {}
+    String(const char *cstr, unsigned int length) : _s(cstr ? std::string(cstr, length) : std::string()) {}
     const char *c_str() const { return _s.c_str(); }
     size_t length() const { return _s.size(); }
     char operator[](size_t i) const { return _s[i]; }
