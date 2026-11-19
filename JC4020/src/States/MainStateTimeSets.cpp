@@ -52,12 +52,8 @@ void MainState::timeSetZrihaYomShkiaa()
     Text txt = Text(mainScreen.colorBottomT, &font5, 15, 7, CENTER);
     if(presentationPrefs.leil==1 && dayInfo.afterShkiaa) 
     {
-        Serial.println("if(userPreferences.leil==1 && dayInfo.afterShkiaa)");
-        Serial.println(dayStr);
-        Serial.println(daysOfTheWeek[3]);
         if(strcmp(dayStr, daysOfTheWeek[3]) == 0)
         {
-            Serial.println("if(dayStr==daysOfTheWeek[3])");
             txt.align=RIGHT;
         }
         txt.marginY=9;

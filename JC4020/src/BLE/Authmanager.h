@@ -19,6 +19,7 @@
 //
 // עקרונות:
 //   - כתיבת NVS של ה-slots רק ב-REGISTER מפורש של לקוח *חדש* (מניעת שחיקת flash)
+//   - clientId שכולו אפסים לעולם אינו מהימן (מגן מהתאמה מקרית ל-slot ריק)
 //   - factoryReset() הוא ה-master revoke: PIN=1111 + ניקוי כל ה-slots.
 //     נקרא מהתפריט: BACK+OK למשך 2 שניות פותח את מסך ההגדרות, ומשם
 //     איפוס סיסמה (SetResetPassState) או שחזור הגדרות יצרן (SetResetAllState).

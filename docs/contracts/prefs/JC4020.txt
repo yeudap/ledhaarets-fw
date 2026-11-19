@@ -42,7 +42,7 @@ zeetZom	PT_U8(1)	39	14	uint8_t	clk
 nerot	PT_U8(1)	40	22	uint8_t	clk
 homa	PT_U8(1)	41	0	uint8_t	clk
 hul	PT_U8(1)	42	0	uint8_t	clk
-leil	PT_U8(1)	43	0	uint8_t	clk
+leil	PT_U8(1)	43	1	uint8_t	clk
 netzClk	PT_U8(1)	44	0	uint8_t	clk
 shanim	PT_U8(1)	45	0	uint8_t	clk
 interval	PT_U16(3)	46	30	uint16_t	clk
@@ -74,7 +74,7 @@ IORT	PT_U8(1)	71	2	uint8_t	clk
 colorIvri	PT_U8(1)	72	6	uint8_t	clk
 colorLoazi	PT_U8(1)	73	1	uint8_t	clk
 colorParashaV	PT_U8(1)	74	6	uint8_t	clk
-screen	PT_U8(1)	75	1	uint8_t	clk
+screen	PT_U8(1)	75	2	uint8_t	clk
 bt	PT_U8(1)	76	1	uint8_t	clk
 [textPrefs] 50
 textInput1	PT_STR(8)	0	""	String	clk
@@ -219,7 +219,7 @@ zeetZom	PT_U8(1)	39	14	uint8_t	clk
 nerot	PT_U8(1)	40	22	uint8_t	clk
 homa	PT_U8(1)	41	0	uint8_t	clk
 hul	PT_U8(1)	42	0	uint8_t	clk
-leil	PT_U8(1)	43	0	uint8_t	clk
+leil	PT_U8(1)	43	1	uint8_t	clk
 netzClk	PT_U8(1)	44	0	uint8_t	clk
 shanim	PT_U8(1)	45	0	uint8_t	clk
 interval	PT_U16(3)	46	30	uint16_t	clk
@@ -251,7 +251,7 @@ IORT	PT_U8(1)	71	2	uint8_t	clk
 colorIvri	PT_U8(1)	72	6	uint8_t	clk
 colorLoazi	PT_U8(1)	73	1	uint8_t	clk
 colorParashaV	PT_U8(1)	74	6	uint8_t	clk
-screen	PT_U8(1)	75	1	uint8_t	clk
+screen	PT_U8(1)	75	2	uint8_t	clk
 bt	PT_U8(1)	76	1	uint8_t	clk
 [nvs-load] 126
 clk	begin		rw
@@ -346,7 +346,7 @@ clk	getUChar	zeetZom	14
 clk	getUChar	nerot	22
 clk	getUChar	homa	0
 clk	getUChar	hul	0
-clk	getUChar	leil	0
+clk	getUChar	leil	1
 clk	getUChar	netzClk	0
 clk	getUChar	shanim	0
 clk	getUShort	interval	30
@@ -378,6 +378,6 @@ clk	getUChar	IORT	2
 clk	getUChar	colorIvri	6
 clk	getUChar	colorLoazi	1
 clk	getUChar	colorParashaV	6
-clk	getUChar	screen	1
+clk	getUChar	screen	2
 clk	getUChar	bt	1
 [serial] 0
