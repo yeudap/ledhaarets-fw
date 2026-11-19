@@ -244,7 +244,7 @@ void RegsScreen::printValues()
     printValue(c6, (int)dataPrefs.zmanim.nerot, (int)dataPrefs.zmanim.nerot.getDefault());
     printValue(c7, (int)dataPrefs.minhagim.hul, (int)dataPrefs.minhagim.hul.getDefault());
     printValue(d1, (int)presentationPrefs.leil, (int)presentationPrefs.leil.getDefault());
-    printValue(d2, (int)presentationPrefs.leil, (int)presentationPrefs.leil.getDefault());
+    printValue(d2, (int)presentationPrefs.timeFormat, (int)presentationPrefs.timeFormat.getDefault());
     printValue(d3, (int)logicPrefs.dafHayomi, (int)logicPrefs.dafHayomi.getDefault());
     printValue(d4, (int)logicPrefs.yerushalmi, (int)logicPrefs.yerushalmi.getDefault());
     printValue(d5, (int)logicPrefs.yom, (int)logicPrefs.yom.getDefault());

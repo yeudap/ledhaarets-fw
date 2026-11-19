@@ -331,7 +331,8 @@ protected:
             }
             else if constexpr (std::is_same<T, String>::value)
             {
-                _value = String(reinterpret_cast<const char *>(&data[0]));
+                const char *s = reinterpret_cast<const char *>(data);
+                _value = String(s, strnlen(s, length));
             }
 
             return true;
@@ -846,13 +847,16 @@ public:
 
                         screen("screen", 2, PT_U8, 75, &prefs),
                         // main screens
-                        // 1. Big
-                        // 2. Small
+                        // 1. digit only  - Big
+                        // 2. yom + ivri + loazi + digit  - Small
+                        // 3. yom + loazi + digit
+                        // 4. yom + ivri + digit
 
                         bt("bt", 1, PT_U8, 76, &prefs)
                         // bluetooth on/off
                         // 0. off
                         // 1. on
+
     {
         // הוספת ההעדפות לווקטור לגישה גנרית
         simplePrefs.push_back(&forceWrite);
@@ -986,7 +990,7 @@ public:
         allPrefs.insert(allPrefs.end(), simplePrefs.begin(), simplePrefs.end());
     }
 
-    ~UserPreferences()
+       ~UserPreferences()
     {
         prefs.end();
         Serial.println("UserPreferences closed.");
@@ -1026,6 +1030,15 @@ public:
         for (auto pref : textPrefs)
         {
             pref->reset();
+        }
+    }
+    
+    void printAll()
+    {
+        Serial.println("Printing all user preferences:");
+        for (auto pref : allPrefs)
+        {
+            pref->print();
         }
     }
 };
