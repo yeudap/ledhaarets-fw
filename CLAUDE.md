@@ -66,11 +66,13 @@ in JC6416 (through 2a.2.10: `count_deps.py` counts view access; `dependencies.md
 with `tools/gen_deps_doc.py` as the baseline for the replication), in JC4020 and in JC6432 (2a.1,
 2a.2.1–2a.2.5 each; verification rules in `refactor-log.md`; the JC6432 colors `colorIvri`,
 `colorLoazi`, `colorParashaV` are in `DisplayPrefs`); `dependencies.md` regenerated after the
-replication. Production 7.08 is synced into this repo. 2a.3 is planned with the owner (decisions
+replication. Production 7.09 is synced into this repo (Sync 5; it includes 2a.3.1 except
+`printAll`, and the table of 2a.3.2). 2a.3 is planned with the owner (decisions
 in `refactor-log.md`, "2a.3 — plan"); done: 2a.3.0 (contract tool `tools/prefs_contract.py`,
 baselines in `docs/contracts/prefs/`), 2a.3.1 (unused registry functions removed, all models),
 2a.3.2 (one preference table for all models, as in JC6432; documented contract change). Next:
 2a.3.3, move field ownership to the layer objects in JC6416, then stop for review with the owner.
+Before starting 2a.3.3, the saved plan ("2a.3 — plan") is re-checked against the new HEAD.
 No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
 stay identical.
 
@@ -82,15 +84,15 @@ stay identical.
 - **2a** — Per-layer preference structs (`DataPrefs` with place / zmanim / minhagim,
   `LogicPrefs`, `PresentationPrefs` with layout, `DisplayPrefs`, `UserContent`, `SystemPrefs`) and a
   central registry that owns the table (key, index, type, default, field) and load/save only.
-  `PREF_OP_WRITE` range checks (`shita`, `ofek`, later the zeet keys of F11) and the immediate
+  `PREF_OP_WRITE` range checks (`shita`, `ofek`, and since 7.08 the zeet keys of F11) and the immediate
   apply (`ofek`, `shita`) stay in `CoreService`; registering limits and actions from above
   belongs to the later "actions mechanism" stage, together with immediate apply of the other
   preferences. Classification: `docs/architecture/preferences.md`; decisions:
   `docs/architecture/notes.md`. Sub-steps:
   1. Structs as views onto the existing `userPreferences` fields. No consumer changes. (Now.)
   2. Move consumers to their layer's struct, one layer per step. (Now.)
-  3. Move field ownership into the structs; `UserPreferences` becomes the registry. Only after
-     the sync of the production release that includes F11.
+  3. Move field ownership into the structs; `UserPreferences` becomes the registry. (F11 was
+     synced with 7.08; 2a.3 started with 2a.3.0.)
 - **2** — Isolate the remaining layers behind interfaces and break couplings.
 - **Later, each approved separately** — applying preference changes from BLE immediately
   (shared apply functions with the menu); NVS namespace per layer with migration; one
@@ -152,4 +154,8 @@ Only the user changes the current stage.
    `nm -C --size-sort` is identical.
 5. Confirm that contract strings are unchanged (UUIDs, NVS namespaces and keys,
    advertisement prefix).
-6. Summarize what changed and what needs testing on a real clock.
+6. Every step that changes edges (`count_deps.py --compare` against the tree before the step
+   shows a changed edge), and every production sync: `python -I tools/gen_deps_doc.py check`
+   (JC6416). If it fails, regenerate `dependencies.md` with `write` in the same step, or report
+   why not. (It went stale unnoticed from 2a.3.2 to Sync 5.)
+7. Summarize what changed and what needs testing on a real clock.

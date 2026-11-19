@@ -35,6 +35,48 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
 
     JC6416 figures are from the 2a.2.7 reference build (same tree, `SOURCE_DATE_EPOCH` set);
     JC4020 and JC6432 were built without it.
+- **Production port 7.09** (Sync 5; commits `7066e4e` JC6416, `da5a349` JC4020, `1cb790a`
+  JC6432) — patch `v7.08..v7.09` in all three models, on top of 2a.1–2a.3.2;
+  `UserPreferences.h` copied from production as is (one-time exception to the editing rule,
+  approved by the owner). Details in `docs/baseline.md`, Sync 5.
+  - **Before the sync:** `672aa78` — the host stub of `tools/prefs_contract.py` had no
+    `String(const char*, length)`, so the registry with F22 did not compile on the PC. Added the
+    Arduino-ESP32 2.0.17 signature; on the tree of `32f2b10` the output of all three models is
+    identical to the baselines.
+  - **Closed in 7.09:** F17, F19, F21, F22. F2 is closed in production too (one table in all
+    three models). F9 updated (`leil` is 1 in all models).
+  - **`printAll`** is back (production keeps it for debug): documented deviation from 2a.3.1.
+  - **Contract change (owner's decision, in production since 7.09):** JC6416 / JC4020 defaults
+    `leil` 0 → 1 and `screen` 1 → 2 (aligned with JC6432; `screen` has no consumer on these
+    models, so no display change). `PREF_OP_READ` of a key never written returns the new default;
+    `PREF_OP_SYNC` now reports 43 for a stored `leil` 0 and 75 for a stored `screen` 1 (e.g. after
+    "reset settings" on 7.08, which saves every default), and no longer reports a stored `leil` 1.
+    `docs/contracts/prefs/JC6416.txt` and `JC4020.txt` rewritten (only these two defaults);
+    JC6432 baseline unchanged.
+  - **Out of scope:** F22 also exists in BA6416, BC6416, JC8040 and Laniado (owner's report).
+  - **Verification** (reference: clean builds of `672aa78`; `SOURCE_DATE_EPOCH=1763337600` in
+    every build; comparison procedure in `docs/baseline.md`, Sync 5):
+
+    | Model | `firmware.bin` | RAM | Flash | Compiler warnings |
+    |---|---|---|---|---|
+    | JC6416 | 2,061,040 → 2,061,072 (+32) | 61,172 | 2,054,457 → 2,054,501 | 0 |
+    | JC4020 | 2,055,760 → 2,055,680 (−80) | 61,204 | 2,049,181 → 2,049,097 | 0 |
+    | JC6432 | 2,072,400 → 2,072,448 (+48) | 61,924 | 2,065,825 → 2,065,869 | 0 |
+
+    - Versus production v7.09, all three: `compare_bins.py` "Only metadata differs"; ELF after
+      `--strip-debug` byte-identical; `nm -C --size-sort` identical.
+    - `prefs_contract.py check`: JC6416 / JC4020 differ from the old baseline only in the `leil`
+      and `screen` defaults; JC6432 OK. Against JC6432 only `colorYom` / `colorParasha` differ.
+    - `count_deps.py --compare` (tree of `32f2b10`): `RegsScreen -> PresentationPrefs` 12 → 12
+      (`leil` −2, `timeFormat` +2) in all three; JC4020 also `MainStateTimeSets -> DB/Dict` 2 → 1
+      (`daysOfTheWeek` in a removed F21 print). Preference consumer sums unchanged: 784 / 820 / 847.
+    - `UserPreferences.h` `cmp`-equal to production, `w/crlf`. UUIDs, NVS namespaces and keys,
+      advertisement prefix unchanged.
+    - `diff -r` of the production tree and the repo: only the 2a views and their consumers, and
+      helper files that exist only in production.
+  - **Docs:** `dependencies.md` regenerated (`gen_deps_doc.py write`). It had not been regenerated
+    after 2a.3.2 (`check` failed already at `32f2b10`: three view edges, +12 references);
+    `CLAUDE.md` now runs `check` in every step that changes edges.
 
 ### Stage 2a — per-layer preference structs
 
@@ -958,6 +1000,8 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - Not touched (owner's decision): `UserPrefBase` / `UserPref`, including `isModified()` and
     `print()` (`UserPreferences` itself has neither), the includes, and the remaining comments.
     Remaining registry functions: `init`, `loadAll`, `resetSimplePrefs`, `resetTextPrefs`.
+  - **Since Sync 5:** `printAll` is back (production 7.09 keeps it for debug). Documented
+    deviation from this step.
   - **Verification** (reference: clean builds of `bd8f222`, `SOURCE_DATE_EPOCH=1763337600` in
     reference and candidate):
     - `pio run -d <model>` succeeds for all three; 0 compiler warnings before and after.
@@ -1041,7 +1085,7 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
 ## Planned for next production release
 
 Decided by the owner. To be done outside this repo, then ported here with the next sync.
-F8, F11 and F16 were done in production 7.08.
+F8, F11 and F16 were done in production 7.08; F17, F19, F21 and F22 in production 7.09.
 
 | Finding | Change |
 |---|---|
@@ -1050,7 +1094,8 @@ F8, F11 and F16 were done in production 7.08.
 **Sync note (from 2a.3.2):** `src/Preferences/UserPreferences.h` in this repo differs from
 production in all three models (2a.3.1 in all, the unified table in JC6416 / JC4020). The next
 production release touches this file (F22), so a patch conflict is expected there at the sync, and
-JC4020 and JC6432 also move to syncing through a patch.
+JC4020 and JC6432 also move to syncing through a patch. **Done in Sync 5 (7.09):** all three
+models synced by patch; `UserPreferences.h` taken from production as is.
 
 ## Findings
 
@@ -1087,7 +1132,7 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   so there is currently no actual collision between models.
 - **Models:** JC6432 differs; JC6416 and JC4020 are identical.
 - **Status:** resolved in this repo by 2a.3.2 (one table for all models, as in JC6432; defaults
-  stay per model). Remains in production (7.08) until this repo is released.
+  stay per model). Closed in production 7.09 too: one table in all three models (defaults: F9).
 
 ### F3 — JC4020: TEXT write and display over BLE are disabled
 
@@ -1131,6 +1176,9 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 - **Where:** `src/BLE/CoreService.cpp:242-253`
 - **What:** the comment at `:244` says undefined values are rejected, but only `0` (NONE) is.
   Any other byte is cast to `MenuCommand` and acknowledged with OK.
+- **Status:** documentation only (owner's decision). An undefined code is cast and acknowledged;
+  `Logic::goToMenuCommand` returns `&mainState` in its `default` branch (`src/Logic.cpp:961`
+  JC6416, `:953` JC4020, `:994` JC6432, at Sync 5), so the clock returns to the home screen.
 - **Models:** same in all three.
 
 ### F7 — `SYS_ERR_NAME_TOO_LONG` is defined but never sent
@@ -1176,6 +1224,8 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   (`docs/contracts/ble.md` §8).
 - **Status:** won't fix (owner's decision). After the refactor the issue will no longer be
   relevant. Closed.
+- **Update (7.09):** `leil` default is 1 in all three models (`:697` in JC6416 / JC4020 at Sync 5),
+  so it matches the app. The only remaining mismatches are `colorYom` and `colorParasha` on JC6432.
 
 ### F10 — Selecting a city overwrites `nz_hul`
 
@@ -1241,13 +1291,14 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   - `CLAUDE.md`, hard contract 5.
   - `docs/environment.md:95` (snapshot).
   - Also `docs/architecture/dependencies.md:419` and `docs/architecture/notes.md:65`.
-- **Status:**
-  - `CLAUDE.md` is being updated now.
-  - The docstring fix was not part of 7.08. `stamp_app_desc.py` comes from `ledhaarets-build`,
-    and the fix will be made there, separately.
+- **Status (Sync 5):**
+  - `CLAUDE.md` (hard contract 5), `dependencies.md` and `notes.md`: fixed. The only remaining
+    mention in `notes.md` (`:113`) is the closed, struck-out entry that records the removal.
+  - The docstring fix was not part of 7.08 nor of 7.09 (`stamp_app_desc.py:21` at `v7.09` still
+    names `HARDWARE_VERSION`). `stamp_app_desc.py` comes from `ledhaarets-build`, and the fix will
+    be made there, separately.
   - `environment.md` is a snapshot and is updated only at the next export.
-  - `dependencies.md` and `notes.md` are being updated with the 7.07 docs sync.
-  - Open, planned.
+  - Open, planned (`ledhaarets-build` docstring only).
 
 ### F14 — `DayInfo` changes that existed only in JC6432
 
@@ -1313,6 +1364,8 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   `d2` was likely meant for another preference.
 - **Impact:** diagnostics screen only. No effect on preferences, NVS or BLE.
 - **Status:** documentation only (owner's decision). No code change.
+  Fixed in production 7.09: `d2` shows `timeFormat` (here `presentationPrefs.timeFormat`,
+  `RegsScreen.cpp:247`). Closed (7.09).
 - **Models:** same in all three (JC6416 / JC4020 `:242-243`, JC6432 `:242-243`).
 
 ### F18 — `SetTimeFormat`: self-assignment in `menuAction` and `okAction`
@@ -1338,14 +1391,15 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   `_isAllZero` in `AuthManager::isTrusted` (`src/BLE/Authmanager.cpp:69-70`), in `addTrusted`
   (`:104`) and in `registerSessionClient` (`:88`). The member comment of `isTrusted`
   (`Authmanager.h:48`) still says that an all-zero `clientId` is never trusted.
-- **Status:** open. To be restored in a later production release. Not fixed in this repo.
+- **Status:** restored in production 7.09 and synced here (Sync 5). Closed (7.09).
 - **Models:** same in all three.
 
 ### F20 — Layer view files are LF in the working copy
 
 - **What:** the 7 view files under `src/Preferences/` (`DataPrefs.h` … `PrefsViews.cpp`) are LF in
-  the working copy, in JC6416 (since `c6882d6`) and in JC4020 (2a.1). All other source files are
-  CRLF in the working copy (`core.autocrlf=true`; the index is LF for all). The editor tool writes
+  the working copy, in JC6416 (since `c6882d6`), in JC4020 (2a.1) and in JC6432 (2a.1). All other
+  source files are CRLF in the working copy (`core.autocrlf=true`; the index is LF for all). The
+  editor tool writes
   LF, and the files have not been checked out since they were created.
 - **Impact:** none on the build or the image. Git warns "LF will be replaced by CRLF the next time
   Git touches it".
@@ -1357,13 +1411,16 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 
 - **What:** `src/States/MainStateTimeSets.cpp:54` (`:52` at `109bbb2`), inside the "zriha - yom -
   shkiaa" screen, prints the text of the condition it is in:
-  `Serial.println("if(userPreferences.leil==1 && dayInfo.afterShkiaa)");`, followed by two more
-  `Serial.println` debug lines. Live code, not a comment.
+  `Serial.println("if(userPreferences.leil==1 && dayInfo.afterShkiaa)");`. Four `Serial.println`
+  debug lines in all: this one, two after it (`dayStr`, `daysOfTheWeek[3]`), and one inside the
+  inner `if`. Live code, not a comment.
 - **Impact:** debug output on Serial only. The string names `userPreferences.leil`, so it appears in
   a grep for direct access although it is not an access.
 - **Status:** open. To be removed in a production release, in the same category as S3 / S5
   (`docs/architecture/models-plan.md`). Until then it is a documented exception in the end-of-2a.2
   grep. Not changed in 2a.2 (changing it would change the image).
+  The four lines were removed in production 7.09 and synced here (Sync 5); the condition keeps
+  `presentationPrefs.leil`. Closed (7.09).
 - **Models:** JC4020 only.
 
 ### F22 — `fromBytes<String>` is not bounded by the value length
@@ -1380,6 +1437,8 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   e.g. a move to `NimBLEAttValue` or a zero-copy path, would read past the buffer), and a `'\0'`
   inside the value silently truncates it. Such a write is possible only after authentication
   (the gate in `onWrite`).
-- **Status:** open. To be fixed in a production release, together with F19 and F21. Not fixed in
-  this repo.
-- **Models:** same in all three.
+- **Status:** fixed in production 7.09 (`const char *s = reinterpret_cast<const char *>(data);
+  _value = String(s, strnlen(s, length));`, `UserPreferences.h:334-335`) and synced here
+  (Sync 5). Closed (7.09).
+- **Models:** same in all three. Also present in BA6416, BC6416, JC8040 and Laniado (owner's
+  report), which are outside this repo.

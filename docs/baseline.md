@@ -96,3 +96,38 @@ key `dayIndex` stays in `clk` as an orphan entry.
 
 Not in 7.08: F13. `stamp_app_desc.py` comes from `ledhaarets-build`, and the docstring is fixed
 there separately.
+
+## Sync 5: production 7.09
+
+| Model  | Tag     | Commit    | Repo commit |
+|--------|---------|-----------|-------------|
+| JC6416 | `v7.09` | `28e1732` | `7066e4e`   |
+| JC4020 | `v7.09` | `8941daa` | `da5a349`   |
+| JC6432 | `v7.09` | `5e38256` | `1cb790a`   |
+
+Branch `709` points at the same commits. Method: patch (`git diff v7.08..v7.09`) in all three
+models, on top of 2a.1–2a.3.2. `UserPreferences.h` was copied as is (one-time exception to the
+editing rule, approved by the owner). Before the sync: `672aa78` (contract tool stub, F22).
+
+Changes in 7.09:
+- `UserPreferences.h`: the unified table of 2a.3.2 in JC6416 / JC4020; `saveAll`, `resetAll`,
+  `setValueByKey`, `getValueByKey`, `getPref` removed, `printAll` kept on purpose (debug);
+  defaults `leil` 0 → 1 and `screen` 1 → 2 in JC6416 / JC4020 (aligned with JC6432; `screen` has
+  no consumer there), with the `screen` comment; F22 (`String(s, strnlen(s, length))`).
+- F19 (`Authmanager.h`), F17 (`RegsScreen.cpp`, d2 = `timeFormat`), F21 (JC4020
+  `MainStateTimeSets.cpp`, four prints removed).
+- `PROJECT_VER` 7.08 → 7.09.
+
+Result: in all three models the compiled content is identical to production v7.09 (procedure
+below). The repo tree differs from production only in the 2a views and their consumers.
+Not in 7.09: F13 (`stamp_app_desc.py` docstring, to be fixed in `ledhaarets-build` (open)).
+
+### Procedure: comparing the repo with a production release (from Sync 5)
+
+1. Reference: `git -C <production> archive vX.YY | tar -x -C <scratch>/b/<model>`, then `pio run`
+   there with `SOURCE_DATE_EPOCH=1763337600`. Keep `firmware.bin` / `.elf`, then move the folder
+   away. Nothing is built in the production project.
+2. Candidate: copy the repo model folder without `.pio` to the same path `<scratch>/b/<model>`
+   and build with the same value. Same path → same `__FILE__` strings and library paths.
+3. Expected: `tools/compare_bins.py` "Only metadata differs" (or identical); the two ELFs after
+   `xtensa-esp32-elf-objcopy --strip-debug` byte-identical; `nm -C --size-sort` identical.

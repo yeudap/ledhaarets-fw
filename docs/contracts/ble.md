@@ -467,7 +467,7 @@ reported by SYNC (JC6416 `:488-537`).
 | 40 | nerot | U8 | 22 | 22 | 685 | 688 |
 | 41 | homa | U8 | 0 | 0 | 689 | 692 |
 | 42 | hul | U8 | 0 | 0 | 693 | 696 |
-| 43 † | leil | U8 | 0 | **1** | 697 | 700 |
+| 43 | leil | U8 | 1 (0 until 7.08) | 1 | 697 | 700 |
 | 44 | netzClk | U8 | 0 | 0 | 702 | 705 |
 | 45 | shanim | U8 | 0 | 0 | 706 | 709 |
 | 46 | interval | U16 | 30 | 30 | 711 | 714 |
@@ -504,7 +504,9 @@ reported by the user):
 |---|---|---|---|---|---|
 | 18 | colorYom | 6 | 6 | 1 | JC6432 |
 | 19 | colorParasha | 6 | 6 | 1 | JC6432 |
-| 43 | leil | 1 | 0 | 1 | JC6416, JC4020 |
+
+`leil` (43) was a mismatch on JC6416 / JC4020 until 7.08; since 7.09 its firmware default is 1 in
+all three models, as in the app.
 
 ### ⚠ Indexes 72–76 — BLE contract differs between models
 
@@ -528,22 +530,23 @@ reported by the user):
 
 Refactor-log: F2.
 
-### In this repo since 2a.3.2 — one table for all models (not in the field)
+### Since 7.09 (2a.3.2 in this repo) — one table for all models
 
-The table above is the contract of production 7.08 and stays the contract in the field until this
-repo is declared the new production. In this repo, step 2a.3.2 (owner's decision) gave JC6416 and
-JC4020 the JC6432 table:
+The table above is the contract of production 7.08. In this repo, step 2a.3.2 (owner's decision)
+gave JC6416 and JC4020 the JC6432 table; production 7.09 has the same table, so since 7.09 this is
+the contract in the field too (Sync 5). 7.09 also set the JC6416 / JC4020 defaults of `leil`
+(0 → 1) and `screen` (1 → 2), as in JC6432:
 
 | Idx | Key | Type | Default JC6416 / JC4020 | Default JC6432 |
 |---|---|---|---|---|
 | 72 | `colorIvri` | U8 | 6 | 6 |
 | 73 | `colorLoazi` | U8 | 1 | 1 |
 | 74 | `colorParashaV` | U8 | 6 | 6 |
-| 75 | `screen` | U8 | 1 | **2** |
+| 75 | `screen` | U8 | 2 (1 until 7.08) | 2 |
 | 76 | `bt` | U8 | 1 | 1 |
 
-- Same keys, types and indexes in all three models; defaults stay per model (`colorYom`,
-  `colorParasha`, `leil`, `screen`). `screen` keeps its per-model meaning. Snapshot of the table as
+- Same keys, types and indexes in all three models; defaults that stay per model: `colorYom`,
+  `colorParasha` (F9). `screen` keeps its per-model meaning. Snapshot of the table as
   the code builds it: `docs/contracts/prefs/<model>.txt` (`tools/prefs_contract.py`).
 - **Change for JC6416 / JC4020 clocks:** `PREF_OP_SYNC` returns 75 / 76 instead of 72 / 73 for
   `screen` / `bt`, and 72–74 when one of the three colors differs from its default.
@@ -555,4 +558,8 @@ JC4020 the JC6432 table:
 - **App:** per the owner, `preference_constants.dart` ends at `IORT` (71) and
   `getDefinitionByIndex` returns null for an unknown index, so the change has no effect on the app.
   To be confirmed on a clock (2a.3.5).
-- Refactor-log: 2a.3.2, F2.
+- **Defaults (7.09), JC6416 / JC4020:** SYNC now reports 43 for a stored `leil` 0 and 75 for a
+  stored `screen` 1 (e.g. after a menu reset on 7.08, which saves every default), and no longer
+  reports a stored `leil` 1. READ of a key never written returns the new default. `screen` has no
+  consumer on these models; the app does not map 75.
+- Refactor-log: 2a.3.2, F2, Production port 7.09.

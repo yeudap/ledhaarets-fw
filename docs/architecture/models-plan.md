@@ -2,6 +2,8 @@
 
 **7.08** (`d01dd0f`): deviations aligned in production are marked in the status column of §4 (S1, S2, S5, S9 aligned; S3 partly; S7 closed). Decision on Q2 recorded in §5. The comparison itself was not re-run.
 
+**7.09** (Sync 5, `7066e4e` / `da5a349` / `1cb790a`): the preference table (keys, indexes, types) is the same in all three models (2a.3.2 in production); the `leil` and `screen` defaults are aligned (1 and 2 in all). Per model there remain only the `colorYom` / `colorParasha` defaults (F9) and the meaning of `clockFont` and `screen`. F21 (JC4020 debug prints) removed. §3 and §6 updated accordingly; the comparison itself was not re-run.
+
 # תוכנית: `docs/architecture/models.md` — מפת הבדלים בין הדגמים
 
 ## הקשר
@@ -62,7 +64,8 @@
   ב-JC4020 (F3); מעבר בין שתי פריסות ב-JC6432; עורך תוכן אחר ב-JC4020 (`upLine`/`middleLine`/`interval`/`ZSZ`/`ZYS`/`ZPS`/`IPO`,
   לפי `preferences.md` §8); סטים מפוצלים בפריסה Big של JC6432 (`Tahanun`, `Bavli`, `…1`, `…2`).
 - **חוזה:** אינדקסים וברירות מחדל (F2, F9), והמשמעות לפי דגם של `clockFont`, של `screen`, ושל `dateFormat` אם יתברר כמכוון.
-  יודגש שבפרויקט אחד טבלת ההעדפות חייבת להישאר לפי דגם.
+  מ-7.09 הטבלה אחת (מפתחות, אינדקסים, טיפוסים). לפי דגם נשארו ברירות המחדל של `colorYom` ו-`colorParasha`,
+  והמשמעות של `clockFont` ושל `screen`.
 
 ### 4. רשימת סטיות והמלצה (סעיף 3 בבקשה)
 | # | סטייה | הדגם הנכון (המלצה) | סטטוס (7.08) |
@@ -98,7 +101,8 @@
   3. ציור הסטים ורשימות הסטים (`MainStateTimeSets`, `MainStateInfoSets*`). כללי ה-`flag*` יכולים להיות משותפים.
   4. תפריט התוכן (`SetTochen*` וחיווט ה-Tohen ב-`Logic`), ורשימת הצבעים ב-`ColorState`.
   5. גופני השעון (`font_list`), `ariel10` של JC4020, ופרמטרים של `Digit`.
-  6. **טבלת ההעדפות לפי דגם** (חוזה: F2, F9, `screen`, 3 צבעים).
+  6. **מה שנשאר לפי דגם בהעדפות:** ברירות המחדל של `colorYom` ו-`colorParasha` (F9), והמשמעות של `clockFont` ושל `screen`.
+     הטבלה עצמה אחת מ-7.09 (F2).
   7. דריסות של `Strings` ו-`Dict` (קיצורים, ר' צרה), ו-`LoaziDate` אם Q1 מכוון.
 - **דגלי יכולת מוצעים:** `HAS_TEXTS` (JC6416, JC6432), `HAS_SCREEN_SWITCH` (JC6432). ב-JC4020 התשובות של `TEXT_OP_*`
   חייבות להישאר `INVALID_INDEX` (F3).
