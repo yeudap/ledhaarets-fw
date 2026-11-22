@@ -96,7 +96,8 @@ stay identical.
 - **2** — Isolate the remaining layers behind interfaces and break couplings.
 - **Later, each approved separately** — applying preference changes from BLE immediately
   (shared apply functions with the menu); NVS namespace per layer with migration; one
-  project with `[env:<model>]` per model; per-module versioning.
+  project with `[env:<model>]` per model; per-module versioning; BLE layer identical in all
+  models; the decision on texts moves to Logic (F3).
 
 Only the user changes the current stage.
 
