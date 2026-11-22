@@ -4,6 +4,8 @@
 
 **7.09** (Sync 5, `7066e4e` / `da5a349` / `1cb790a`): the preference table (keys, indexes, types) is the same in all three models (2a.3.2 in production); the `leil` and `screen` defaults are aligned (1 and 2 in all). Per model there remain only the `colorYom` / `colorParasha` defaults (F9) and the meaning of `clockFont` and `screen`. F21 (JC4020 debug prints) removed. §3 and §6 updated accordingly; the comparison itself was not re-run.
 
+**After 7.09** (owner's decisions): S3 closed; S6 fonts kept on purpose. S4, S6 (`or_*`) and S8 are done in production after `v7.09`, not released yet (`refactor-log.md`, "Planned for next production release"). Q6 answered. F3 closed as a finding and moved to the refactor plan (§6).
+
 # תוכנית: `docs/architecture/models.md` — מפת הבדלים בין הדגמים
 
 ## הקשר
@@ -68,16 +70,16 @@
   והמשמעות של `clockFont` ושל `screen`.
 
 ### 4. רשימת סטיות והמלצה (סעיף 3 בבקשה)
-| # | סטייה | הדגם הנכון (המלצה) | סטטוס (7.08) |
+| # | סטייה | הדגם הנכון (המלצה) | סטטוס |
 |---|---|---|---|
 | S1 | `ClockRV3028`: ב-JC6416 יש `ensureBackupConfiguration` ו-`rtc.begin(Wire, true, false, false)`. ב-JC4020 וב-JC6432 יש `rtc.begin()` עם ברירות המחדל (`disableTrickleCharge`, `setBackupSwitchoverMode` בכל אתחול) | JC6416. דורש בדיקה על כרטיסי RV3028 של JC4020 ו-JC6432 | **יושר ב-7.08.** `ClockRV3028.*` זהה בשלושת הדגמים |
 | S2 | `validate_time`: תאריך ברירת המחדל הוא 2025-01-01 ב-JC4020, ו-2026-09-01 ב-JC6416 וב-JC6432 | JC6416/JC6432 | **יושר ב-7.08.** `Clock.cpp` זהה בשלושת הדגמים |
-| S3 | `Display.cpp` ב-JC6432: הדפסות debug ל-Serial, ו-`dumpMem` שלא נקרא | להסיר (כמו JC6416), להשאיר את פרמטרי החומרה | **יושר חלקית ב-7.08.** ההדפסות הוסרו מ-`initDisplay`. `dumpMem` נשאר בכוונה, ככלי debug, כי ב-JC6432 הזיכרון צפוף |
-| S4 | הגלובלי `display`: מוגדר ב-`Area.cpp` ב-JC6416 וב-JC4020, וב-`Display.cpp` ב-JC6432 | JC6432 (`Display` = שכבת החומרה, notes.md) | פתוח |
+| S3 | `Display.cpp` ב-JC6432: הדפסות debug ל-Serial, ו-`dumpMem` שלא נקרא | להסיר (כמו JC6416), להשאיר את פרמטרי החומרה | **סגור.** ההדפסות הוסרו מ-`initDisplay` ב-7.08. `dumpMem` נשאר בכוונה, ככלי debug, כי ב-JC6432 הזיכרון צפוף |
+| S4 | הגלובלי `display`: מוגדר ב-`Area.cpp` ב-JC6416 וב-JC4020, וב-`Display.cpp` ב-JC6432 | JC6432 (`Display` = שכבת החומרה, notes.md) | **תוקן בפרודקשן אחרי v7.09 (עוד לא שוחרר).** `display` מוגדר ב-`Display.cpp`, וה-`extern` נמצא ב-`Display.h`, בשלושת הדגמים. ב-JC6432 זה כבר היה כך |
 | S5 | קוד debug בהערה: `DayInfo.cpp` ו-`main.cpp` (`rtc.adjust`) ב-JC6432 | JC6416 (בלי) | **יושר ב-7.08** |
-| S6 | קבצים יתומים: גופנים שלא נכללים (ב-JC6416 `number10/12/15/15d/28/33/35/35d/37`, `russian`; `number33` ב-JC4020) ו-`or_*` באותיות גדולות ב-JC6432 | להשאיר רק קבצים בשימוש. בלי השפעה על הבינארי | פתוח |
+| S6 | קבצים יתומים: גופנים שלא נכללים (ב-JC6416 `number10/12/15/15d/28/33/35/35d/37`, `russian`; `number33` ב-JC4020; ב-JC6432 `number10/12/15/15d/28`, `russian`) ו-`or_*` באותיות גדולות ב-JC6432 | להשאיר רק קבצים בשימוש. בלי השפעה על הבינארי | **גופנים: נשארים בכוונה**, כספריית גופנים. בתוכנית הריפקטור תהיה תיקיית `Fonts` אחת לכל הדגמים. לפני האיחוד צריך לוודא שקבצים עם אותו שם זהים גם בתוכן, אחרת דגם יקבל גופן אחר בלי שנשים לב. הרשימה המלאה כאן משמשת לבדיקה הזו. **`or_*`:** ארבעת הקבצים היתומים ב-JC6432 נמחקו בפרודקשן אחרי v7.09 (עוד לא שוחרר). הטבלאות שבשימוש מוכללות ב-`Place.h:7-10` |
 | S7 | כתיבת `dayIndex`: קיימת ב-JC6416, ובהערה או חסרה ב-JC4020 וב-JC6432 | להחליט יחד עם `preferences.md` 9.2. לא ליישר לפני כן | **נסגר ב-7.08.** `dayIndex` נמחק בשלושת הדגמים (F16) |
-| S8 | רווחים בלבד: `Clock.h` ו-`ConfigState` (JC4020), `OfekState`, `platformio.ini` (JC6432) | כל אחד מהם. מתיישר מעצמו במיזוג | פתוח |
+| S8 | רווחים בלבד: `Clock.h` ו-`ConfigState` (JC4020), `OfekState`, `platformio.ini` (JC6432) | כל אחד מהם. מתיישר מעצמו במיזוג | **יושר בפרודקשן מול JC6416, אחרי v7.09 (עוד לא שוחרר)** |
 | S9 | `.gitignore` | JC6432 (המלא) | **יושר ב-7.08.** התוכן זהה בשלושת הדגמים |
 
 ### 5. לא ברור — שאלות אליך
@@ -86,7 +88,7 @@
 - Q3: Morphing: ב-JC6416 וב-JC4020 הציור הטקסטואלי של הספרות לא נחסם בזמן morphing. ב-JC6432 הוא נחסם (`if(!morphing)`). תיקון שצריך להעביר, או הבדל שנובע מהגופן?
 - Q4: פריסה Big ב-JC6432: `flaginfoSet_1_Omer` לא בודק `tfila`, ו-`HagYaaleVeyavoHalel` לא מוצג בימי צום. מכוון?
 - Q5: ב-`flaginfoSet_1_Omer1` (JC6432) השורה `f && dayInfo.omer >= 7;` לא משפיעה על כלום. נראה כמו באג, מועמד ל-Finding.
-- Q6: מה הם קבצי `or_*` באותיות גדולות ב-JC6432 (4,017 שורות, נתונים אחרים)? אפשר למחוק?
+- Q6: מה הם קבצי `or_*` באותיות גדולות ב-JC6432 (4,017 שורות, נתונים אחרים)? אפשר למחוק? **תשובה:** קבצים יתומים. הם נמחקו בפרודקשן אחרי v7.09 (S6). הטבלאות שבשימוש (`or_tel_aviv_db.h` וכו') מוכללות ב-`Place.h:7-10`.
 
 ### 6. הערכת שיתוף ומה ב-`models/<דגם>/` (סעיף 4 בבקשה)
 - **מספרים:** ב-JC6416 יש כ-20,500 שורות קוד (בלי טבלאות וגופנים). כ-8,400 זהות בשלושת הדגמים. כ-7,300 בקבצים ששונים מעט,
@@ -105,7 +107,9 @@
      הטבלה עצמה אחת מ-7.09 (F2).
   7. דריסות של `Strings` ו-`Dict` (קיצורים, ר' צרה), ו-`LoaziDate` אם Q1 מכוון.
 - **דגלי יכולת מוצעים:** `HAS_TEXTS` (JC6416, JC6432), `HAS_SCREEN_SWITCH` (JC6432). ב-JC4020 התשובות של `TEXT_OP_*`
-  חייבות להישאר `INVALID_INDEX` (F3).
+  נשארות `INVALID_INDEX`, כי הן חלק מהחוזה (F3). רק המקום שבו ההחלטה מתקבלת משתנה: שכבת ה-BLE תהיה זהה
+  בשלושת הדגמים, וההחלטה אם לקבל טקסטים תעבור ללוגיקה כשהלוגיקה תופרד מ-BLE. התפריט של JC4020 בלי `resetText`
+  (`ConfigState.cpp:23`, `:26`) מכוון.
 
 ## אימות
 - אין שינוי קוד, ולכן אין `pio run`. אוודא ש-`git status` מראה רק את `docs/architecture/models.md` כקובץ חדש.

@@ -1086,10 +1086,17 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
 
 Decided by the owner. To be done outside this repo, then ported here with the next sync.
 F8, F11 and F16 were done in production 7.08; F17, F19, F21 and F22 in production 7.09.
+The rows below go into 7.10. They are already committed in production after `v7.09` and not
+released yet; they come in with the next sync. `PROJECT_VER` is already 7.10 in production
+(`b929601` JC6416, `fbf9eb9` JC4020, `8249d5e` JC6432). S* refer to
+`docs/architecture/models-plan.md` §4.
 
-| Finding | Change |
-|---|---|
-| F13 | Fix the `stamp_app_desc.py` docstring (no `HARDWARE_VERSION` build flag). The script comes from `ledhaarets-build`; the fix is made there, not in the production projects |
+| Finding | Change | Production commits |
+|---|---|---|
+| F13 | `stamp_app_desc.py` docstring (no `HARDWARE_VERSION` build flag) in all three models, copied from `ledhaarets-build`, where the source was already fixed | JC6416 `8d4db32`, JC4020 `225ed5e`, JC6432 `7da8a8a` |
+| S4 | `display` defined in `Display.cpp`, `extern` in `Display.h`, in all three models (JC6432 already was) | JC6416 `b929601`, JC4020 `fbf9eb9`; JC6432: none needed |
+| S6 | The four orphan `or_*` files in JC6432 (`or_TelAviv`, `or_Jerusalem`, `or_Haifa`, `or_BeerSheva`) deleted. The tables in use are included in `src/DB/Place.h:7-10` | JC6432 `8249d5e`; JC6416 / JC4020: not applicable |
+| S8 | Whitespace aligned with JC6416 | JC4020 `5d948bb`, JC6432 `916eac2`; JC6416: reference |
 
 **Sync note (from 2a.3.2):** `src/Preferences/UserPreferences.h` in this repo differs from
 production in all three models (2a.3.1 in all, the unified table in JC6416 / JC4020). The next
@@ -1126,7 +1133,8 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   a different meaning for `screen` (1 = Big, 2 = Small vs. 1–4 layout variants).
 - **Impact:** an app that maps indexes to keys without checking the model will
   misinterpret preferences 72–76 on JC6432 or on the other two models. Must be preserved as-is;
-  any future unification needs an approved migration.
+  any future unification needs an approved migration (until 2a.3.2; the contract change is
+  documented there).
   Per the app source (`lib/config/preference_constants.dart`, outside this repo, as reported
   by the user): the app's preference map ends at index 71 (`IORT`) and does not define 72–76,
   so there is currently no actual collision between models.
@@ -1148,6 +1156,13 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   JC4020 every index is invalid: READ, DELETE and SWAP also return `INVALID_INDEX`, and COUNT
   returns 0. The commented-out code in write/display does not change the wire behavior.
 - **Models:** JC4020 differs; JC6416 and JC6432 are identical.
+- **Also (JC4020):** the settings menu without `resetText` (`src/States/ConfigState.cpp:23`, `:26`
+  at Sync 5) is intentional: JC4020 has no texts.
+- **Status:** closed as a finding (owner's decision); moved to the refactor plan
+  (`docs/architecture/models-plan.md` §6). Goal: the BLE layer is the same in all three models,
+  and the decision whether to accept texts moves to the logic layer when logic is separated from
+  BLE. On JC4020 the `TEXT_OP_*` responses stay `INVALID_INDEX`, because they are part of the
+  contract; only the place where the decision is made changes. Closed.
 
 ### F4 — PREF STR value: READ returns a trailing `\0`, protocol comment says it doesn't
 
@@ -1161,6 +1176,7 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   "UTF-8", while the actual encoding is single-byte keyboard-layout transliteration
   (see `docs/contracts/ble.md` §6.5).
 - **Models:** same in all three.
+- **Status:** documentation only (owner's decision). The format with `\0` is the contract. Closed.
 
 ### F5 — OTA service is not behind the Core auth gate
 
@@ -1170,6 +1186,8 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 - **Impact:** a connected client can run OTA without HELLO/PIN. Recorded for awareness;
   behavior is part of the current field contract.
 - **Models:** same in all three.
+- **Status:** accepted risk (owner's decision). OTA is performed only through the app, and the
+  app authenticates first. Closed.
 
 ### F6 — `MENU_OP_GOTO` accepts undefined menu codes
 
@@ -1187,6 +1205,7 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   `CORE_ERR_INVALID_VALUE` (0x05) instead (`src/BLE/CoreService.cpp:795-798`).
 - **Impact:** the app sees 0x05. The 0x05 response is the contract.
 - **Models:** same in all three.
+- **Status:** documentation only (owner's decision). 0x05 is the contract. Closed.
 
 ### F8 — Factory-reset trigger described differently in comments and code
 
@@ -1297,8 +1316,9 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   - The docstring fix was not part of 7.08 nor of 7.09 (`stamp_app_desc.py:21` at `v7.09` still
     names `HARDWARE_VERSION`). `stamp_app_desc.py` comes from `ledhaarets-build`, and the fix will
     be made there, separately.
-  - `environment.md` is a snapshot and is updated only at the next export.
-  - Open, planned (`ledhaarets-build` docstring only).
+- **Status (after 7.09):** the source in `ledhaarets-build` was already fixed, and the copies in the
+  three models were updated from it in production after `v7.09` (not released yet; "Planned for
+  next production release"). `environment.md` is updated at the next sync. Closed.
 
 ### F14 — `DayInfo` changes that existed only in JC6432
 
@@ -1363,8 +1383,7 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 - **What:** areas `d1` and `d2` both print `leil` and its default. Probably a copy-paste error;
   `d2` was likely meant for another preference.
 - **Impact:** diagnostics screen only. No effect on preferences, NVS or BLE.
-- **Status:** documentation only (owner's decision). No code change.
-  Fixed in production 7.09: `d2` shows `timeFormat` (here `presentationPrefs.timeFormat`,
+- **Status:** Fixed in production 7.09: `d2` shows `timeFormat` (here `presentationPrefs.timeFormat`,
   `RegsScreen.cpp:247`). Closed (7.09).
 - **Models:** same in all three (JC6416 / JC4020 `:242-243`, JC6432 `:242-243`).
 
@@ -1403,7 +1422,7 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   LF, and the files have not been checked out since they were created.
 - **Impact:** none on the build or the image. Git warns "LF will be replaced by CRLF the next time
   Git touches it".
-- **Status:** no action needed — working copy only; the index is LF for all files, and a fresh
+- **Status:** closed, no action needed (owner's decision) — working copy only; the index is LF for all files, and a fresh
   checkout makes the views CRLF like the rest.
 - **Models:** JC6416, JC4020, JC6432 (all three since 2a.1 in each).
 
@@ -1416,11 +1435,11 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   inner `if`. Live code, not a comment.
 - **Impact:** debug output on Serial only. The string names `userPreferences.leil`, so it appears in
   a grep for direct access although it is not an access.
-- **Status:** open. To be removed in a production release, in the same category as S3 / S5
-  (`docs/architecture/models-plan.md`). Until then it is a documented exception in the end-of-2a.2
+- **Status:** closed (7.09). Removed in production 7.09, in the same category as S3 / S5
+  (`docs/architecture/models-plan.md`). Until 7.09 it was a documented exception in the end-of-2a.2
   grep. Not changed in 2a.2 (changing it would change the image).
   The four lines were removed in production 7.09 and synced here (Sync 5); the condition keeps
-  `presentationPrefs.leil`. Closed (7.09).
+  `presentationPrefs.leil`.
 - **Models:** JC4020 only.
 
 ### F22 — `fromBytes<String>` is not bounded by the value length
@@ -1441,4 +1460,4 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   _value = String(s, strnlen(s, length));`, `UserPreferences.h:334-335`) and synced here
   (Sync 5). Closed (7.09).
 - **Models:** same in all three. Also present in BA6416, BC6416, JC8040 and Laniado (owner's
-  report), which are outside this repo.
+  report), which are outside this repo. For those models: out of scope (owner's decision). Closed.
