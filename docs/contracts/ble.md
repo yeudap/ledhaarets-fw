@@ -533,7 +533,7 @@ by the owner.
 | Firmware | Clock behavior | App |
 |---|---|---|
 | below 7.05 | `shita` 0–7 only (`numOfShitot` 8) and zeet methods 0–27, with no range check: a write of `shita` 8–9 or of zeet 28 is stored, and `shitot[]` / `zeetMethod[]` are read past their end (for `shita`: in `DayInfo::initDay` at every boot) | No handling in the app. A rollback to such firmware is not blocked in the app (refactor-log F11) |
-| below 7.05 | A write of `ofek` ≠ 0 runs `SetCustomState::printUpdateSucc`, which sets `ofek` to 0: a city chosen from the app is not kept | No handling in the app |
+| below 7.05 | A write of `ofek` ≠ 0 runs `SetCustomState::printUpdateSucc`, which sets `ofek` to 0: a city chosen from the app is not kept | City selection is blocked in the app for firmware below `MIN_SW_VERSION_CITY_LIST` (7.05), through `ManufacturerData.supportsCityList`, in `settings_location_tab` |
 | below 7.07 | No range check for `shita` and `ofek`: any value is stored | No handling in the app |
 | below 7.07 | A write of `shita` is only saved; `Shita::setDefault` does not run | The app writes `shita`, waits 500 ms and reads back the 12 method preferences and `nerot`; on these clocks it reads back the previous values. No handling in the app |
 | below 7.08 | No range check for `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom`: any value is stored | No handling in the app |
