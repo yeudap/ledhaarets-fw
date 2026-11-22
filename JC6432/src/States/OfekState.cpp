@@ -70,8 +70,6 @@ void SetOfekState::okAction()
     dataPrefs.place.ofek= this->ofekTemp;
     printUpdateSucc();
 }
-
-
 void lonStr(char* buffer)
 {
     sprintf(buffer, "%.2f : %s",dataPrefs.place.nz_long.getValue() , strings.kavOrech);
@@ -510,7 +508,6 @@ void SetCustomState::printUpdateSucc()
     bl.configStates();
     bl.mainState.updateDayValues = true;
 }
-
 void SetOfekState::printUpdateSucc()
 {
     messageScreen.printMessages(messageScreen.SUCCESS, "! gmuc", "...ohbnz  ifsgn");

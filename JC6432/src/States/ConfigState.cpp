@@ -27,7 +27,7 @@ void ResetPassState::showStateScreen()   { menuScreen.printMenu(strings.menuConf
 void ResetAllState::showStateScreen()    { menuScreen.printMenu(strings.menuConfg, strings.resetPass, strings.resetAll, strings.aboutUs); }
 void AboutUsState::showStateScreen()     { menuScreen.printMenu(strings.menuConfg, strings.resetAll, strings.aboutUs, strings.aboutDevice); }
 void AboutDeviceState::showStateScreen() { menuScreen.printMenu(strings.menuConfg, strings.aboutUs, strings.aboutDevice, strings.MemoryMap); }
-void MemoryMapState::showStateScreen()   
+void MemoryMapState::showStateScreen()    
 { 
     char btStr[50];
     setBTStr(btStr, systemPrefs.bt);
@@ -146,7 +146,6 @@ void SetResetAllState::okAction()
     }
     reset = false;
 }
-
 void ViewAboutUsState::showStateScreen() { aboutScreen.printScreen(); }
 void ViewDeviceState::showStateScreen() { versionScreen.printScreen(); }
 void ViewMemoryMapState::showStateScreen() { regsScreen.printScreen(); }
