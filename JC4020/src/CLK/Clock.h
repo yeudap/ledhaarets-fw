@@ -10,7 +10,6 @@ enum class ClockType : uint8_t
     DS3231,
     RV3028
 };
-
 const int idx0Year = 2022;
 const int idx0mounth = 9;
 const int idx0day = 26;

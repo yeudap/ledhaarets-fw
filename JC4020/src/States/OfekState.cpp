@@ -70,7 +70,6 @@ void SetOfekState::okAction()
     dataPrefs.place.ofek= this->ofekTemp;
     printUpdateSucc();
 }
-
 void lonStr(char* buffer)
 {
     sprintf(buffer, "%.2f : %s",dataPrefs.place.nz_long.getValue() , strings.kavOrech);

@@ -1,7 +1,5 @@
 #include "Area.h"
 
-MatrixPanel_I2S_DMA * display;
-
 
 void Area::clearArea()
 {
