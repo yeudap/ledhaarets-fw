@@ -70,13 +70,28 @@ through the views, and `dependencies.md` is generated with `tools/gen_deps_doc.p
 synced into this repo. 2a.3 is planned with the owner (decisions in `refactor-log.md`, "2a.3 —
 plan"); done: 2a.3.0 (contract tool `tools/prefs_contract.py`, baselines in
 `docs/contracts/prefs/`), 2a.3.1 (unused registry functions removed, all models), 2a.3.2 (one
-preference table for all models, as in JC6432; documented contract change). Next: 2a.3.3, move
-field ownership to the layer objects, in all three models; to be planned with the owner. After
-2a.3.3: a docs step that replaces `file:line` references with symbol references (file + function
-or class), keeping line numbers only where there is no other way.
+preference table for all models, as in JC6432; documented contract change). **Next step: 2a.3.3
+in all three models** (move field ownership to the layer objects; to be planned with the owner).
+After 2a.3.3: a docs step that replaces `file:line` references with symbol references (file +
+function or class), keeping line numbers only where there is no other way.
 Existing NVS keys, namespaces and types never change. Any change to the preference contract
 (new keys, BLE indexes, defaults) happens only as a documented contract-change step approved by
 the owner and recorded in refactor-log. Otherwise behavior stays identical.
+
+**New generation after the refactor (major 8; owner's decision, recorded in refactor-log):**
+- App and firmware versions depend on each other, and the app forces updates. No BLE
+  compatibility with old versions is needed.
+- Frozen, must stay compatible: the advertisement (`LEDHAARETS` + version), authentication, OTA
+  and the partition table. The build must fit the existing slot. There is no update by cable.
+- NVS: on the first boot the firmware migrates. Texts, shita, location and eda carry over, the
+  rest is reset, and a generation key is written. The migration is safe to run again. Before OTA
+  the app keeps a backup of the same data, as a safety net, and guides the new setup with a wizard.
+- The app checks `MAX_SUPPORTED_FW_MAJOR` and shows an "app update required" banner. This check
+  goes into the app before the new generation is released. Downgrade is not offered to users,
+  only as a support action.
+- The legacy checks in the app and `docs/contracts/ble.md` §9 are removed when the new generation
+  is released.
+- Until then, the contract rule above applies.
 
 - **0** — Baseline: contracts extraction, dependency map, preference classification.
   Read-only except for files under `docs/`.

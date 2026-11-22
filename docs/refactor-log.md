@@ -1126,6 +1126,25 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
 - **2a.3.3 — plan for JC6416 alone cancelled** (owner's decision, Sync 6): 2a.3.3 is planned again
   for all three models.
 
+### Decisions
+
+- **New generation after the refactor (major 8)** (owner's decision, after Sync 6; also in
+  `CLAUDE.md`, with the contract rule):
+  - App and firmware versions depend on each other, and the app forces updates. No BLE
+    compatibility with old versions is needed.
+  - Frozen, must stay compatible: the advertisement (`LEDHAARETS` + version), authentication, OTA
+    and the partition table. The build must fit the existing slot. There is no update by cable.
+  - NVS: on the first boot the firmware migrates. Texts, shita, location and eda carry over, the
+    rest is reset, and a generation key is written. The migration is safe to run again. Before
+    OTA the app keeps a backup of the same data, as a safety net, and guides the new setup with a
+    wizard.
+  - The app checks `MAX_SUPPORTED_FW_MAJOR` and shows an "app update required" banner. This check
+    goes into the app before the new generation is released. Downgrade is not offered to users,
+    only as a support action.
+  - The legacy checks in the app and `docs/contracts/ble.md` §9 are removed when the new
+    generation is released.
+  - Until then, the current contract rule applies.
+
 ## Planned for next production release
 
 Decided by the owner. To be done outside this repo, then ported here with the next sync.
