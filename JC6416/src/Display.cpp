@@ -1,5 +1,6 @@
 #include "Display.h"
 
+MatrixPanel_I2S_DMA * display;
 
 void initDisplay(){
     HUB75_I2S_CFG mxconfig(
