@@ -35,14 +35,17 @@ even if it looks like a pure rename or move.
 7. **Toolchain** — `espressif32 @ 6.12.0`, Arduino-ESP32 2.0.17, `gnu++17`, pinned
    `lib_deps`. Never upgrade platform or libraries as part of a refactor step.
 
-Reference snapshots of these contracts live in `docs/contracts/`. If code and a contract
-file disagree, report it. Do not "fix" either side.
+Reference snapshots of contracts live in `docs/contracts/`: the BLE contract (`ble.md`, with
+preference indexes and defaults) and the preference contract baselines (`prefs/`). The NVS, OTA,
+advertisement and metadata contracts are not written yet. If code and a contract file disagree,
+report it. Do not "fix" either side.
 
 ## Repo layout
 
 - `JC6416/`, `JC4020/`, `JC6432/` — synced to production main (see `docs/baseline.md`).
   Each is a standalone PlatformIO project.
-- `docs/contracts/` — BLE, NVS, OTA, advertisement, metadata.
+- `docs/contracts/` — `ble.md` (BLE contract) and `prefs/` (preference contract baselines,
+  `tools/prefs_contract.py`). NVS, OTA, advertisement and metadata contracts: not written yet.
 - `docs/architecture/` — `dependencies.md` (unit map and layers), `preferences.md`
   (preference classification by layer), `notes.md` (the owner's answers on intent and
   constraints — the source of truth for "why", read it before proposing structure).
@@ -62,11 +65,8 @@ but the content differs in many places.
 ## Stages
 
 **Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
-in JC6416 (through 2a.2.10: `count_deps.py` counts view access; `dependencies.md` regenerated
-with `tools/gen_deps_doc.py` as the baseline for the replication), in JC4020 and in JC6432 (2a.1,
-2a.2.1–2a.2.5 each; verification rules in `refactor-log.md`; the JC6432 colors `colorIvri`,
-`colorLoazi`, `colorParashaV` are in `DisplayPrefs`); `dependencies.md` regenerated after the
-replication. Production 709A (temporary tag; commit hashes in `docs/baseline.md`, Sync 6) is
+in all three models (verification rules in `refactor-log.md`); `count_deps.py` counts access
+through the views, and `dependencies.md` is generated with `tools/gen_deps_doc.py`. Production 709A (temporary tag; commit hashes in `docs/baseline.md`, Sync 6) is
 synced into this repo. 2a.3 is planned with the owner (decisions in `refactor-log.md`, "2a.3 —
 plan"); done: 2a.3.0 (contract tool `tools/prefs_contract.py`, baselines in
 `docs/contracts/prefs/`), 2a.3.1 (unused registry functions removed, all models), 2a.3.2 (one
@@ -86,15 +86,15 @@ the owner and recorded in refactor-log. Otherwise behavior stays identical.
 - **2a** — Per-layer preference structs (`DataPrefs` with place / zmanim / minhagim,
   `LogicPrefs`, `PresentationPrefs` with layout, `DisplayPrefs`, `UserContent`, `SystemPrefs`) and a
   central registry that owns the table (key, index, type, default, field) and load/save only.
-  `PREF_OP_WRITE` range checks (`shita`, `ofek`, and since 7.08 the zeet keys of F11) and the immediate
+  `PREF_OP_WRITE` range checks (`shita`, `ofek`, and the four zeet keys) and the immediate
   apply (`ofek`, `shita`) stay in `CoreService`; registering limits and actions from above
   belongs to the later "actions mechanism" stage, together with immediate apply of the other
   preferences. Classification: `docs/architecture/preferences.md`; decisions:
   `docs/architecture/notes.md`. Sub-steps:
-  1. Structs as views onto the existing `userPreferences` fields. No consumer changes. (Now.)
-  2. Move consumers to their layer's struct, one layer per step. (Now.)
-  3. Move field ownership into the structs; `UserPreferences` becomes the registry. (F11 was
-     synced with 7.08; 2a.3 started with 2a.3.0.)
+  1. Structs as views onto the existing `userPreferences` fields. No consumer changes. (Done.)
+  2. Move consumers to their layer's struct, one layer per step. (Done.)
+  3. Move field ownership into the structs; `UserPreferences` becomes the registry. (Now:
+     2a.3.0–2a.3.2 done.)
 - **2** — Isolate the remaining layers behind interfaces and break couplings.
 - **Later, each approved separately** — applying preference changes from BLE immediately
   (shared apply functions with the menu); NVS namespace per layer with migration; one
@@ -162,5 +162,5 @@ Only the user changes the current stage.
 6. Every step that changes edges (`count_deps.py --compare` against the tree before the step
    shows a changed edge), and every production sync: `python -I tools/gen_deps_doc.py check`
    (JC6416). If it fails, regenerate `dependencies.md` with `write` in the same step, or report
-   why not. (It went stale unnoticed from 2a.3.2 to Sync 5.)
+   why not.
 7. Summarize what changed and what needs testing on a real clock.

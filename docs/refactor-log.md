@@ -1136,38 +1136,9 @@ Nothing planned.
 Line numbers in F1–F9 refer to commit `e9c7639`; in F10–F18, to commit `dcd2cdb` (7.07); from
 F19 on, to commit `d01dd0f` (7.08).
 Status updates inside older findings use `dcd2cdb` line numbers and say so.
-
-### F1 — `metadata.cpp` includes `metadata.h`, file is `Metadata.h`
-
-- **Where:** `JC6416/src/metadata.cpp:1`, `JC4020/src/metadata.cpp:1`, `JC6432/src/metadata.cpp:1`
-- **What:** `#include "metadata.h"`, while the header on disk is `src/Metadata.h`. All other
-  includers use `"Metadata.h"` (e.g. `src/BLE/Bluetooth.h:6`).
-- **Impact:** builds only on a case-insensitive filesystem (Windows). Would break a
-  Linux/CI build. No effect on the produced binary.
-- **Models:** same in all three.
-- **Status:** resolved in production 7.06. `metadata.cpp:2` now includes `"Metadata.h"` in all
-  three models (`dcd2cdb`). Closed.
-
-### F2 — JC6432 preference indexes differ from JC6416/JC4020 (BLE contract divergence)
-
-- **Where:** `src/Preferences/UserPreferences.h`
-  - JC6416 / JC4020: `screen` = 72 (`:839`), `bt` = 73 (`:846`)
-  - JC6432: `colorIvri` = 72 (`:842`), `colorLoazi` = 73 (`:845`), `colorParashaV` = 74 (`:848`),
-    `screen` = 75 (`:851`), `bt` = 76 (`:856`)
-- **What:** the same preference index refers to a different key depending on the model.
-  Preference indexes are part of the BLE contract (`PREF_OP_SYNC` returns indices).
-  JC6432 also has different defaults for `colorYom`, `colorParasha`, `leil`, `screen`, and
-  a different meaning for `screen` (1 = Big, 2 = Small vs. 1–4 layout variants).
-- **Impact:** an app that maps indexes to keys without checking the model will
-  misinterpret preferences 72–76 on JC6432 or on the other two models. Must be preserved as-is;
-  any future unification needs an approved migration (until 2a.3.2; the contract change is
-  documented there).
-  Per the app source (`lib/config/preference_constants.dart`, outside this repo, as reported
-  by the user): the app's preference map ends at index 71 (`IORT`) and does not define 72–76,
-  so there is currently no actual collision between models.
-- **Models:** JC6432 differs; JC6416 and JC4020 are identical.
-- **Status:** resolved in this repo by 2a.3.2 (one table for all models, as in JC6432; defaults
-  stay per model). Closed in production 7.09 too: one table in all three models (defaults: F9).
+Only findings that describe the current state are kept (open, accepted, intentional, won't fix,
+documentation only). Fixed findings were removed; their text is in git at `707d5d2`. Numbers are
+not reused.
 
 ### F3 — JC4020: TEXT write and display over BLE are disabled
 
@@ -1234,64 +1205,43 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 - **Models:** same in all three.
 - **Status:** documentation only (owner's decision). 0x05 is the contract. Closed.
 
-### F8 — Factory-reset trigger described differently in comments and code
-
-- **Where:** `src/BLE/Authmanager.h:23-24` and `src/BLE/Authmanager.cpp:137` say "BACK+OK for 10
-  seconds"; the only caller is `SetResetPassState::okAction`
-  (`src/States/ConfigState.cpp:115-124`), a menu confirmation.
-- **Impact:** comment-only mismatch. `factoryReset()` has no other caller (grep, all three
-  models). Whether a button combination leads into that menu state was not checked here.
-- **Models:** same in all three.
-- **Update (7.06, `dcd2cdb` line numbers):** a second caller was added:
-  `SetResetAllState::okAction` (`src/States/ConfigState.cpp:136-147`, menu "שחזור הגדרות יצרן").
-  It calls `factoryReset()`, then `resetTextPrefs()` and `resetSimplePrefs()`, then `ESP.restart()`.
-  `SetResetPassState::okAction` is now at `:116-125`. Both callers are menu states, same lines in
-  all three models. The comment in `Authmanager.h` / `Authmanager.cpp` is unchanged, so the
-  mismatch remains.
-- **Status:** fixed in production 7.08 (`d01dd0f` line numbers: `src/BLE/Authmanager.h:22-24`,
-  `src/BLE/Authmanager.cpp:137-138`): the comment now says that BACK+OK for 2 seconds opens the
-  settings menu, and from there `SetResetPassState` or `SetResetAllState`. Same in all three
-  models. Closed. (The same edit lost an unrelated comment line: F19.)
-
 ### F9 — Preference defaults differ between the app and the firmware
 
 - **Where (firmware):** `src/Preferences/UserPreferences.h`
-  - `leil` (43): JC6416 / JC4020 default `0` (`:697`); JC6432 `1` (`:700`).
   - `colorYom` (18): JC6416 / JC4020 `6` (`:602`); JC6432 `1` (`:605`).
   - `colorParasha` (19): JC6416 / JC4020 `6` (`:605`); JC6432 `1` (`:608`).
 - **Where (app, as reported by the user):** `lib/config/preference_constants.dart`,
   `lib/models/app_preferences.dart:90`, `lib/providers/ble/ble_preferences_mixin.dart:154-180`.
-  App defaults: `leil` = 1, `colorYom` = 6, `colorParasha` = 6.
-- **Mismatches:** `leil` on JC6416 and JC4020; `colorYom` and `colorParasha` on JC6432.
+  App defaults: `colorYom` = 6, `colorParasha` = 6.
+- **Mismatches:** `colorYom` and `colorParasha` on JC6432.
 - **Impact:** `PREF_OP_SYNC` reports only values that differ from the *firmware* default. When
   the clock holds its firmware default, the index is not reported, and the app shows its own
-  default, which is a different value. E.g. JC6416 with `leil` = 0 → app shows 1.
+  default, which is a different value. E.g. JC6432 with `colorYom` = 1 → app shows 6.
 - **Action:** documentation only, no fix. Firmware defaults are part of the BLE contract
   (`docs/contracts/ble.md` §8).
 - **Status:** won't fix (owner's decision). After the refactor the issue will no longer be
   relevant. Closed.
-- **Update (7.09):** `leil` default is 1 in all three models (`:697` in JC6416 / JC4020 at Sync 5),
-  so it matches the app. The only remaining mismatches are `colorYom` and `colorParasha` on JC6432.
 
 ### F10 — Selecting a city overwrites `nz_hul`
 
 - **Where:** `src/States/OfekState.cpp:510-519` (`SetOfekState::printUpdateSucc`), lines `:516-517`.
   Called from the menu (`SetOfekState::okAction`, `:67-71`) and from BLE `PREF_OP_WRITE ofek` ≠ 0
   (`src/BLE/CoreService.cpp:669-678`).
-- **What:** since 7.05 (together with the fix for `PREF_OP_WRITE ofek` ≠ 0 from BLE) the
-  function writes `nz_hul` (and `hul`) from `places[ofek].hul` of the selected city. Afterwards, when the user goes back to the custom place (`ofek` = 0), `nz_hul`
+- **What:** the function writes `nz_hul` (and `hul`) from `places[ofek].hul` of the selected
+  city. Afterwards, when the user goes back to the custom place (`ofek` = 0), `nz_hul`
   still holds the city's value, not the value the custom place had before.
-- **Impact:** `nz_hul` selects the DST rules (`src/DB/DayInfo.cpp:198-199`, Israel or USA) and,
-  since 7.06, `zmanTalit` in `myZmanim::setDefault` (F15).
+- **Impact:** `nz_hul` selects the DST rules (`src/DB/DayInfo.cpp:198-199`, Israel or USA) and
+  `zmanTalit` in `myZmanim::setDefault` (F15).
 - **Status:** intentional. `nz_hul` is the Israel/abroad flag of the *active* place, and selecting
   a city sets it, even at the expense of the custom place's value. Closed.
 - **Models:** same in all three.
 
-### F11 — Value range of `shita` and of `zeetCochavim` grew in 7.05
+### F11 — A rollback below 7.05 with a new `shita` or zeet value stored
 
-- **What:** `numOfShitot` 8 → 10 (`shita` 0–9: `myZmanim` = 8, `pozen` = 9) and
-  `numOfZeetCochavin` 27 → 28 (`zeetMethod` rows 0–28; new method 28 = 7.08°)
-  (`src/DB/Shita.h:10, 12-13`). The arrays are indexed with the stored value without a check:
+- **What:** `numOfShitot` is 10 (`shita` 0–9: `myZmanim` = 8, `pozen` = 9) and
+  `numOfZeetCochavin` 28 (`zeetMethod` rows 0–28; method 28 = 7.08°) (`src/DB/Shita.h:10,
+  12-13`). Firmware below 7.05 has 8 and 27. The arrays are indexed with the stored value without
+  a check:
   - `shitot[userPreferences.shita]` in `DayInfo::initDay` (`src/DB/DayInfo.cpp:20`), at every day
     calculation including boot. Also `src/States/MinhagState.cpp:309-642` (10 places) and
     `src/States/ShitaState.cpp:38`.
@@ -1300,63 +1250,16 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
     (`src/Logic.cpp:68-77`, `MinhagState.cpp:315, 352, 611, 648`). The same list serves all four
     keys. The calculation itself (`Shita::zeetCochavimMethods`) is a `switch` with a `default`
     branch and does not index the array.
-- **Risks:**
-  - Rolling back to a firmware before 7.05 with a new value already stored: `shitot[8]` / `[9]`
-    reads past the array of 8 → most likely a crash in `initDay` at every boot (boot loop).
-    A stored 28 in one of the four `zeetMethod` keys reads past the array when that menu is
-    shown. NVS is not reset by an install. `pozen::setDefault` itself stores 28 in
-    `zeetCochavim` and `zeetZom`, so selecting that shita is enough.
-  - Out-of-range writes from BLE.
-- **Status:**
-  - Since 7.07, out-of-range BLE writes of `shita` and `ofek` are rejected with
-    `CORE_ERR_INVALID_VALUE` before `fromBytes` (`src/BLE/CoreService.cpp:653-659`,
-    `docs/contracts/ble.md` §6.5).
-  - Since 7.08, out-of-range BLE writes of `zeetCochavim`, `rabenuTam`, `zeetShabat` and
-    `zeetZom` (value > `numOfZeetCochavin`) are rejected with `CORE_ERR_INVALID_VALUE` before
-    `fromBytes`. The four keys are identified by preference address
-    (`src/BLE/CoreService.cpp:654-660` at `d01dd0f`; through `dataPrefs.zmanim` since 2a.2.7).
-  - Rollback to an older version: decided not to block it in the app, because it is a manual,
-    deliberate install.
-  - Closed (7.08).
+- **Risk:** rolling back to firmware below 7.05 with a new value already stored: `shitot[8]` /
+  `[9]` reads past the array of 8 → most likely a crash in `initDay` at every boot (boot loop). A
+  stored 28 in one of the four `zeetMethod` keys reads past the array when that menu is shown.
+  NVS is not reset by an install. `pozen::setDefault` itself stores 28 in `zeetCochavim` and
+  `zeetZom`, so selecting that shita is enough.
+- **BLE:** out-of-range writes of `shita`, `ofek` and the four zeet keys are rejected
+  (`docs/contracts/ble.md` §6.5; older firmware: §9).
+- **Status:** accepted (owner's decision): the rollback is not blocked in the app, because it is a
+  manual, deliberate install. Closed.
 - **Models:** same in all three (`Shita.h`, `Shita.cpp` identical).
-
-### F12 — `hardwareModel` defined `inline` only in JC6432
-
-- **Where:** `src/Hardware.h:14`.
-- **What:** in 7.06, JC6432 declared `inline HardwareModel hardwareModel;`, while JC6416 and
-  JC4020 had a plain definition in a header.
-- **Status:** `inline` in all three models since 7.07. Closed.
-
-### F13 — Stale references to `HARDWARE_VERSION` (removed in 7.06)
-
-- **What:** the `HARDWARE_VERSION` build flag was removed in 7.06. The hardware version is now
-  detected at runtime (`detectHardwareModel` → `configureHardware` →
-  `Metadata::setHardwareVersion`, `src/Hardware.h`). References that are no longer true:
-  - `stamp_app_desc.py:20-21` docstring (all three models): says the script reads
-    `HARDWARE_VERSION` from the build flags.
-  - `CLAUDE.md`, hard contract 5.
-  - `docs/environment.md:95` (snapshot).
-  - Also `docs/architecture/dependencies.md:419` and `docs/architecture/notes.md:65`.
-- **Status (Sync 5):**
-  - `CLAUDE.md` (hard contract 5), `dependencies.md` and `notes.md`: fixed. The only remaining
-    mention in `notes.md` (`:113`) is the closed, struck-out entry that records the removal.
-  - The docstring fix was not part of 7.08 nor of 7.09 (`stamp_app_desc.py:21` at `v7.09` still
-    names `HARDWARE_VERSION`). `stamp_app_desc.py` comes from `ledhaarets-build`, and the fix will
-    be made there, separately.
-- **Status (after 7.09):** the source in `ledhaarets-build` was already fixed, and the copies in the
-  three models were updated from it in production after `v7.09` (not released yet; "Planned for
-  next production release"). `environment.md` is updated at the next sync. Closed.
-
-### F14 — `DayInfo` changes that existed only in JC6432
-
-- **Where:** `src/DB/DayInfo.cpp`, `DayInfo::setAfterShkiaa` (JC6416 / JC4020 `:946-1009`,
-  JC6432 `:964-1027`) and `DayInfo::setBooleanValues` (JC6416 / JC4020 `:742`, JC6432 `:760`).
-- **What:**
-  - `setAfterShkiaa` calls `setHul()` when `hul` is on (JC6416 / JC4020 `:1005`, JC6432 `:1023`),
-    and sets `afterShkiaa = true` at the end instead of the start.
-  - The assignment `parasha_hul = tomorrow->parasha_hul` is commented out.
-  - `this->isShaonKaiz = _shaonKaiz` is commented out.
-- **Status:** ported to JC6416 and JC4020 in 7.07; the three models are aligned. Closed.
 
 ### F15 — `zmanTalit` is not updated after selecting a city
 
@@ -1372,48 +1275,6 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 - **Status:** won't fix (owner's decision: keep as is). Closed.
 - **Models:** same in all three.
 
-### F16 — `dayIndex` is written every day and never read
-
-- **Where:** `src/States/MainState.cpp:285` (`MainState::setNewDay`): `userPreferences.dayIndex= idx;`.
-  Definition: `src/Preferences/UserPreferences.h:542` (key `dayIndex`, U8, default 1, index 3).
-- **What:** the preference was meant to keep the day index, to restore the date after a power
-  and battery loss. No code reads it. On JC6416 it is written at every day calculation, so its
-  value almost always differs from the default.
-- **Indexes are explicit:** every `UserPref` gets its BLE index as a constructor argument, and
-  `getIndex()` returns that value. Nothing derives an index from the position in `allPrefs` or
-  `simplePrefs`. The only uses of the index are in `src/BLE/CoreService.cpp`: `PREF_OP_SYNC`
-  (`:707`) and `getIndex() == 4` / `== 6` (`:654-655`, `:670`, `:680`). `PREF_OP_READ` and
-  `PREF_OP_WRITE` look up by key. Removing the definition does not move any other index; index 3
-  becomes a gap.
-- **Effect of removal on the firmware:**
-  - `PREF_OP_SYNC` no longer reports index 3. Today it reports it almost always on JC6416.
-  - `PREF_OP_READ` / `PREF_OP_WRITE` with key `dayIndex` return `CORE_ERR_INVALID_KEY`.
-  - The NVS key `dayIndex` stays in `clk` as an orphan entry (no active erase). No behavior
-    effect.
-  - Stopping the write alone would freeze the last value, and `SYNC` would keep reporting
-    index 3 on existing clocks until a reset.
-- **Effect on the app** (per the app source, as reported by the user:
-  `lib/config/preference_constants.dart`, `lib/models/app_preferences.dart:13`): `dayIndex` is
-  defined at index 3 and not used beyond the definition. After the removal `SYNC` does not
-  return 3, and the app does not request it. Safe with existing app versions.
-- **Status:** removed in production 7.08 in all three models: the definition, the
-  `simplePrefs.push_back`, and the write in `MainState::setNewDay` (JC6416; the commented-out
-  write in JC6432 too). Index 3 is a gap; no other index moved. The NVS key stays in `clk` as an
-  orphan entry. Closed.
-- **Models:** only JC6416 writes it. JC6432 has the write commented out
-  (`src/States/MainState.cpp:310`); JC4020 does not write it. The definition (index 3) is the
-  same in all three.
-
-### F17 — Diagnostics screen shows `leil` twice
-
-- **Where:** `src/Screens/RegsScreen.cpp:242-243` (`dcd2cdb`; `:243-244` after 2a.2.2).
-- **What:** areas `d1` and `d2` both print `leil` and its default. Probably a copy-paste error;
-  `d2` was likely meant for another preference.
-- **Impact:** diagnostics screen only. No effect on preferences, NVS or BLE.
-- **Status:** Fixed in production 7.09: `d2` shows `timeFormat` (here `presentationPrefs.timeFormat`,
-  `RegsScreen.cpp:247`). Closed (7.09).
-- **Models:** same in all three (JC6416 / JC4020 `:242-243`, JC6432 `:242-243`).
-
 ### F18 — `SetTimeFormat`: self-assignment in `menuAction` and `okAction`
 
 - **Where:** `src/States/SetClockState.cpp:229` (`menuAction`) and `:243` (`okAction`)
@@ -1428,22 +1289,10 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
 - **Status:** documentation only (owner's decision). No code change.
 - **Models:** same in all three (JC6416 / JC4020 `:229`, `:243`; JC6432 `:230`, `:244`).
 
-### F19 — `Authmanager.h`: a principle comment was lost in 7.08
-
-- **Where:** `src/BLE/Authmanager.h`, the principles block (`:20-24`).
-- **What:** when the F8 comment block was replaced in 7.08, the line
-  "clientId שכולו אפסים לעולם אינו מהימן (מגן מהתאמה מקרית ל-slot ריק)" was deleted by mistake.
-- **Impact:** none. The comment was informative only. The protection is in the code:
-  `_isAllZero` in `AuthManager::isTrusted` (`src/BLE/Authmanager.cpp:69-70`), in `addTrusted`
-  (`:104`) and in `registerSessionClient` (`:88`). The member comment of `isTrusted`
-  (`Authmanager.h:48`) still says that an all-zero `clientId` is never trusted.
-- **Status:** restored in production 7.09 and synced here (Sync 5). Closed (7.09).
-- **Models:** same in all three.
-
 ### F20 — Layer view files are LF in the working copy
 
 - **What:** the 7 view files under `src/Preferences/` (`DataPrefs.h` … `PrefsViews.cpp`) are LF in
-  the working copy, in JC6416 (since `c6882d6`), in JC4020 (2a.1) and in JC6432 (2a.1). All other
+  the working copy, in all three models. All other
   source files are CRLF in the working copy (`core.autocrlf=true`; the index is LF for all). The
   editor tool writes
   LF, and the files have not been checked out since they were created.
@@ -1451,48 +1300,17 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   Git touches it".
 - **Status:** closed, no action needed (owner's decision) — working copy only; the index is LF for all files, and a fresh
   checkout makes the views CRLF like the rest.
-- **Models:** JC6416, JC4020, JC6432 (all three since 2a.1 in each).
-
-### F21 — JC4020: live debug print of a condition text in `MainStateTimeSets.cpp`
-
-- **What:** `src/States/MainStateTimeSets.cpp:54` (`:52` at `109bbb2`), inside the "zriha - yom -
-  shkiaa" screen, prints the text of the condition it is in:
-  `Serial.println("if(userPreferences.leil==1 && dayInfo.afterShkiaa)");`. Four `Serial.println`
-  debug lines in all: this one, two after it (`dayStr`, `daysOfTheWeek[3]`), and one inside the
-  inner `if`. Live code, not a comment.
-- **Impact:** debug output on Serial only. The string names `userPreferences.leil`, so it appears in
-  a grep for direct access although it is not an access.
-- **Status:** closed (7.09). Removed in production 7.09, in the same category as S3 / S5
-  (`docs/architecture/models-plan.md`). Until 7.09 it was a documented exception in the end-of-2a.2
-  grep. Not changed in 2a.2 (changing it would change the image).
-  The four lines were removed in production 7.09 and synced here (Sync 5); the condition keeps
-  `presentationPrefs.leil`.
-- **Models:** JC4020 only.
+- **Models:** JC6416, JC4020, JC6432.
 
 ### F22 — `fromBytes<String>` is not bounded by the value length
 
-- **Where:** `src/Preferences/UserPreferences.h:334` (`UserPref<T>::fromBytes`, `T` = `String`):
-  `_value = String(reinterpret_cast<const char *>(&data[0]));`. Called only from `PREF_OP_WRITE`,
-  `src/BLE/CoreService.cpp:666`, with `valueStart` / `valueLen` (`:609`).
-- **What:** the string is read up to the first `'\0'`; `length` (`valueLen`) is not used for
-  `String`. A value that is not terminated within `valueLen` is read past it.
-- **Today:** the payload is `std::string raw = pCharacteristic->getValue()` (`CoreService.cpp:871-872`),
-  and `std::string::data()` is always followed by a `'\0'` (C++11). So with the current caller the
-  read stops at the end of the received bytes and does not leave the buffer. What remains: the
-  bound depends on that property of the caller (a caller that passes a buffer without a terminator,
-  e.g. a move to `NimBLEAttValue` or a zero-copy path, would read past the buffer), and a `'\0'`
-  inside the value silently truncates it. Such a write is possible only after authentication
-  (the gate in `onWrite`).
-- **Status:** fixed in production 7.09 (`const char *s = reinterpret_cast<const char *>(data);
-  _value = String(s, strnlen(s, length));`, `UserPreferences.h:334-335`) and synced here
-  (Sync 5). Closed (7.09).
-- **Models:** same in all three. Also present in BA6416, BC6416, JC8040 and Laniado (owner's
-  report), which are outside this repo. For those models: out of scope (owner's decision). Closed.
+Fixed in JC6416/JC4020/JC6432; still open in BA6416, BC6416, JC8040, Laniado (out of refactor
+scope).
 
 ### F23 — `stamp_app_desc.py`: two docstring lines joined
 
-- **Where:** `stamp_app_desc.py:12` (all three models, since Sync 6 / production 709A).
-- **What:** the F13 docstring fix joined two lines without a space: "…מזהה בוודאותדגם וגרסה — …"
+- **Where:** `stamp_app_desc.py:12` (all three models).
+- **What:** the docstring text that dropped `HARDWARE_VERSION` joined two lines without a space: "…מזהה בוודאותדגם וגרסה — …"
   (should be "בוודאות" + newline + "דגם וגרסה").
 - **Impact:** none. Docstring only; the script and the image are not affected.
 - **Source:** the file is copied from `ledhaarets-build`, so a fix belongs there and comes in with

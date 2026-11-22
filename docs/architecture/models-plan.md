@@ -1,10 +1,4 @@
-**Pending.** Based on commit `0e48b1a` (production 7.07). Re-run the comparison before writing models.md if a newer production version was synced.
-
-**7.08** (`d01dd0f`): deviations aligned in production are marked in the status column of §4 (S1, S2, S5, S9 aligned; S3 partly; S7 closed). Decision on Q2 recorded in §5. The comparison itself was not re-run.
-
-**7.09** (Sync 5, `7066e4e` / `da5a349` / `1cb790a`): the preference table (keys, indexes, types) is the same in all three models (2a.3.2 in production); the `leil` and `screen` defaults are aligned (1 and 2 in all). Per model there remain only the `colorYom` / `colorParasha` defaults (F9) and the meaning of `clockFont` and `screen`. F21 (JC4020 debug prints) removed. §3 and §6 updated accordingly; the comparison itself was not re-run.
-
-**After 7.09** (owner's decisions): S3 closed; S6 fonts kept on purpose. S4, S6 (`or_*`) and S8 are done in production after `v7.09`, not released yet (`refactor-log.md`, "Planned for next production release"). Q6 answered. F3 closed as a finding and moved to the refactor plan (§6).
+**Pending.** Based on commit `0e48b1a` (production 7.07). Re-run the comparison before writing models.md. Differences that production has since aligned are no longer listed; the line counts in §2 and §6 are the estimates from the base.
 
 # תוכנית: `docs/architecture/models.md` — מפת הבדלים בין הדגמים
 
@@ -21,7 +15,7 @@
 ## הקובץ שייכתב
 
 `docs/architecture/models.md` בלבד. בעברית, בסגנון של `preferences.md` ו-`notes.md`, עם קישורים יחסיים
-לקבצים ולשורות. הוא יקשר ל-`preferences.md` §8 ול-F2, F3 ו-F9 ב-`refactor-log.md` במקום לחזור עליהם.
+לקבצים ולשורות. הוא יקשר ל-`preferences.md` §8 ול-F3 ו-F9 ב-`refactor-log.md` במקום לחזור עליהם.
 
 ## מבנה המסמך ותוכן עיקרי (מה שנמצא)
 
@@ -39,18 +33,18 @@
 ### 2. טבלת קבצים (סעיף 1 בבקשה)
 ארבעה מצבים: **זהה** / **שונה מעט** / **שונה מהותית** / **חלקי** (לא קיים בכל הדגמים). עמודה לכל דגם, ועמודת סיווג.
 - **זהה בשלושה** (~8,400 שורות קוד + ~9,400 שורות טבלאות וגופנים): כל `BLE/` חוץ מ-`TextCommandHandler.cpp`,
-  כל `BTN/`, `ClockDS3231.*`, `ClockDriver.h`, `Colors.h`, `Hardware.h`, `Metadata.h`, `metadata.cpp`, `Area.h`,
+  כל `BTN/`, כל `CLK/`, `Colors.h`, `Hardware.h`, `Metadata.h`, `metadata.cpp`, `Area.h`, `Area.cpp`,
   `DB.*`, `DayInfo.h`, `HebrewDate.h`, `Omer.cpp`, `Place.*`, `Shita.*`, `Sun.*`, `Zman.*`, `Preferences/UserPreferences.cpp`,
-  `MinhagState`, `EdotState`, `ShitaState`, `State.*`, `States.cpp`, `UpdateState`, רוב `Screens/`, `stamp_app_desc.py`, וכל `DB/DataBase/`
+  `MinhagState`, `EdotState`, `ShitaState`, `OfekState`, `State.*`, `States.cpp`, `UpdateState`, רוב `Screens/`, `stamp_app_desc.py`, וכל `DB/DataBase/`
   (ה-`luchotChai` וה-`kiseRahamim` זהים).
-- **שונה מעט:** `platformio.ini`, `Area.cpp`, `Text.*`, `Display.*`, `main.cpp`, `Clock.cpp`, `Clock.h`, `DafYomi.h`, `LoaziDate.h`,
-  `Dict.h`, `Strings.*`, `DayInfo.cpp`, `UserPreferences.h`, `ConfigState`, `OfekState` (רווחים), `FontState`, `BrightnessState`,
+- **שונה מעט:** `platformio.ini` (`DEVICE_MODEL`), `Text.*`, `Display.*`, `main.cpp`, `DafYomi.h`, `LoaziDate.h`,
+  `Dict.h`, `Strings.*`, `DayInfo.cpp`, `UserPreferences.h`, `ConfigState` (JC4020), `FontState`, `BrightnessState`,
   `SetClockState`, `Digit.h`, `SetInputText`, `SetTochenInfoState`, `SetTochenTimeState`, `TextCommandHandler.cpp` (JC4020).
-- **שונה מהותית:** `ClockRV3028.*` (JC6416 חריג), `MainScreen.cpp`, `Screens.h`, `Logic.*`, `States.h`, `MainState.cpp`,
+- **שונה מהותית:** `MainScreen.cpp`, `Screens.h`, `Logic.*`, `States.h`, `MainState.cpp`,
   `MainStateTimeSets.cpp`, `MainStateInfoSets*.cpp`, `ColorState.cpp`, `Digit.cpp`, `Fonts/ariel10.h` (JC4020).
 - **חלקי:** `TextScreen.cpp`, `SetInputText`, `SetTochenInfoState`, `SetTochenTimeState` (לא ב-JC4020);
   `SetTochenState.cpp` (רק ב-JC4020); `MainStateInfoSets1/2.cpp` (רק ב-JC6432); גופנים `number10/12/15/15d/28/35/35d/37`,
-  `russian` (לא ב-JC4020); `or_BeerSheva/Haifa/Jerusalem/TelAviv_db.h` (רק ב-JC6432, לא נכללים בשום מקום).
+  `russian` (לא ב-JC4020).
 - `.vscode/*` ו-`.gitignore`: מחוץ לקושחה. יסומנו "סביבה" ולא ייכנסו לסיווג.
 
 ### 3. פירוט ההבדלים עם סיווג (סעיף 2 בבקשה)
@@ -65,37 +59,28 @@
 - **יכולת:** טקסטים ועילוי נשמה (`TextScreen`, `SetInputText`, `TextCommandHandler`, `resetText` בתפריט ההגדרות) לא קיימים
   ב-JC4020 (F3); מעבר בין שתי פריסות ב-JC6432; עורך תוכן אחר ב-JC4020 (`upLine`/`middleLine`/`interval`/`ZSZ`/`ZYS`/`ZPS`/`IPO`,
   לפי `preferences.md` §8); סטים מפוצלים בפריסה Big של JC6432 (`Tahanun`, `Bavli`, `…1`, `…2`).
-- **חוזה:** אינדקסים וברירות מחדל (F2, F9), והמשמעות לפי דגם של `clockFont`, של `screen`, ושל `dateFormat` אם יתברר כמכוון.
-  מ-7.09 הטבלה אחת (מפתחות, אינדקסים, טיפוסים). לפי דגם נשארו ברירות המחדל של `colorYom` ו-`colorParasha`,
-  והמשמעות של `clockFont` ושל `screen`.
+- **חוזה:** הטבלה אחת (מפתחות, אינדקסים, טיפוסים). לפי דגם: ברירות המחדל של `colorYom` ו-`colorParasha` (F9),
+  והמשמעות של `clockFont`, של `screen`, ושל `dateFormat` אם יתברר כמכוון.
 
 ### 4. רשימת סטיות והמלצה (סעיף 3 בבקשה)
 | # | סטייה | הדגם הנכון (המלצה) | סטטוס |
 |---|---|---|---|
-| S1 | `ClockRV3028`: ב-JC6416 יש `ensureBackupConfiguration` ו-`rtc.begin(Wire, true, false, false)`. ב-JC4020 וב-JC6432 יש `rtc.begin()` עם ברירות המחדל (`disableTrickleCharge`, `setBackupSwitchoverMode` בכל אתחול) | JC6416. דורש בדיקה על כרטיסי RV3028 של JC4020 ו-JC6432 | **יושר ב-7.08.** `ClockRV3028.*` זהה בשלושת הדגמים |
-| S2 | `validate_time`: תאריך ברירת המחדל הוא 2025-01-01 ב-JC4020, ו-2026-09-01 ב-JC6416 וב-JC6432 | JC6416/JC6432 | **יושר ב-7.08.** `Clock.cpp` זהה בשלושת הדגמים |
-| S3 | `Display.cpp` ב-JC6432: הדפסות debug ל-Serial, ו-`dumpMem` שלא נקרא | להסיר (כמו JC6416), להשאיר את פרמטרי החומרה | **סגור.** ההדפסות הוסרו מ-`initDisplay` ב-7.08. `dumpMem` נשאר בכוונה, ככלי debug, כי ב-JC6432 הזיכרון צפוף |
-| S4 | הגלובלי `display`: מוגדר ב-`Area.cpp` ב-JC6416 וב-JC4020, וב-`Display.cpp` ב-JC6432 | JC6432 (`Display` = שכבת החומרה, notes.md) | **תוקן בפרודקשן אחרי v7.09 (עוד לא שוחרר).** `display` מוגדר ב-`Display.cpp`, וה-`extern` נמצא ב-`Display.h`, בשלושת הדגמים. ב-JC6432 זה כבר היה כך |
-| S5 | קוד debug בהערה: `DayInfo.cpp` ו-`main.cpp` (`rtc.adjust`) ב-JC6432 | JC6416 (בלי) | **יושר ב-7.08** |
-| S6 | קבצים יתומים: גופנים שלא נכללים (ב-JC6416 `number10/12/15/15d/28/33/35/35d/37`, `russian`; `number33` ב-JC4020; ב-JC6432 `number10/12/15/15d/28`, `russian`) ו-`or_*` באותיות גדולות ב-JC6432 | הגופנים נשארים כספריית גופנים. `or_*` היתומים נמחקו. בלי השפעה על הבינארי | **גופנים: נשארים בכוונה**, כספריית גופנים. בתוכנית הריפקטור תהיה תיקיית `Fonts` אחת לכל הדגמים. לפני האיחוד צריך לוודא שקבצים עם אותו שם זהים גם בתוכן, אחרת דגם יקבל גופן אחר בלי שנשים לב. הרשימה המלאה כאן משמשת לבדיקה הזו. **`or_*`:** ארבעת הקבצים היתומים ב-JC6432 נמחקו בפרודקשן אחרי v7.09 (עוד לא שוחרר). הטבלאות שבשימוש מוכללות ב-`Place.h:7-10` |
-| S7 | כתיבת `dayIndex`: קיימת ב-JC6416, ובהערה או חסרה ב-JC4020 וב-JC6432 | להחליט יחד עם `preferences.md` 9.2. לא ליישר לפני כן | **נסגר ב-7.08.** `dayIndex` נמחק בשלושת הדגמים (F16) |
-| S8 | רווחים בלבד: `Clock.h` ו-`ConfigState` (JC4020), `OfekState`, `platformio.ini` (JC6432) | כל אחד מהם. מתיישר מעצמו במיזוג | **יושר בפרודקשן מול JC6416, אחרי v7.09 (עוד לא שוחרר)** |
-| S9 | `.gitignore` | JC6432 (המלא) | **יושר ב-7.08.** התוכן זהה בשלושת הדגמים |
+| S3 | `Display.cpp` ב-JC6432: `dumpMem`, שלא נקרא | להשאיר | **בכוונה**, ככלי debug, כי ב-JC6432 הזיכרון צפוף |
+| S6 | קבצים יתומים: גופנים שלא נכללים (ב-JC6416 `number10/12/15/15d/28/33/35/35d/37`, `russian`; `number33` ב-JC4020; ב-JC6432 `number10/12/15/15d/28`, `russian`) | הגופנים נשארים כספריית גופנים. בלי השפעה על הבינארי | **נשארים בכוונה**, כספריית גופנים. בתוכנית הריפקטור תהיה תיקיית `Fonts` אחת לכל הדגמים. לפני האיחוד צריך לוודא שקבצים עם אותו שם זהים גם בתוכן, אחרת דגם יקבל גופן אחר בלי שנשים לב. הרשימה המלאה כאן משמשת לבדיקה הזו |
 
 ### 5. לא ברור — שאלות אליך
 - Q1: `LoaziDate.h` ב-JC6432: שנה בשתי ספרות בכל הפורמטים, ופורמט 3 הוא חודש/יום. כלומר ערך `dateFormat` מציג משהו אחר בכל דגם. האם זה מכוון (מקום) או סטייה? ההערות בקובץ לא עודכנו.
-- Q2: `DayInfo.cpp`: נוסח "שנים למדינת ישראל" מול "ה-N למדינת ישראל", ו"לחורבן" מול "לחורבן בית שני". איזה נוסח נכון, או שזה מכוון לפי רוחב? **החלטה (7.08):** להשאיר את הנוסח הנוכחי, ולהחליט כשנחזור למפת ההבדלים.
+- Q2: `DayInfo.cpp`: נוסח "שנים למדינת ישראל" מול "ה-N למדינת ישראל", ו"לחורבן" מול "לחורבן בית שני". איזה נוסח נכון, או שזה מכוון לפי רוחב? **החלטה:** להשאיר את הנוסח הנוכחי, ולהחליט כשנחזור למפת ההבדלים.
 - Q3: Morphing: ב-JC6416 וב-JC4020 הציור הטקסטואלי של הספרות לא נחסם בזמן morphing. ב-JC6432 הוא נחסם (`if(!morphing)`). תיקון שצריך להעביר, או הבדל שנובע מהגופן?
 - Q4: פריסה Big ב-JC6432: `flaginfoSet_1_Omer` לא בודק `tfila`, ו-`HagYaaleVeyavoHalel` לא מוצג בימי צום. מכוון?
 - Q5: ב-`flaginfoSet_1_Omer1` (JC6432) השורה `f && dayInfo.omer >= 7;` לא משפיעה על כלום. נראה כמו באג, מועמד ל-Finding.
-- Q6: מה הם קבצי `or_*` באותיות גדולות ב-JC6432 (4,017 שורות, נתונים אחרים)? אפשר למחוק? **תשובה:** קבצים יתומים. הם נמחקו בפרודקשן אחרי v7.09 (S6). הטבלאות שבשימוש (`or_tel_aviv_db.h` וכו') מוכללות ב-`Place.h:7-10`.
 
 ### 6. הערכת שיתוף ומה ב-`models/<דגם>/` (סעיף 4 בבקשה)
 - **מספרים:** ב-JC6416 יש כ-20,500 שורות קוד (בלי טבלאות וגופנים). כ-8,400 זהות בשלושת הדגמים. כ-7,300 בקבצים ששונים מעט,
   שמתאחדים בפרמטר או בדגל יכולת. כ-4,900 בקבצים ששונים מהותית, וגם בהם חלק משותף: חיווט התפריטים של שעון, אופק ומנהגים
   ב-`Logic.cpp`, ופונקציות `flag*` שזהות כמעט לגמרי.
   **הערכה: כ-75–80% משותף. בערך 3,000–4,000 שורות לכל דגם.**
-- **משותף (`src/`):** BLE, BTN, CLK (אחרי S1 ו-S2), Preferences (המנגנון), Metadata, Hardware, Area, Colors, DB/דומיין
+- **משותף (`src/`):** BLE, BTN, CLK, Preferences (המנגנון), Metadata, Hardware, Area, Colors, DB/דומיין
   וטבלאות, רוב המסכים והמצבים, `main.cpp` (בהירות דרך שכבת התצוגה).
 - **חייב לשבת ב-`models/<דגם>/`:**
   1. תצורת התצוגה: גיאומטריה, סוג ה-display (`Display.h/.cpp`).
@@ -106,7 +91,7 @@
      משותפת לכל הדגמים (S6). לפני האיחוד צריך לוודא שקבצים עם אותו שם זהים גם בתוכן. וגם: `ariel10` של JC4020,
      ופרמטרים של `Digit`.
   6. **מה שנשאר לפי דגם בהעדפות:** ברירות המחדל של `colorYom` ו-`colorParasha` (F9), והמשמעות של `clockFont` ושל `screen`.
-     הטבלה עצמה אחת מ-7.09 (F2).
+     הטבלה עצמה אחת.
   7. דריסות של `Strings` ו-`Dict` (קיצורים, ר' צרה), ו-`LoaziDate` אם Q1 מכוון.
 - **דגלי יכולת מוצעים:** `HAS_TEXTS` (JC6416, JC6432), `HAS_SCREEN_SWITCH` (JC6432). ב-JC4020 התשובות של `TEXT_OP_*`
   נשארות `INVALID_INDEX`, כי הן חלק מהחוזה (F3). רק המקום שבו ההחלטה מתקבלת משתנה: שכבת ה-BLE תהיה זהה

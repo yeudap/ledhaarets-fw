@@ -7,9 +7,7 @@
 
 ## 1. בסיס ושיטה
 
-**בסיס:** פרויקט `JC6416`, העץ `src/` כמו שהוא ב-commit `7b60c79`: פרודקשן 7.08, ואחרי 2a.2 (הגישה להעדפות עוברת דרך ה-views). העץ לא השתנה מאז, חוץ מ-2a.3.1, 2a.3.2 ופרודקשן 7.09 (Sync 5, `7066e4e`). הבלוקים שנוצרים בכלי (§4, §9, נספח A) והמספרים של ה-views ב-§5.6 מעודכנים ל-`7066e4e`. שאר מספרי השורות במסמך נכונים ל-`7b60c79`. הספירה נעשתה בכלי של 2a.2.10 (ההחרגה של `DataPrefs`). הבדלים ב-JC4020 וב-JC6432 מופיעים רק כהערות, בסעיף 10.
-נוצר מחדש ב-`ae29f42`, אחרי השכפול של 2a.1–2a.2 ל-JC4020 ול-JC6432: `JC6416/src` לא השתנה מאז `7b60c79`, הבלוקים שנוצרים מהכלי עדכניים (`gen_deps_doc.py check`), וסעיף 10 נבדק מחדש מול שני הדגמים האחרים.
-תמונת המצב הקודמת (`9c75812`, 7.04, וסעיף הדלתא של 7.06–7.07) נמצאת ב-git, ב-commit `e7f8efb`.
+**בסיס:** פרויקט `JC6416`, העץ `src/` הנוכחי (הגישה להעדפות עוברת דרך ה-views). הבלוקים שנוצרים בכלי (§4, §9, נספח A) עדכניים (`gen_deps_doc.py check`), וכך גם המספרים של ה-views ב-§5.6. שאר מספרי השורות במסמך לפי `7b60c79`. הספירה נעשתה בכלי [tools/count_deps.py](../../tools/count_deps.py). הבדלים ב-JC4020 וב-JC6432 מופיעים רק כהערות, בסעיף 10.
 
 ### יחידה
 
@@ -69,7 +67,7 @@
 
 חמשת התאים שנבדקו ידנית מול grep בספירה המקורית נבדקו שוב על הבסיס הנוכחי, והכלי נותן בהם את אותן תוצאות כמו grep:
 
-- `ConfigState→Authmanager` = 2 (מ-7.06: `SetResetPassState` ו-`SetResetAllState`)
+- `ConfigState→Authmanager` = 2 (`SetResetPassState` ו-`SetResetAllState`)
 - `OtaProtocol→UpdateState` = 8
 - `TextCommandHandler→States.h` = 9
 - `MainStateInfoSets→Screens.h` = 197
@@ -768,7 +766,7 @@ flowchart LR
 **הערות:**
 
 - `Authmanager → CoreService` (22) ו-`OtaProtocol → FirmwareService` (151) הן הפניות לקבועי הפרוטוקול שב-`CoreProtocol.h` וב-`FirmwareProtocol.h`, שמשויכים ליחידות האלה.
-- `CoreService → DB` (4): בדיקות הטווח ב-`PREF_OP_WRITE` (`numOfOfeks` 2, `numOfShitot` ו-`numOfZeetCochavin`). `CoreService → States` כולל את `bl.shitaState.setShita` (הטמעת `shita`, 7.07) ואת `currentState` בבלוק ההטמעה.
+- `CoreService → DB` (4): בדיקות הטווח ב-`PREF_OP_WRITE` (`numOfOfeks` 2, `numOfShitot` ו-`numOfZeetCochavin`). `CoreService → States` כולל את `bl.shitaState.setShita` (הטמעת `shita`) ואת `currentState` בבלוק ההטמעה.
 
 ### 5.3 `BTN/`
 
@@ -1223,7 +1221,7 @@ flowchart LR
 | `now`, `currentHour` … `currentYear` | `DateTime`, `int` | `CLK/Clock` | `Clock.h:21-30` | `Clock.cpp:11-20` |
 | `db` | `DB` | `DB/DB` | אין. `extern` ב-`DayInfo.cpp:7` | `DB.cpp:4` |
 | `place`, `numOfOfeks`, `lonPre` … `latFrac`, `places[]` | `Place*`, `int`, `Place[]` | `DB/Place` | אין. `extern` בקבצים המשתמשים | `Place.cpp:4-13` |
-| `shitot[]` | `Shita*[10]` (`numOfShitot` = 10, מ-7.05) | `DB/Shita` | אין. `extern` בקבצים המשתמשים | `Shita.cpp:17` |
+| `shitot[]` | `Shita*[10]` (`numOfShitot` = 10) | `DB/Shita` | אין. `extern` בקבצים המשתמשים | `Shita.cpp:17` |
 | `mainScreen`, `menuScreen`, `brightnessScreen`, `colorScreen`, `aboutScreen`, `logoScreen`, `versionScreen`, `regsScreen`, `setClockScreen`, `resetScreen`, `textScreen`, `messageScreen` | מחלקות `Screens.h` | `Screens/Screens.h` (והמתודות ב-`Screens/*.cpp`) | `States.h:12-23` | `Logic.cpp:9-20` |
 | `dayInfo`, `dayInfoYesterday`, `dayInfoTomorrow`, `dayInfoNextShishi`, `dayInfoNextShabat` | `DayInfo` | `DB/DayInfo` | אין. `extern` בקבצים המשתמשים | `Logic.cpp:22-26` |
 | `authManager` | `AuthManager` | `BLE/Authmanager` | `Authmanager.h:86` | `Authmanager.cpp:8` |
@@ -1235,8 +1233,8 @@ flowchart LR
 | `long_push_temp` | `int` | `BTN/Button` | אין. `extern` ב-`main.cpp:9` | `Button.cpp:7` |
 | `font_list[]` | `const GFXfont*[5]` | `Text` | אין. `extern` ב-`Logic.cpp:28` וב-`FontState.cpp:5` | `Text.cpp:3` |
 | `color_list[]` | `const int[7]` | `Colors` | `Colors.h:17` (הגדרה בכותרת) | `Colors.h:17` |
-| `hardwareModel` | `HardwareModel` | `Hardware` | הגדרה בכותרת, `inline` (מ-7.07 בכל הדגמים) | `Hardware.h:14` |
-| `Metadata::HWversion` | `char[7]` | `Metadata` | `Metadata.h:38` | `metadata.cpp:9`. נקבע בזמן ריצה ב-`Metadata::setHardwareVersion` (מ-7.06; עד 7.04 היה `constexpr` מהמאקרו) |
+| `hardwareModel` | `HardwareModel` | `Hardware` | הגדרה בכותרת, `inline` (בכל הדגמים) | `Hardware.h:14` |
+| `Metadata::HWversion` | `char[7]` | `Metadata` | `Metadata.h:38` | `metadata.cpp:9`. נקבע בזמן ריצה ב-`Metadata::setHardwareVersion` |
 | `showAll`, `globalchanged`, `globalchangedOfek` | `bool` | בשימוש רק בקובץ המגדיר | — | `MainStateInfoSets.cpp:7`, `SetClockState.cpp:15`, `OfekState.cpp:16` |
 
 ## 9. includes שלא מלוות בהפניה ישירה (מידע)
@@ -1271,7 +1269,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 
 ## 10. הבדלים בין דגמים (הערות)
 
-הסעיף נבדק מול JC4020 ו-JC6432 כמו שהם ב-`ae29f42`: פרודקשן 7.08, אחרי 2a.1–2a.2. בשלושת הדגמים הגישה להעדפות עוברת דרך ה-views.
+הסעיף נבדק מול JC4020 ו-JC6432 כמו שהם ב-`ae29f42`. בשלושת הדגמים הגישה להעדפות עוברת דרך ה-views.
 
 ### JC4020
 
@@ -1291,7 +1289,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 - **Fonts:** `Text.h` מכליל ארבעה פונטים נוספים.
 - **`Screens/MainScreen → Preferences/PresentationPrefs`** 1 (`presentationPrefs.dateFormat`, `MainScreen.cpp:92`): שכבת התצוגה קוראת העדפה ישירות. קשת כלפי מטה (3 → 4), ולכן לא ב-7.1. צימוד בין שכבות לשלב בידוד השכבות ([notes.md](notes.md), מודל הפריסה).
 
-### העדפות לפי דגם: אחרי 2a.1–2a.2
+### העדפות לפי דגם
 
 בשלושת הדגמים הגישה להעדפות עוברת דרך ה-views. נספרים רק צרכנים: יחידות ה-view, `PrefsViews` ו-`UserPreferences` לא נכללות. בכל תא: הפניות / צרכנים. הפירוט לכל צעד, לפני ואחרי ולכל צרכן, נמצא ב-[refactor-log.md](../refactor-log.md) (2a.2 של כל דגם).
 
@@ -1306,10 +1304,9 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 | `UserPreferences` ישיר | 50 / 16 | 44 / 14 | 50 / 16 |
 | **סה"כ** | **784** | **820** | **847** |
 
-- **הסכומים לא השתנו בשכפול:** 820 ב-JC4020 ו-847 ב-JC6432, כמו בתמונת המצב שלפני השכפול (`3c02e13`), והסכום של כל צרכן זהה. ההבדל היחיד הוא בחלוקה: הגישה עברה מ-`UserPreferences` ל-views.
 - **`UserPreferences` ישיר** בשלושת הדגמים: חברי הרישום (`resetSimplePrefs`, `resetTextPrefs` ב-`ConfigState`; `simplePrefs`, `allPrefs` ב-`CoreService`, שנספרים כ-`userPreferences` כי השרשרת לא נעקבת לתוך `std::vector`), ההצהרות `extern UserPreferences userPreferences;`, הטיפוסים `UserPref` ו-`UserPreferences`, ו-`setupPreferences` (`main`). אין גישה ישירה לשדה של העדפה.
 - **`UserContent` ב-JC4020:** 6 ולא 7, כי אחת משבע הגישות של `TextCommandHandler` נמצאת בבלוק המוער של F3, והכלי לא סופר הערות.
-- **`DisplayPrefs` ב-JC6432** כולל את שלושת הצבעים של הדגם (`colorIvri`, `colorLoazi`, `colorParashaV`, בסוף המבנה לפי האינדקס): 9 הפניות משני צרכנים, `Logic` 3 ו-`ColorState` 6. בתמונת המצב הקודמת הם הופיעו בשורה נפרדת כ-"9 / 3", ומספר הצרכנים שם היה שגוי.
+- **`DisplayPrefs` ב-JC6432** כולל את שלושת הצבעים של הדגם (`colorIvri`, `colorLoazi`, `colorParashaV`, בסוף המבנה לפי האינדקס): 9 הפניות משני צרכנים, `Logic` 3 ו-`ColorState` 6.
 
 ## נספח א' — מטריצות
 

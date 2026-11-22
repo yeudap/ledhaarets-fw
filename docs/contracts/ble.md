@@ -1,13 +1,13 @@
 # BLE contract (Core service)
 
-Snapshot of the BLE protocol as implemented in production **7.08** (repo commit `d01dd0f`,
-see [../baseline.md](../baseline.md)). This is the contract in the field. First snapshot: commit
-`e9c7639` (7.03); the 7.05–7.08 changes are in §5.3 and §6.5. OTA service is documented
-in [ota.md](ota.md), the advertisement in [advertisement.md](advertisement.md).
+The BLE protocol as implemented in production **7.09**, and in **709A**, which does not change
+`BLE/` or `Preferences/` (see [../baseline.md](../baseline.md)). This is the contract in the field.
+How older firmware that the app may still meet behaves differently: §9. The OTA service contract
+(not written yet) and the advertisement contract (not written yet) are separate.
 
-**Line numbers still refer to `dcd2cdb` (7.07)**, unless a line says otherwise. 7.08 removed
-`dayIndex` from `UserPreferences.h` and added the zeet range check to `CoreService.cpp`, so lines
-after those places are shifted by a few lines in 7.08.
+**Line numbers refer to `dcd2cdb` (7.07)**, unless a line says otherwise. In
+`Preferences/UserPreferences.h` and `BLE/CoreService.cpp` the current lines are a few lines off
+from these.
 
 Line numbers refer to `JC6416/src/...` unless stated otherwise. Where a file is identical in
 all three models (verified by md5), the same line numbers apply to JC4020 and JC6432.
@@ -34,9 +34,8 @@ contract depends on (`SetCustomState::printUpdateSucc`, `SetOfekState::printUpda
 (compared function by function). Their line numbers differ by 1–3 lines between models.
 
 **Model differences in the BLE contract** (details in §6.3 and §8):
-1. **JC6432:** preference indexes 72–76 differ (§8). See refactor-log F2. In the field (7.08) only:
-   in this repo the table is the same in all three models since 2a.3.2 (§8, "In this repo since
-   2a.3.2").
+1. **JC6432:** the firmware defaults of `colorYom` and `colorParasha` differ (§8). See
+   refactor-log F9. Keys, indexes and types are the same in all three models.
 2. **JC4020:** TEXT domain has 0 slots and write/display are disabled (§6.3). See refactor-log F3.
 
 Everything else in this document is identical in all three models.
@@ -48,7 +47,7 @@ Everything else in this document is identical in all three models.
 | Core service UUID | `7b79e39b-488a-4f76-a60f-bd3a29da174f` | `BLE/CoreService.h:8` |
 | CMD characteristic UUID | `326109ee-bcea-4809-88b1-5e0da1289a8c`, property `WRITE` | `CoreService.h:9`, `CoreService.cpp:919-922` |
 | EVT characteristic UUID | `fbe9b56e-270b-4765-a3ec-b917bb0ad0e1`, property `NOTIFY` | `CoreService.h:10`, `CoreService.cpp:925-927` |
-| OTA service UUID (details in ota.md) | `85564e0a-542d-4967-9d09-892b864a1b46` | `BLE/FirmwareService.h:12` |
+| OTA service UUID (OTA contract: not written yet) | `85564e0a-542d-4967-9d09-892b864a1b46` | `BLE/FirmwareService.h:12` |
 | GAP init name | `"LedHaarets"` | `BLE/Bluetooth.cpp:63` |
 | Preferred MTU | 517 (firmware preference only, see note) | `Bluetooth.cpp:64` |
 | Device name (GAP + scan response) | NVS `sys`/`dev_name`, default `"LedHaarets"`, max 24 bytes | `CoreService.cpp:731-760`, `CoreProtocol.h:287-290` |
@@ -57,7 +56,7 @@ Everything else in this document is identical in all three models.
 sides: the app requests **150** (`lib/services/ble_service/ble_connection.dart:64`, app source as
 reported by the user). On Android the effective ATT payload is therefore ≤ 147 bytes
 (MTU − 3). Any frame size assumption must hold at 147 bytes. This is directly relevant to the
-OTA chunk size (`CHUNK_SIZE_DEFAULT` / `SAFE_CHUNK_SIZE` = 244), see [ota.md](ota.md).
+OTA chunk size (`CHUNK_SIZE_DEFAULT` / `SAFE_CHUNK_SIZE` = 244; OTA contract: not written yet).
 
 Connection callbacks (`Bluetooth.cpp:17-47`): on connect and on disconnect the auth session is
 reset (`authManager.resetSession()`); advertising restarts on disconnect.
@@ -168,18 +167,15 @@ domain/opcode. Session flag is per-connection and reset on connect/disconnect
 
 `factoryReset()` callers (`States/ConfigState.cpp`, same lines in all three models):
 
-| Caller | Since | What it does | Source |
-|---|---|---|---|
-| `SetResetPassState::okAction` | already in 7.03 | `factoryReset()`, then `ESP.restart()` | `:116-125` |
-| `SetResetAllState::okAction` (menu "שחזור הגדרות יצרן") | 7.06 | `factoryReset()`, `resetTextPrefs()`, `resetSimplePrefs()`, then `ESP.restart()`. Clears `sec` and resets all of `clk` to firmware defaults; `sys/dev_name` is not touched | `:136-147` |
+| Caller | What it does | Source |
+|---|---|---|
+| `SetResetPassState::okAction` | `factoryReset()`, then `ESP.restart()` | `:116-125` |
+| `SetResetAllState::okAction` (menu "שחזור הגדרות יצרן") | `factoryReset()`, `resetTextPrefs()`, `resetSimplePrefs()`, then `ESP.restart()`. Clears `sec` and resets all of `clk` to firmware defaults; `sys/dev_name` is not touched | `:136-147` |
 
 There is no BLE opcode for factory reset. Both are menu states, reachable from the buttons (or
 by simulating them over NAV/MENU).
 
-NVS keys (`sec` namespace) are listed in [nvs.md](nvs.md).
-
-Note: the comment in `Authmanager.h:23-24` / `Authmanager.cpp:137` describes the factory reset
-trigger as "BACK+OK for 10 seconds"; the callers in code are the two reset menu states. See refactor-log F8.
+NVS keys (`sec` namespace): `pin` (u16) and `trusted` (blob); the NVS contract is not written yet.
 
 ## 6. Domain details
 
@@ -289,26 +285,25 @@ Time data (7 B, `TIME_DATA_SIZE`):
 |---|---|---|---|
 | 0x01 `PREF_OP_READ` | `[05][01][key\0]` (≥4 B) | `[type][value bytes]` | `simplePrefs` only (`:562`) |
 | 0x02 `PREF_OP_WRITE` | `[05][02][type][key\0][value bytes]` (≥5 B) | — | `allPrefs` (= `textPrefs` + `simplePrefs`, `:643`) + special key `"pin"` |
-| 0x03 `PREF_OP_SYNC` | `[05][03]` | `[count][index…]` for every `simplePrefs` entry whose value ≠ default. Since 7.08 never contains index 3 (§8) | `simplePrefs` (`:704`) |
+| 0x03 `PREF_OP_SYNC` | `[05][03]` | `[count][index…]` for every `simplePrefs` entry whose value ≠ default. Never contains index 3 (§8) | `simplePrefs` (`:704`) |
 
 WRITE checks, in order:
 
 1. No `\0` after key → `INVALID_KEY`.
 2. Type ≠ declared type → `TYPE_MISMATCH`.
-3. **Range check (since 7.07, `:653-659`; zeet keys since 7.08, `:654-660` at `d01dd0f`)**,
+3. **Range check (`:653-659`; with the zeet keys `:654-660` at `d01dd0f`)**,
    before `fromBytes`, on the first value byte:
-   - index 4 (`shita`): value ≥ `numOfShitot` (`DB/Shita.h:10`, 10 since 7.06) → `INVALID_VALUE`;
+   - index 4 (`shita`): value ≥ `numOfShitot` (`DB/Shita.h:10`, 10) → `INVALID_VALUE`;
    - index 6 (`ofek`): value ≥ `numOfOfeks` (size of `places[]`, set in `initPlace`,
      `DB/Place.cpp:115`) → `INVALID_VALUE`;
-   - `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom` (since 7.08): value >
+   - `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom`: value >
      `numOfZeetCochavin` (`DB/Shita.h:12`, 28) → `INVALID_VALUE`. The upper bound is allowed
      (`>`, not `≥`), because `zeetMethod` has `numOfZeetCochavin + 1` rows (0–28). These four keys
      are identified by preference address, not by index;
    - empty value for any of these keys → `INVALID_VALUE`.
 
    Nothing is written. The accepted range follows the firmware tables, so adding a shita, a city
-   or a zeet method widens it. Clocks before 7.07 accept any value of `shita` / `ofek`, and clocks
-   before 7.08 any value of the four zeet keys (refactor-log F11).
+   or a zeet method widens it. Older firmware without these checks: §9.
 4. `fromBytes` failure (too short) → `INVALID_VALUE`.
 5. Unknown key → `INVALID_KEY`.
 
@@ -321,11 +316,11 @@ Both apply steps run inside the write callback, after the OK EVT. Each one tempo
 `currentState` to `bl.updateState`, calls the same function the menu uses, then restores
 `currentState` and redraws it. Every other key is saved only, with no apply step.
 
-| Idx | Key | Value | Function called | Since | Source |
-|---|---|---|---|---|---|
-| 6 | `ofek` | 0 | `SetCustomState::printUpdateSucc` | ≤ 7.03 | `CoreService.cpp:669-678`, `OfekState.cpp:501-509` |
-| 6 | `ofek` | ≠ 0 | `SetOfekState::printUpdateSucc` | 7.05 | `CoreService.cpp:669-678`, `OfekState.cpp:510-519` |
-| 4 | `shita` | any (after range check) | `ShitaState::setShita` | 7.07 | `CoreService.cpp:679-687`, `ShitaState.cpp:36-42` |
+| Idx | Key | Value | Function called | Source |
+|---|---|---|---|---|
+| 6 | `ofek` | 0 | `SetCustomState::printUpdateSucc` | `CoreService.cpp:669-678`, `OfekState.cpp:501-509` |
+| 6 | `ofek` | ≠ 0 | `SetOfekState::printUpdateSucc` | `CoreService.cpp:669-678`, `OfekState.cpp:510-519` |
+| 4 | `shita` | any (after range check) | `ShitaState::setShita` | `CoreService.cpp:679-687`, `ShitaState.cpp:36-42` |
 
 - **`ofek` = 0 ("apply custom place"):** success message, `globalchangedOfek = false`,
   `initPlace()`, `ofek = 0`, `bl.configStates()`, `updateDayValues = true`. This is the last
@@ -333,15 +328,14 @@ Both apply steps run inside the write callback, after the OK EVT. Each one tempo
 - **`ofek` ≠ 0 (city from the list):** success message; writes `nerot` and `homa` from
   `places[ofek]`; `initPlace()`; writes `nz_hul` and `hul` = `places[ofek].hul`;
   `bl.configStates()`; `updateDayValues = true`. Same function as the menu
-  (`SetOfekState::okAction`). Intentional fix in 7.05 for city selection from the app (until
-  7.04 every `ofek` write went through `SetCustomState::printUpdateSucc`, which reset `ofek` to 0).
+  (`SetOfekState::okAction`).
   **Side effects on the wire:** a city write changes four more keys in NVS (`nerot`, `homa`,
   `nz_hul`, `hul`), and they show up in the next `PREF_OP_SYNC`. `nz_hul` is the Israel/abroad
   flag of the active place, so a city overwrites the value the custom place had (refactor-log F10).
 - **`shita`:** `shitot[shita]->setDefault()` (writes the calculation-method preferences of that
   shita), `bl.configStates()`, `updateDayValues = true`, success message. Same function as the
   menu (`ShitaState::okAction`). The app writes `shita` and then reads the method preferences
-  back; since 7.07 it reads the values set by `setDefault`.
+  back, so it reads the values set by `setDefault`.
 
 Note: textInput keys are writable through `PREF_OP_WRITE` (they are in `allPrefs`) but are not
 readable through `PREF_OP_READ` and all share index 0.
@@ -402,7 +396,7 @@ with the app. Protocol version per comment: 1.1 (`CoreProtocol.h:19`).
 ## 8. Preference indexes
 
 Indexes are returned by `PREF_OP_SYNC`, and the app maps them to keys. Keys and types are
-also the NVS keys in namespace `clk` (see [nvs.md](nvs.md)).
+also the NVS keys in namespace `clk` (NVS contract: not written yet).
 
 **Firmware defaults are part of the contract.** `PREF_OP_SYNC` returns only the indexes whose
 value differs from the *firmware* default (`CoreService.cpp:704-708`, `_hasChangedFromDefault`
@@ -411,10 +405,9 @@ Changing a firmware default therefore changes what the app displays for clocks s
 default, and any mismatch between app and firmware defaults is visible to the user.
 Known mismatches: refactor-log F9 (marked † in the table below).
 
-**Index 3 is no longer sent (since 7.08).** SYNC returns `getIndex()` of the `simplePrefs` entries
-only (`CoreService.cpp:709-712` at `d01dd0f`), and since `dayIndex` was removed no entry has index
-3. Before 7.08, JC6416 returned 3 almost always, because `dayIndex` was written every day
-(refactor-log F16).
+**Index 3 is not used.** SYNC returns `getIndex()` of the `simplePrefs` entries only
+(`CoreService.cpp:709-712` at `d01dd0f`), and no entry has index 3. Clocks may still hold the key
+`dayIndex` in `clk` as an orphan NVS entry; nothing reads it.
 
 Declarations: `UserPreferences.h` constructor, JC6416/JC4020 lines 487–846, JC6432 lines 490–856.
 JC4020 `UserPreferences.h` is byte-identical to JC6416. The `UserPref` template (lines 1–345,
@@ -427,7 +420,7 @@ reported by SYNC (JC6416 `:488-537`).
 |---|---|---|---|---|---|---|
 | 1 | forceWrite | U8 | 0 | 0 | 487 | 490 |
 | 2 | textPlace | STR | `"whaht otwun"` | same | 539 | 542 |
-| 3 | — (gap; was `dayIndex`, removed in 7.08. READ / WRITE look up by key, and the key `dayIndex` is in neither `simplePrefs` nor `allPrefs`, so both return `INVALID_KEY`: `CoreService.cpp:581` / `:697` at `d01dd0f`. SYNC never returns 3, see above) | — | — | — | — | — |
+| 3 | — (gap. READ / WRITE look up by key, and the key `dayIndex` is in neither `simplePrefs` nor `allPrefs`, so both return `INVALID_KEY`: `CoreService.cpp:581` / `:697` at `d01dd0f`. SYNC never returns 3, see above) | — | — | — | — | — |
 | 4 | shita | U8 | 0 | 0 | 545 | 548 |
 | 5 | eda | U8 | 1 | 1 | 555 | 558 |
 | 6 | ofek | U8 | 1 | 1 | 563 | 566 |
@@ -467,7 +460,7 @@ reported by SYNC (JC6416 `:488-537`).
 | 40 | nerot | U8 | 22 | 22 | 685 | 688 |
 | 41 | homa | U8 | 0 | 0 | 689 | 692 |
 | 42 | hul | U8 | 0 | 0 | 693 | 696 |
-| 43 | leil | U8 | 1 (0 until 7.08) | 1 | 697 | 700 |
+| 43 | leil | U8 | 1 | 1 | 697 | 700 |
 | 44 | netzClk | U8 | 0 | 0 | 702 | 705 |
 | 45 | shanim | U8 | 0 | 0 | 706 | 709 |
 | 46 | interval | U16 | 30 | 30 | 711 | 714 |
@@ -496,6 +489,26 @@ reported by SYNC (JC6416 `:488-537`).
 | 69 | ZPS | U8 | 0 | 0 | 818 | 821 |
 | 70 | IPO | U8 | 2 | 2 | 825 | 828 |
 | 71 | IORT | U8 | 2 | 2 | 832 | 835 |
+| 72 | colorIvri | U8 | 6 | 6 | — | 842 |
+| 73 | colorLoazi | U8 | 1 | 1 | — | 845 |
+| 74 | colorParashaV | U8 | 6 | 6 | — | 848 |
+| 75 | screen | U8 | 2 | 2 | — | 851 |
+| 76 | bt | U8 | 1 | 1 | — | 856 |
+
+Rows 72–76 have no line in the base commit for JC6416 / JC4020.
+
+- Same keys, types and indexes in all three models: 75 `simplePrefs` entries, highest index 76.
+  Snapshot of the table as the code builds it: `docs/contracts/prefs/<model>.txt`
+  (`tools/prefs_contract.py`).
+- Defaults that differ per model: `colorYom` and `colorParasha` (†).
+- `screen` has a different meaning per model: JC6416 / JC4020 1–4 = layout variants (no consumer on
+  these models); JC6432 1 = Big, 2 = Small (`:852-854`).
+- `colorIvri`, `colorLoazi`, `colorParashaV` are read only on JC6432; on JC6416 / JC4020 they are in
+  the table, with no consumer.
+- Per the app source (`lib/config/preference_constants.dart`, as reported by the user) the app's
+  map ends at 71 (`IORT`), and `getDefinitionByIndex` returns null for an unknown index, so 72–76
+  are not mapped by the app. Any future app mapping of 72+ must allow for the per-model meaning of
+  `screen`.
 
 † App default differs from the firmware default on some models (refactor-log F9; app values as
 reported by the user):
@@ -505,61 +518,24 @@ reported by the user):
 | 18 | colorYom | 6 | 6 | 1 | JC6432 |
 | 19 | colorParasha | 6 | 6 | 1 | JC6432 |
 
-`leil` (43) was a mismatch on JC6416 / JC4020 until 7.08; since 7.09 its firmware default is 1 in
-all three models, as in the app.
+**Stored values versus defaults.** SYNC compares the stored value with the current firmware
+default. A JC6416 / JC4020 clock that holds `leil` 0 or `screen` 1 in NVS (values that a menu reset
+on older firmware saved as defaults) reports 43 or 75. The index is not stored in NVS. A key never
+written reads as its default; a menu reset (`resetSimplePrefs`) saves every `simplePrefs` entry.
+That 72–76 have no effect on the app is to be confirmed on a clock (2a.3.5).
 
-### ⚠ Indexes 72–76 — BLE contract differs between models
+## 9. Older firmware in the field
 
-| Idx | JC6416 / JC4020 | JC6432 |
+Clocks in the field may still run older firmware. This section lists where it behaves differently
+from §1–§8. The "App" column gives only what is known about the app from its source, as reported
+by the owner.
+
+| Firmware | Clock behavior | App |
 |---|---|---|
-| 72 | **`screen`** U8, default 1 (`:839`) | **`colorIvri`** U8, default 6 (`:842`) |
-| 73 | **`bt`** U8, default 1 (`:846`) | **`colorLoazi`** U8, default 1 (`:845`) |
-| 74 | — | **`colorParashaV`** U8, default 6 (`:848`) |
-| 75 | — | **`screen`** U8, default **2** (`:851`) |
-| 76 | — | **`bt`** U8, default 1 (`:856`) |
-
-- The same index refers to a different key on JC6432. This is a **difference in the BLE
-  contract between models**, not only in the NVS content.
-- `screen` also has a different meaning: JC6416/JC4020 1–4 = layout variants
-  (`:840-844`); JC6432 1 = Big, 2 = Small (`:852-854`).
-- Per the app source (`lib/config/preference_constants.dart`, as reported by the user) the app's
-  map ends at 71 (`IORT`), so 72–76 are not currently mapped by the app and there is no collision
-  in practice. Any future app mapping of 72+ must be per-model.
-- Simple-pref counts: JC6416/JC4020 72, JC6432 75 (`simplePrefs.push_back`), since 7.08
-  (`dayIndex` removed, index 3 is a gap). The highest index is unchanged: 73 / 76.
-
-Refactor-log: F2.
-
-### Since 7.09 (2a.3.2 in this repo) — one table for all models
-
-The table above is the contract of production 7.08. In this repo, step 2a.3.2 (owner's decision)
-gave JC6416 and JC4020 the JC6432 table; production 7.09 has the same table, so since 7.09 this is
-the contract in the field too (Sync 5). 7.09 also set the JC6416 / JC4020 defaults of `leil`
-(0 → 1) and `screen` (1 → 2), as in JC6432:
-
-| Idx | Key | Type | Default JC6416 / JC4020 | Default JC6432 |
-|---|---|---|---|---|
-| 72 | `colorIvri` | U8 | 6 | 6 |
-| 73 | `colorLoazi` | U8 | 1 | 1 |
-| 74 | `colorParashaV` | U8 | 6 | 6 |
-| 75 | `screen` | U8 | 2 (1 until 7.08) | 2 |
-| 76 | `bt` | U8 | 1 | 1 |
-
-- Same keys, types and indexes in all three models; defaults that stay per model: `colorYom`,
-  `colorParasha` (F9). `screen` keeps its per-model meaning. Snapshot of the table as
-  the code builds it: `docs/contracts/prefs/<model>.txt` (`tools/prefs_contract.py`).
-- **Change for JC6416 / JC4020 clocks:** `PREF_OP_SYNC` returns 75 / 76 instead of 72 / 73 for
-  `screen` / `bt`, and 72–74 when one of the three colors differs from its default.
-  `PREF_OP_READ` and `PREF_OP_WRITE` accept the keys `colorIvri`, `colorLoazi`, `colorParashaV`
-  (before: `INVALID_KEY`). On these models nothing reads the three colors.
-- **NVS:** existing keys and types unchanged; the index is not stored in NVS. The three new keys
-  are written only by a BLE write or by a reset from the menu (`resetSimplePrefs` saves every
-  entry of `simplePrefs`).
-- **App:** per the owner, `preference_constants.dart` ends at `IORT` (71) and
-  `getDefinitionByIndex` returns null for an unknown index, so the change has no effect on the app.
-  To be confirmed on a clock (2a.3.5).
-- **Defaults (7.09), JC6416 / JC4020:** SYNC now reports 43 for a stored `leil` 0 and 75 for a
-  stored `screen` 1 (e.g. after a menu reset on 7.08, which saves every default), and no longer
-  reports a stored `leil` 1. READ of a key never written returns the new default. `screen` has no
-  consumer on these models; the app does not map 75.
-- Refactor-log: 2a.3.2, F2, Production port 7.09.
+| below 7.05 | `shita` 0–7 only (`numOfShitot` 8) and zeet methods 0–27, with no range check: a write of `shita` 8–9 or of zeet 28 is stored, and `shitot[]` / `zeetMethod[]` are read past their end (for `shita`: in `DayInfo::initDay` at every boot) | No handling in the app. A rollback to such firmware is not blocked in the app (refactor-log F11) |
+| below 7.05 | A write of `ofek` ≠ 0 runs `SetCustomState::printUpdateSucc`, which sets `ofek` to 0: a city chosen from the app is not kept | No handling in the app |
+| below 7.07 | No range check for `shita` and `ofek`: any value is stored | No handling in the app |
+| below 7.07 | A write of `shita` is only saved; `Shita::setDefault` does not run | The app writes `shita`, waits 500 ms and reads back the 12 method preferences and `nerot`; on these clocks it reads back the previous values. No handling in the app |
+| below 7.08 | No range check for `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom`: any value is stored | No handling in the app |
+| below 7.08 | Key `dayIndex` at index 3 (U8, default 1). READ / WRITE accept it; JC6416 writes it every day, so SYNC almost always returns 3 | The app defines `dayIndex` at index 3 and does not use it beyond the definition |
+| below 7.09, JC6416 / JC4020 | Table ends at 73: `screen` = 72 (default 1), `bt` = 73; `colorIvri`, `colorLoazi`, `colorParashaV` → `INVALID_KEY`. `leil` default 0 | The app's map ends at 71 and `getDefinitionByIndex` returns null for 72–73, so they are ignored. App default of `leil` is 1: a clock at its `leil` default 0 is not reported by SYNC, and the app shows 1 |

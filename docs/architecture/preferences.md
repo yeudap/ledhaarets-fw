@@ -9,9 +9,7 @@
 
 ## 1. בסיס ושיטה
 
-- **בסיס:** `JC6416`, פרודקשן 7.07 (commit `dcd2cdb`). הבסיס הקודם היה `9c75812` (7.04). בין שני הבסיסים `Preferences/` לא השתנה: אותם מפתחות, אינדקסים, טיפוסים וברירות מחדל. השתנו רק הצרכנים והכותבים של `shita`, `ofek`, `nz_hul`, `nerot`, `hul` ו-12 השיטות, וגם התגובה לכתיבה מ-BLE (סעיף 6). הבדלים בדגמים האחרים מופיעים בסעיף 8.
-- **7.08** (commit `d01dd0f`): `dayIndex` נמחק בשלושת הדגמים, ואינדקס 3 הוא חור. נוספה ב-BLE בדיקת טווח לארבעת מפתחות צאת הכוכבים (סעיף 6.4). שאר `Preferences/` לא השתנה. מספרי השורות במסמך עדיין לפי `dcd2cdb`.
-- **7.09** (Sync 5, commit `7066e4e` ב-JC6416): ברירות המחדל של `leil` (0 → 1) ושל `screen` (1 → 2) ב-JC6416 וב-JC4020, כמו ב-JC6432. הטבלה של 2a.3.2 נמצאת גם בפרודקשן. שאר המפתחות, האינדקסים, הטיפוסים וברירות המחדל לא השתנו.
+- **בסיס:** `JC6416`. המסמך מתאר את הקוד הנוכחי. מספרי השורות במסמך לפי commit `dcd2cdb`, וב-`UserPreferences.h` וב-`CoreService.cpp` השורות הנוכחיות זזו בכמה שורות. הבדלים בדגמים האחרים מופיעים בסעיף 8.
 - **מקור ההגדרות:** בנאי `UserPreferences` ב-[Preferences/UserPreferences.h:487-846](../../JC6416/src/Preferences/UserPreferences.h#L487-L846).
 - **שכבות היעד:**
   - **נתונים**: מיקום, שיטה, מנהגים
@@ -37,7 +35,7 @@
 
 | namespace | מי מנהל | תוכן | גישה מ-BLE |
 | --- | --- | --- | --- |
-| `clk` | `UserPreferences` ([UserPreferences.cpp:9](../../JC6416/src/Preferences/UserPreferences.cpp#L9)) | 125 העדפות: 75 ב-`simplePrefs` (אינדקסים 1-76, ו-3 חור מ-7.08) ו-50 טקסטים ב-`textPrefs`. עד 2a.3.2: 122, ‏72 ב-`simplePrefs`, אינדקסים 1-73 | `PREF_OP_*` לפי מפתח, ו-`TEXT_OP_*` לפי מיקום ב-`textPrefs` |
+| `clk` | `UserPreferences` ([UserPreferences.cpp:9](../../JC6416/src/Preferences/UserPreferences.cpp#L9)) | 125 העדפות: 75 ב-`simplePrefs` (אינדקסים 1-76, ו-3 חור) ו-50 טקסטים ב-`textPrefs` | `PREF_OP_*` לפי מפתח, ו-`TEXT_OP_*` לפי מיקום ב-`textPrefs` |
 | `sec` | `AuthManager` ([Authmanager.cpp:11-13](../../JC6416/src/BLE/Authmanager.cpp#L11-L13)) | `pin` (u16), `trusted` (blob של 48B) | `pin` דרך `PREF_OP_WRITE` בלבד, כ-special-case ([CoreService.cpp:616-640](../../JC6416/src/BLE/CoreService.cpp#L616-L640)). `trusted` רק דרך `AUTH_OP_REGISTER` |
 | `sys` | `CoreService` ([CoreService.cpp:731-749](../../JC6416/src/BLE/CoreService.cpp#L731-L749)) | `dev_name` (string) | `SYS_OP_SET_NAME` |
 
@@ -55,7 +53,7 @@
 | נתונים | 26 | **רשומת מקום (9):** `ofek`, `textPlace`, `nz_lat`, `nz_long`, `nz_height`, `nz_hul`, `timezone`, `shaonKaiz`, `homa` · **שיטה (14):** `shita`, 12 שיטות חישוב (`zriha` … `zeetZom`), `nerot` · **מנהגים (3):** `eda`, `hul`, `shanim` |
 | לוגיקה | 27 | `netzClk`, 4×`interval*`, 10 בחירות "מה מוצג" (`dafHayomi` … `showIsraeli`), 12 בחירות "מה ומתי" (`TAZ` … `IORT`) |
 | הצגה | 8 | `safa`, `dateFormat`, `clockFormat`, `timeFormat`, `leil` · **פריסה (3):** `middleLine`, `upLine`, `screen` |
-| תצוגה | 12 | `brightness`, 7×`color*`, `clockFont`, ועוד 3 צבעים: `colorIvri`, `colorLoazi`, `colorParashaV`. הם בשימוש רק ב-JC6432, ומ-2a.3.2 הם בטבלה של כל הדגמים |
+| תצוגה | 12 | `brightness`, 7×`color*`, `clockFont`, ועוד 3 צבעים: `colorIvri`, `colorLoazi`, `colorParashaV`. הם בטבלה של כל הדגמים, ובשימוש רק ב-JC6432 |
 | מערכת | 1 + 1 | `bt`; ב-`sys`: `dev_name` |
 | רישום מרכזי | 1 | `forceWrite` |
 | אבטחה | 2 | ב-`sec`: `pin`, `trusted` |
@@ -75,8 +73,8 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `forceWrite` | U8 | `0` | — | — | **רישום מרכזי** | נועד לאיפוס מרחוק לברירות מחדל. לא בשימוש (9.1) |
 | 2 | `textPlace` | STR | `whaht otwun` | Place 1 | — | **נתונים · מקום** | שם המיקום המותאם, נטען ל-`places[0]` (9.8) |
-| 3 | — | — | — | — | — | **נמחק ב-7.08** | חור. היה `dayIndex` (U8, ברירת מחדל `1`): נכתב כל יום ב-`MainState::setNewDay` ולא נקרא. נמחק בפרודקשן 7.08 (F16), והאינדקס לא הוקצה מחדש (9.2) |
-| 4 | `shita` | U8 | `0` | DB 3, DayInfo 5, MinhagState 11 | EdotState r0/w1, Logic r1 (temp), ShitaState r2/w1 | **נתונים · שיטה** | שיטת החישוב (0-9 מ-7.05). ראשית: בחירה דורסת 12 שיטות ו-`nerot`. מ-BLE נטמעת מיד דרך `ShitaState::setShita` (7.07) |
+| 3 | — | — | — | — | — | **חור** | אינדקס לא בשימוש. המפתח `dayIndex` עשוי להישאר ב-`clk` בשעונים כרשומת NVS יתומה, ואף אחד לא קורא אותו (9.2) |
+| 4 | `shita` | U8 | `0` | DB 3, DayInfo 5, MinhagState 11 | EdotState r0/w1, Logic r1 (temp), ShitaState r2/w1 | **נתונים · שיטה** | שיטת החישוב (0-9). ראשית: בחירה דורסת 12 שיטות ו-`nerot`. מ-BLE נטמעת מיד דרך `ShitaState::setShita` |
 | 5 | `eda` | U8 | `1` | DayInfo 18, MainStateInfoSets 4, MainStateTimeSets 2, Omer 6 | EdotState r6/w6 | **נתונים · מנהגים** | מנהג העדה |
 | 6 | `ofek` | U8 | `1` | DayInfo 1, MinhagState 1, Place 2 | Logic r1 (temp), OfekState r5/w2, Place w1 | **נתונים · מקום** | אינדקס העיר ברשימה; 0 = מקום מותאם. ראשית (9.10). מ-BLE נטמעת מיד, גם 0 וגם ≠0 |
 | 7 | `nz_lat` | BLOB | `32.07` | Place 2 | OfekState r1/w1 | **נתונים · מקום** | מיקום מותאם |
@@ -144,11 +142,11 @@
 | 69 | `ZPS` | U8 | `0` | — | — | **לוגיקה** | מה מוצג ומתי. בשימוש רק ב-JC4020 |
 | 70 | `IPO` | U8 | `2` | — | — | **לוגיקה** | מה מוצג ומתי. בשימוש רק ב-JC4020 |
 | 71 | `IORT` | U8 | `2` | MainStateInfoSets 4 | SetTochenInfoState r4/w2 | **לוגיקה** | מה מוצג ומתי |
-| 72 | `colorIvri` | U8 | `6` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432. בטבלה מ-2a.3.2 |
-| 73 | `colorLoazi` | U8 | `1` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432. בטבלה מ-2a.3.2 |
-| 74 | `colorParashaV` | U8 | `6` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432. בטבלה מ-2a.3.2 |
-| 75 | `screen` | U8 | `2` | — | — | **הצגה · פריסה** | בחירת הפריסה: חלוקת האזורים של המסך הראשי. בשימוש רק ב-JC6432 (9.7). עד 2a.3.2 אינדקס 72 |
-| 76 | `bt` | U8 | `1` | main 1 | ConfigState r4/w1 | **מערכת** | הפעלת BLE. עד 2a.3.2 אינדקס 73 |
+| 72 | `colorIvri` | U8 | `6` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432 |
+| 73 | `colorLoazi` | U8 | `1` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432 |
+| 74 | `colorParashaV` | U8 | `6` | — | — | **תצוגה** | צבע. בשימוש רק ב-JC6432 |
+| 75 | `screen` | U8 | `2` | — | — | **הצגה · פריסה** | בחירת הפריסה: חלוקת האזורים של המסך הראשי. בשימוש רק ב-JC6432 (9.7) |
+| 76 | `bt` | U8 | `1` | main 1 | ConfigState r4/w1 | **מערכת** | הפעלת BLE |
 
 **תוכן אישי (`textInput1` … `textInput50`):**
 
@@ -165,7 +163,7 @@
 
 | העדפה | טיפוס | ברירת מחדל | משתמש | שכבה מוצעת |
 | --- | --- | --- | --- | --- |
-| `sec/pin` | u16 | 1111 | `AuthManager::init`, `checkPin`, `setPin`, `factoryReset`. `factoryReset` נקרא מ-`ConfigState.cpp:120` (`SetResetPassState`) ומ-`:140` (`SetResetAllState`, מ-7.06) | **אבטחה** |
+| `sec/pin` | u16 | 1111 | `AuthManager::init`, `checkPin`, `setPin`, `factoryReset`. `factoryReset` נקרא מ-`ConfigState.cpp:120` (`SetResetPassState`) ומ-`:140` (`SetResetAllState`) | **אבטחה** |
 | `sec/trusted` | blob 48B | ריק | `AuthManager` בלבד | **אבטחה** |
 | `sys/dev_name` | string | `LedHaarets` | `loadDeviceName` (ב-`Bluetooth.cpp:82`), `saveDeviceName` ו-`applyDeviceName` (ב-`CoreService.cpp`) | **מערכת** |
 
@@ -201,7 +199,7 @@
 - **`brightness` (תצוגה)** נקרא ב-`main.cpp:29-40`.
 - **כתיבה מתוך הדומיין:**
   - `Shita::setDefault` כותב 12 העדפות שיטה ואת `nerot` ([Shita.cpp:61-474](../../JC6416/src/DB/Shita.cpp#L61-L474)). נקרא מ-`ShitaState::setShita` ([ShitaState.cpp:38](../../JC6416/src/States/ShitaState.cpp#L38)), מהתפריט ומ-BLE.
-  - `myZmanim::setDefault` (מ-7.05) קורא גם את `nz_hul` כדי לבחור את `zmanTalit` ([Shita.cpp:421-422](../../JC6416/src/DB/Shita.cpp#L421-L422)). זו הקריאה היחידה של העדפת מקום בתוך `Shita`. בחירת עיר לא מריצה את `setDefault` מחדש (F15, סגור).
+  - `myZmanim::setDefault` קורא גם את `nz_hul` כדי לבחור את `zmanTalit` ([Shita.cpp:421-422](../../JC6416/src/DB/Shita.cpp#L421-L422)). זו הקריאה היחידה של העדפת מקום בתוך `Shita`. בחירת עיר לא מריצה את `setDefault` מחדש (F15, סגור).
   - `initPlace` כותב את `ofek` כשהערך מחוץ לטווח ([Place.cpp:117-122](../../JC6416/src/DB/Place.cpp#L117-L122)).
 - **כתיבה של שתי העדפות בפעולה אחת:**
   - `SetOfekState::printUpdateSucc` כותב גם את `nerot`, `homa`, `nz_hul` ו-`hul` מנתוני העיר שנבחרה ([OfekState.cpp:510-519](../../JC6416/src/States/OfekState.cpp#L510-L519)). נקרא מהתפריט (`SetOfekState::okAction`) ומ-BLE (`ofek` ≠ 0).
@@ -214,7 +212,7 @@
 | מסלול | מה כותב | מה קורה אחרי הכתיבה |
 | --- | --- | --- |
 | מצב תפריט, `okAction` | `UserPref::setValue` → `save()` | תלוי במצב. פירוט בסעיף 6.3 |
-| BLE `PREF_OP_WRITE` ([CoreService.cpp:588-694](../../JC6416/src/BLE/CoreService.cpp#L588-L694)) | בדיקת טווח ל-`shita` ול-`ofek` (7.07) ולארבעת מפתחות צאת הכוכבים (7.08), ואז `fromBytes()` → `save()`, ישירות, בלי `setValue` | רק אינדקס 6 (`ofek`) ואינדקס 4 (`shita`) מפעילים תגובה. פירוט בסעיף 6.4 |
+| BLE `PREF_OP_WRITE` ([CoreService.cpp:588-694](../../JC6416/src/BLE/CoreService.cpp#L588-L694)) | בדיקת טווח ל-`shita`, ל-`ofek` ולארבעת מפתחות צאת הכוכבים, ואז `fromBytes()` → `save()`, ישירות, בלי `setValue` | רק אינדקס 6 (`ofek`) ואינדקס 4 (`shita`) מפעילים תגובה. פירוט בסעיף 6.4 |
 | BLE `PREF_OP_WRITE` עם המפתח `pin` | `authManager.setPin` | שמירה ב-`sec` בלבד |
 | BLE `TEXT_OP_WRITE/DELETE/SWAP` ([TextCommandHandler.cpp](../../JC6416/src/BLE/TextCommandHandler.cpp)) | `textPrefs[i] = …` | WRITE: מעדכן את `bl.mainState.numOfValidTexts`, `stateIndexNameSet` ו-`flagNameSetChanged`, כך שהטקסט מוצג מיד. DELETE: מעדכן את `numOfValidTexts`. SWAP: אין תגובה |
 | BLE `SYS_OP_SET_NAME` | `sys/dev_name` | `applyDeviceName`: שם ה-GAP וה-scan response מתעדכנים מיד |
@@ -223,7 +221,7 @@
 | `initPlace` | `ofek` (fallback) | — |
 | `SetResetPrefState` / `SetResetTextState` ([ConfigState.cpp:76-105](../../JC6416/src/States/ConfigState.cpp#L76-L105)) | `resetSimplePrefs` / `resetTextPrefs` | `ESP.restart()` |
 | `SetResetPassState` ([ConfigState.cpp:116-125](../../JC6416/src/States/ConfigState.cpp#L116-L125)) | `authManager.factoryReset` | `ESP.restart()` |
-| `SetResetAllState` ([ConfigState.cpp:136-147](../../JC6416/src/States/ConfigState.cpp#L136-L147)), מ-7.06 | `authManager.factoryReset`, `resetTextPrefs`, `resetSimplePrefs`: כל `sec` וכל `clk`. `sys/dev_name` לא מתאפס | `ESP.restart()` |
+| `SetResetAllState` ([ConfigState.cpp:136-147](../../JC6416/src/States/ConfigState.cpp#L136-L147)) | `authManager.factoryReset`, `resetTextPrefs`, `resetSimplePrefs`: כל `sec` וכל `clk`. `sys/dev_name` לא מתאפס | `ESP.restart()` |
 
 ### 6.2 איפה ערכים מוחזקים בזיכרון, ומה מרענן אותם
 
@@ -242,9 +240,9 @@
 | `ColorState` (7 צבעים) | `bl.configStates()` |
 | `MinhagState` (שיטות, `nerot`) | `bl.configStates()` ו-`updateDayValues = true` |
 | `MinhagShanimSetState` (`shanim`) | `dayInfo.setShanimLahurban()` ו-`updateDayValues = true` ([MinhagState.cpp:292-297](../../JC6416/src/States/MinhagState.cpp#L292-L297)) |
-| `ShitaState` | `okAction` כותב את `shita` וקורא ל-`setShita` ([ShitaState.cpp:31-42](../../JC6416/src/States/ShitaState.cpp#L31-L42)): `shitot[shita]->setDefault()`, `bl.configStates()`, `updateDayValues = true`, הודעת הצלחה. `setShita` משמש גם את BLE (7.07) |
+| `ShitaState` | `okAction` כותב את `shita` וקורא ל-`setShita` ([ShitaState.cpp:31-42](../../JC6416/src/States/ShitaState.cpp#L31-L42)): `shitot[shita]->setDefault()`, `bl.configStates()`, `updateDayValues = true`, הודעת הצלחה. `setShita` משמש גם את BLE |
 | `EdotState` (`eda`, `hul`) | `updateDayValues = true` רק ב-`EdotBneiHul` ([EdotState.cpp:131](../../JC6416/src/States/EdotState.cpp#L131)). בשאר: כתיבה בלבד |
-| `SetOfekState` (עיר מהרשימה) | `okAction` כותב את `ofek` וקורא ל-`printUpdateSucc` ([OfekState.cpp:67-71](../../JC6416/src/States/OfekState.cpp#L67-L71), [:510-519](../../JC6416/src/States/OfekState.cpp#L510-L519)): הודעת הצלחה, `nerot` ו-`homa` מהעיר, `initPlace()`, `nz_hul` ו-`hul` מהעיר, `bl.configStates()`, `updateDayValues = true`. אחר כך עובר למסך הראשי (מ-7.06). `printUpdateSucc` משמש גם את BLE (`ofek` ≠ 0, מ-7.05) |
+| `SetOfekState` (עיר מהרשימה) | `okAction` כותב את `ofek` וקורא ל-`printUpdateSucc` ([OfekState.cpp:67-71](../../JC6416/src/States/OfekState.cpp#L67-L71), [:510-519](../../JC6416/src/States/OfekState.cpp#L510-L519)): הודעת הצלחה, `nerot` ו-`homa` מהעיר, `initPlace()`, `nz_hul` ו-`hul` מהעיר, `bl.configStates()`, `updateDayValues = true`. אחר כך עובר למסך הראשי. `printUpdateSucc` משמש גם את BLE (`ofek` ≠ 0) |
 | `SetCustomState` (מיקום מותאם) | `printUpdateSucc` ([OfekState.cpp:501-509](../../JC6416/src/States/OfekState.cpp#L501-L509)): הודעת הצלחה, `initPlace()`, `ofek = 0`, `bl.configStates()`, `updateDayValues = true`. משמש גם את BLE (`ofek` = 0) |
 | `SetShaonKaiz` | `setShaonKaitz()` או `setShaonHoref()` (מזיז את ה-RTC), ו-`updateDayValues = true` ([SetClockState.cpp:173-180](../../JC6416/src/States/SetClockState.cpp#L173-L180)) |
 | `SetClkFormat`, `SetDateFormat`, `SetTimeFormat`, `MinhagLeilState` | כתיבה בלבד (הערך נקרא בזמן שימוש) |
@@ -256,7 +254,7 @@
 
 ### 6.4 אחרי כתיבה מ-BLE (`PREF_OP_WRITE`)
 
-- **בדיקת טווח (מ-7.07)** ([CoreService.cpp:653-659](../../JC6416/src/BLE/CoreService.cpp#L653-L659)): לפני `fromBytes`, `shita` ≥ `numOfShitot` ו-`ofek` ≥ `numOfOfeks` נדחים ב-`CORE_ERR_INVALID_VALUE`, ושום דבר לא נכתב. מ-7.08 נבדקים גם `zeetCochavim`, `rabenuTam`, `zeetShabat` ו-`zeetZom`, לפי כתובת ההעדפה ולא לפי אינדקס: ערך > `numOfZeetCochavin` (28) נדחה באותו אופן (F11). שאר המפתחות לא נבדקים.
+- **בדיקת טווח** ([CoreService.cpp:653-659](../../JC6416/src/BLE/CoreService.cpp#L653-L659)): לפני `fromBytes`, `shita` ≥ `numOfShitot` ו-`ofek` ≥ `numOfOfeks` נדחים ב-`CORE_ERR_INVALID_VALUE`, ושום דבר לא נכתב. נבדקים גם `zeetCochavim`, `rabenuTam`, `zeetShabat` ו-`zeetZom`, לפי כתובת ההעדפה ולא לפי אינדקס: ערך > `numOfZeetCochavin` (28) נדחה באותו אופן. שאר המפתחות לא נבדקים.
 - **כל מפתח:** `pref->fromBytes()` ואז `pref->save()`. הערך בזיכרון וב-NVS מתעדכן. חוץ מ-`ofek` ו-`shita` אין קריאה ל-`configStates`, ל-`initPlace` או ל-`updateDayValues`. מתי השינוי משפיע תלוי במנגנון שמחזיק את ההעדפה (6.2):
   - נקראת בזמן שימוש: בציור הבא.
   - מוחזקת ב-`configStates`: בקריאה הבאה ל-`configStates`.
@@ -264,13 +262,13 @@
   - `initPlace`, `brightness` ו-`bt`: באתחול הבא.
 - **אינדקסים 6 ו-4: הטמעה מיידית.** בשני המקרים BLE מחליף זמנית את `currentState` ל-`bl.updateState`, קורא לאותה פונקציה שהתפריט מפעיל, ואחר כך מצייר מחדש את המסך הקודם. ההטמעה רצה בתוך ה-callback של הכתיבה, אחרי שליחת ה-OK.
 
-  | אינדקס | ערך | פונקציה | מה היא מבצעת, לפי הסדר | מאז |
-  | --- | --- | --- | --- | --- |
-  | 6 `ofek` ([CoreService.cpp:669-678](../../JC6416/src/BLE/CoreService.cpp#L669-L678)) | 0 | `SetCustomState::printUpdateSucc` ([OfekState.cpp:501-509](../../JC6416/src/States/OfekState.cpp#L501-L509)) | הודעת הצלחה, `globalchangedOfek = false`, `initPlace()`, `ofek = 0`, `bl.configStates()`, `updateDayValues = true` | ≤ 7.03 |
-  | 6 `ofek` | ≠ 0 | `SetOfekState::printUpdateSucc` ([OfekState.cpp:510-519](../../JC6416/src/States/OfekState.cpp#L510-L519)) | הודעת הצלחה, `nerot` ו-`homa` מהעיר, `initPlace()`, `nz_hul` ו-`hul` מהעיר, `bl.configStates()`, `updateDayValues = true` | 7.05 |
-  | 4 `shita` ([CoreService.cpp:679-687](../../JC6416/src/BLE/CoreService.cpp#L679-L687)) | כל ערך בטווח | `ShitaState::setShita` ([ShitaState.cpp:36-42](../../JC6416/src/States/ShitaState.cpp#L36-L42)) | `shitot[shita]->setDefault()`, `bl.configStates()`, `updateDayValues = true`, הודעת הצלחה | 7.07 |
+  | אינדקס | ערך | פונקציה | מה היא מבצעת, לפי הסדר |
+  | --- | --- | --- | --- |
+  | 6 `ofek` ([CoreService.cpp:669-678](../../JC6416/src/BLE/CoreService.cpp#L669-L678)) | 0 | `SetCustomState::printUpdateSucc` ([OfekState.cpp:501-509](../../JC6416/src/States/OfekState.cpp#L501-L509)) | הודעת הצלחה, `globalchangedOfek = false`, `initPlace()`, `ofek = 0`, `bl.configStates()`, `updateDayValues = true` |
+  | 6 `ofek` | ≠ 0 | `SetOfekState::printUpdateSucc` ([OfekState.cpp:510-519](../../JC6416/src/States/OfekState.cpp#L510-L519)) | הודעת הצלחה, `nerot` ו-`homa` מהעיר, `initPlace()`, `nz_hul` ו-`hul` מהעיר, `bl.configStates()`, `updateDayValues = true` |
+  | 4 `shita` ([CoreService.cpp:679-687](../../JC6416/src/BLE/CoreService.cpp#L679-L687)) | כל ערך בטווח | `ShitaState::setShita` ([ShitaState.cpp:36-42](../../JC6416/src/States/ShitaState.cpp#L36-L42)) | `shitot[shita]->setDefault()`, `bl.configStates()`, `updateDayValues = true`, הודעת הצלחה |
 
-  `SetCustomState::printUpdateSucc` משמש בתפריט גם אחרי עריכת קו אורך או קו רוחב. עד 7.04 כל כתיבה של `ofek` מ-BLE עברה דרכו, ולכן עיר שנבחרה מהאפליקציה התאפסה ל-0.
+  `SetCustomState::printUpdateSucc` משמש בתפריט גם אחרי עריכת קו אורך או קו רוחב.
 
 ### 6.5 מנגנוני רענון לפי שכבת יעד
 
@@ -288,7 +286,7 @@
 
 ### 6.6 הפער מול הדרישה (9.9)
 
-**הדרישה:** כל שינוי העדפה, מהתפריט או מ-BLE, נטמע מיד בלי `restart` ומציג מסך הצלחה, דרך אותה פונקציית הטמעה שהתפריט כבר משתמש בה. היום (7.07) זה קורה מ-BLE בשתי ההעדפות הראשיות: `ofek` (0 ו-≠0) ו-`shita`. ההרחבה לשאר ההעדפות היא שלב נפרד ("Later" ב-CLAUDE.md).
+**הדרישה:** כל שינוי העדפה, מהתפריט או מ-BLE, נטמע מיד בלי `restart` ומציג מסך הצלחה, דרך אותה פונקציית הטמעה שהתפריט כבר משתמש בה. היום זה קורה מ-BLE בשתי ההעדפות הראשיות: `ofek` (0 ו-≠0) ו-`shita`. ההרחבה לשאר ההעדפות היא שלב נפרד ("Later" ב-CLAUDE.md).
 
 **ההעדפות שלא נטמעות מיד אחרי `PREF_OP_WRITE`** (לפי 6.2 ו-6.4), כשהן נכתבות לבד:
 
@@ -304,12 +302,12 @@
 - **`brightness`:** אין היום מסלול שמחיל אותו מ-BLE. **מתוכנן:** הטמעה מיידית כחלק ממנגנון הפעולות של הרישום המרכזי (אחרי 2a), יחד עם הוספת כל ההגדרות לאפליקציה. לא כבלוק נוסף ב-`CoreService`.
 - **`bt`:** נטמע רק באתחול, וזה רצוי. כיבוי BLE מיידי היה מנתק את האפליקציה שכתבה את הערך לפני שהיא מקבלת תשובה. **חריג מכוון לדרישה ב-9.9.**
 
-**`shita` מהאפליקציה.** לפי קוד האפליקציה (`lib/ui/.../settings_times_tab.dart:299-330`, מחוץ לריפו, כפי שדווח), האפליקציה כותבת `shita`, ממתינה 500ms וקוראת בחזרה 12 שיטות ו-`nerot`, בהנחה שהקושחה הריצה `Shita::setDefault`. עד 7.06 הקושחה לא הריצה אותו, והאפליקציה קראה בחזרה את הערכים הקודמים. מ-7.07 `ShitaState::setShita` רץ בתוך ה-callback של הכתיבה, ולכן הקריאה בחזרה מחזירה את ערכי השיטה החדשה. הפער נסגר.
+**`shita` מהאפליקציה.** לפי קוד האפליקציה (`lib/ui/.../settings_times_tab.dart:299-330`, מחוץ לריפו, כפי שדווח), האפליקציה כותבת `shita`, ממתינה 500ms וקוראת בחזרה 12 שיטות ו-`nerot`, בהנחה שהקושחה הריצה `Shita::setDefault`. `ShitaState::setShita` רץ בתוך ה-callback של הכתיבה, ולכן הקריאה בחזרה מחזירה את ערכי השיטה החדשה.
 
 **העדפות ראשיות ותלויות.** האפליקציה כותבת את ההעדפה הראשית אחרונה:
 
 - **מקום מותאם:** `nz_lat`, `nz_long`, `nz_height`, `timezone`, `shaonKaiz`, `nz_hul`, `hul`, `textPlace`, ובסוף `ofek` = 0 בתור "החל מיקום מותאם" (`lib/providers/ble/ble_location_mixin.dart:79-131`).
-- **עיר מהרשימה:** `ofek` ≠ 0. הקושחה כותבת בעצמה `nerot`, `homa`, `nz_hul` ו-`hul` מנתוני העיר (מ-7.05). לכן `nz_hul` הוא תמיד של המקום הפעיל (9.11).
+- **עיר מהרשימה:** `ofek` ≠ 0. הקושחה כותבת בעצמה `nerot`, `homa`, `nz_hul` ו-`hul` מנתוני העיר. לכן `nz_hul` הוא תמיד של המקום הפעיל (9.11).
 - **שיטה:** רק `shita`.
 
 כלומר, הפעלת ההטמעה על ההעדפה הראשית בלבד מספיקה כדי שכתיבות ברצף לא יציגו מסך הצלחה כמה פעמים.
@@ -323,16 +321,16 @@
   - `PREF_OP_WRITE`: חיפוש ב-`allPrefs` ([:588-694](../../JC6416/src/BLE/CoreService.cpp#L588-L694)).
   - `PREF_OP_SYNC`: מעבר על `simplePrefs` ודיווח האינדקסים שערכם שונה מברירת המחדל ([:700-720](../../JC6416/src/BLE/CoreService.cpp#L700-L720)).
   - התלויות בהעדפה ספציפית: `getIndex() == 6` ו-`getIndex() == 4`, גם בבדיקת הטווח וגם בהטמעה. בבדיקת הטווח BLE משתמש גם ב-`numOfShitot` (`DB/Shita.h`) וב-`numOfOfeks` (`DB/Place.cpp`), ובהטמעה ב-`bl.setCustomState`, `bl.setOfekState` ו-`bl.shitaState`.
-- **`States/ConfigState`:** `resetSimplePrefs` ו-`resetTextPrefs`, כל אחת משני מקומות: `SetResetPrefState`/`SetResetTextState` ו-`SetResetAllState` (מ-7.06).
+- **`States/ConfigState`:** `resetSimplePrefs` ו-`resetTextPrefs`, כל אחת משני מקומות: `SetResetPrefState`/`SetResetTextState` ו-`SetResetAllState`.
 - **`BLE/TextCommandHandler`:** `textPrefs[i]` (7 מקומות).
-- **`Preferences/UserPreferences`:** `loadAll` (נקרא מתוך `setupPreferences`), `resetSimplePrefs` ו-`resetTextPrefs` (מ-`ConfigState`). הפונקציות `saveAll`, `resetAll`, `printAll`, `getValueByKey`, `setValueByKey` ו-`getPref` לא נקראו בשום מקום, ונמחקו ב-2a.3.1.
+- **`Preferences/UserPreferences`:** פונקציות הרישום הן `init` ו-`loadAll` (נקראות מתוך `setupPreferences`), `resetSimplePrefs` ו-`resetTextPrefs` (מ-`ConfigState`), ו-`printAll` (debug, לא נקראת בשום מקום).
 
 ## 8. הבדלים בין דגמים
 
 ### JC4020
 
-- **הגדרות:** 75 ההגדרות זהות ל-JC6416: מפתח, אינדקס, טיפוס וברירת מחדל (עד 2a.3.2: 72).
-- **views של שכבות (2a.1):** זהים ל-JC6416: אותם מבנים, שדות וסדר. אין שדה ייחודי לדגם. מ-2a.3.2 `DisplayPrefs.h` ו-`PrefsViews.cpp` זהים בשלושת הדגמים.
+- **הגדרות:** 75 ההגדרות זהות ל-JC6416: מפתח, אינדקס, טיפוס וברירת מחדל.
+- **views של שכבות:** זהים ל-JC6416: אותם מבנים, שדות וסדר. אין שדה ייחודי לדגם. `DisplayPrefs.h` ו-`PrefsViews.cpp` זהים בשלושת הדגמים.
 - **שימוש:**
   - `middleLine` ו-`upLine` בשימוש. עורכים: `SetTochenState` ו-`Logic (temp)`. ל-`middleLine` יש צרכן, `MainState` (4). ל-`upLine` אין צרכן.
   - `interval` מחליף את `intervalIluy`, `intervalTime` ו-`intervalInfo`. צרכן: `Logic`, שמזין את `mainState.intervalTimeSet`. עורך: `SetTochenState`. שלוש ההעדפות האחרות לא בשימוש.
@@ -345,8 +343,8 @@
 
 ### JC6432
 
-- **ברירות מחדל שונות:** `colorYom` = 1, `colorParasha` = 1 (F9). `leil` = 1 ו-`screen` = 2 זהים בשלושת הדגמים מ-7.09.
-- **הטבלה (מ-2a.3.2):** אותן העדפות ואותם אינדקסים כמו ב-JC6416 וב-JC4020. ההבדל היחיד בטבלה הוא ברירות המחדל שלמעלה. לפני 2a.3.2, ל-JC6432 בלבד היו 3 צבעים נוספים, ו-`screen`/`bt` היו בו 75/76 במקום 72/73 (F2).
+- **ברירות מחדל שונות:** `colorYom` = 1, `colorParasha` = 1 (F9). שאר ברירות המחדל זהות בשלושת הדגמים.
+- **הטבלה:** אותן העדפות ואותם אינדקסים כמו ב-JC6416 וב-JC4020. ההבדל היחיד בטבלה הוא ברירות המחדל שלמעלה.
 - **3 צבעים בשימוש רק כאן:**
   - `colorIvri` (72, ברירת מחדל 6)
   - `colorLoazi` (73, ברירת מחדל 1)
@@ -358,13 +356,13 @@
 - **`dateFormat`:** נקרא גם ב-`Screens/MainScreen.cpp:92`, כלומר שכבת התצוגה קוראת העדפה ישירות. הפריסה משתנה כשאין תאריך לועזי.
 - **`loazi`:** יש לו עורך ואין לו צרכן.
 - **`MainStateInfoSets`:** מפוצל ל-`…1.cpp` ול-`…2.cpp`. הצרכנים של `tfila`, `moadim`, `IORT` ושאר בחירות התוכן מתחלקים בין שני הקבצים.
-- **views (2a.1):** like JC6416; `DisplayPrefs` adds `colorIvri`, `colorLoazi`, `colorParashaV` at the end (index order); `screen` in `layout`. Since 2a.3.2 the JC6416 and JC4020 views have the same 3 fields.
+- **views:** the same as JC6416 and JC4020 in all three models; `DisplayPrefs` ends with `colorIvri`, `colorLoazi`, `colorParashaV` (index order); `screen` in `layout`.
 
 ## 9. תשובות והחלטות
 
 1. **`forceWrite`** → **רישום מרכזי.** נועד לאיפוס מרחוק: אם הערך שונה מ-0, `setup` מאפס את ההעדפות לברירות מחדל ומאפס גם את `forceWrite`. בפועל לא בשימוש. נשאר בטבלה לתאימות (`PREF_OP_READ`/`SYNC`).
-   - **בדיקה (2a.3.1):** `forceWrite` לא נקרא בשום מקום בקוד, בשלושת הדגמים. הוא נשאר רק בגלל חוזה ה-BLE (אינדקס 1).
-2. **`dayIndex`** → **נמחק ב-7.08.** נועד לשמור את אינדקס היום, כדי לשחזר את התאריך אחרי נפילת חשמל וסוללה. בפועל נכתב כל יום (`MainState::setNewDay`) ולא נקרא אף פעם. לא נכנס למבנה של שכבה, ונמחק בפרודקשן 7.08 בשלושת הדגמים (refactor-log F16). האינדקסים מפורשים, ולכן אינדקס 3 הוא חור ושום אינדקס אחר לא זז.
+   - `forceWrite` לא נקרא בשום מקום בקוד, בשלושת הדגמים. הוא נשאר רק בגלל חוזה ה-BLE (אינדקס 1).
+2. **אינדקס 3** → **חור.** האינדקסים מפורשים, ולכן אינדקס 3 לא בשימוש ושום אינדקס אחר לא תלוי בו. המפתח `dayIndex` עשוי להישאר ב-`clk` בשעונים כרשומת NVS יתומה, ואף אחד לא קורא אותו.
 3. **`safa`** → **הצגה.** לשימוש עתידי כשיתווספו שפות. לא בשימוש ב-JC, אבל בשימוש בדגמי BA ובדגמים אחרים.
 4. **`dateFormat`** → **הצגה.** הערך 8 (טקסט ריק) נוסף לבקשת לקוח שלא רצה תאריך לועזי. אחר כך הפריסה הותאמה להופעת התאריך הלועזי, ונבדקת מול הערך 8. כוונה עתידית: להפריד ל"הצג תאריך לועזי" ולפורמט התאריך. שיפור עתידי, לא לביצוע עכשיו.
 5. **`shaonKaiz`** → **נתונים, חלק מרשומת המקום.** לא חלק משירות הזמן. ידני: מוסיף שעה לזמנים המחושבים, לא לשעון. אוטומטי: לפי האלגוריתם של ישראל או של ארה"ב.
@@ -376,5 +374,5 @@
    - **כיוון לתכנון:** BLE לא מכיר את `Logic`. `Preferences` מגדיר לכל העדפה ראשית את הפעולה הלוגית שקורית בשינוי, והפונקציות הקיימות של התפריט מבצעות אותה.
    - **נדחה:** איך `Logic` מקבל את ההודעה, ובאיזה הקשר ריצה ההטמעה מתבצעת.
    - **חריג מכוון:** `bt` נטמע רק באתחול (6.6).
-10. **`ofek`** → **נתונים, רשומת מקום, העדפה ראשית.** `ofek` הוא אינדקס העיר ברשימת הערים השמורה. 0 = מקום שהלקוח מגדיר ידנית או מהאפליקציה. מקום מוגדר על ידי קואורדינטות, גובה, ישראל או לא, אזור זמן UTC, והאם שעון קיץ פעיל, והאם העיר מוקפת חומה (`homa`). בחירת עיר כותבת את `homa` מנתוני העיר, כמו את `nz_hul`. האפליקציה כותבת את השדות ובסוף `ofek` = 0 בתור "החל מיקום מותאם" (6.6). מ-7.05 גם בחירת עיר מהאפליקציה (`ofek` ≠ 0) נטמעת מיד, דרך הפונקציה של התפריט (6.4).
+10. **`ofek`** → **נתונים, רשומת מקום, העדפה ראשית.** `ofek` הוא אינדקס העיר ברשימת הערים השמורה. 0 = מקום שהלקוח מגדיר ידנית או מהאפליקציה. מקום מוגדר על ידי קואורדינטות, גובה, ישראל או לא, אזור זמן UTC, והאם שעון קיץ פעיל, והאם העיר מוקפת חומה (`homa`). בחירת עיר כותבת את `homa` מנתוני העיר, כמו את `nz_hul`. האפליקציה כותבת את השדות ובסוף `ofek` = 0 בתור "החל מיקום מותאם" (6.6). גם בחירת עיר מהאפליקציה (`ofek` ≠ 0) נטמעת מיד, דרך הפונקציה של התפריט (6.4).
 11. **`nz_hul`** → **נתונים, רשומת מקום.** `nz_hul` הוא ישראל/חו"ל של המקום הפעיל, לא רק של המקום המותאם. בחירת עיר קובעת אותו, גם על חשבון הערך של המקום המותאם. זה מכוון (F10, סגור). אחרי חזרה למקום מותאם הערך נשאר של העיר, עד שכותבים אותו מחדש. האפליקציה כותבת אותו בכל החלה של מקום מותאם (6.6).
