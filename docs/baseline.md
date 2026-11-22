@@ -124,10 +124,39 @@ Not in 7.09: F13 (`stamp_app_desc.py` docstring, to be fixed in `ledhaarets-buil
 
 ### Procedure: comparing the repo with a production release (from Sync 5)
 
-1. Reference: `git -C <production> archive vX.YY | tar -x -C <scratch>/b/<model>`, then `pio run`
+1. Reference: `git -C <production> archive <commit> | tar -x -C <scratch>/b/<model>` (the full
+   commit hash of the release or tag; recorded in the sync table), then `pio run`
    there with `SOURCE_DATE_EPOCH=1763337600`. Keep `firmware.bin` / `.elf`, then move the folder
    away. Nothing is built in the production project.
 2. Candidate: copy the repo model folder without `.pio` to the same path `<scratch>/b/<model>`
    and build with the same value. Same path → same `__FILE__` strings and library paths.
 3. Expected: `tools/compare_bins.py` "Only metadata differs" (or identical); the two ELFs after
    `xtensa-esp32-elf-objcopy --strip-debug` byte-identical; `nm -C --size-sort` identical.
+
+## Sync 6: production 709A
+
+| Model  | Tag    | Commit                                     | Repo commit |
+|--------|--------|--------------------------------------------|-------------|
+| JC6416 | `709A` | `8d4db32dc3000fc33d533aa5423c92ff79b4187b` | `2b1617c`   |
+| JC4020 | `709A` | `225ed5ed5fa4fdae77f0cdf8763cc2ddb49d2e78` | `c53643a`   |
+| JC6432 | `709A` | `7da8a8aaf6e6ed7f405bfeab928dd4c7bc653699` | `cdc789c`   |
+
+`709A` is a temporary production tag, not a release. It will be replaced by `v7.10` and deleted;
+the commit hashes above are the reference. Method: patch (`git diff v7.09..709A`) in all three
+models, applied with the editor tool on top of 2a.1–2a.3.2. One-time exception (owner's decision):
+the trailing whitespace of `src/States/ConfigState.cpp:30-31` in JC4020 and JC6432, which the editor
+tool strips, was written by an exact byte replacement script.
+
+Changes in 709A (after v7.09):
+- S4: `display` defined in `Display.cpp` (JC6416 `b929601`, JC4020 `fbf9eb9`; JC6432 already was).
+- S6: the four orphan `or_*` headers in `JC6432/src/DB/DataBase/orHachaim/` deleted (`8249d5e`).
+- S8: whitespace aligned with JC6416 (JC4020 `5d948bb`, JC6432 `916eac2`).
+- F13: `stamp_app_desc.py` docstring from `ledhaarets-build` (JC6416 `8d4db32`, JC4020 `225ed5e`,
+  JC6432 `7da8a8a`).
+- `PROJECT_VER` 7.09 → 7.10.
+
+`Preferences/` and `BLE/` unchanged.
+
+Result: in all three models the compiled content is identical to production 709A (procedure above,
+reference built from the commit hash). The repo tree differs from production only in the 2a views
+and their consumers.

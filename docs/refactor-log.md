@@ -77,6 +77,48 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - **Docs:** `dependencies.md` regenerated (`gen_deps_doc.py write`). It had not been regenerated
     after 2a.3.2 (`check` failed already at `32f2b10`: three view edges, +12 references);
     `CLAUDE.md` now runs `check` in every step that changes edges.
+- **Production port 709A** (Sync 6; commits `2b1617c` JC6416, `c53643a` JC4020, `cdc789c` JC6432)
+  — patch `v7.09..709A` in all three models, on top of 2a.1–2a.3.2. `709A` is a temporary
+  production tag (not a release; to be replaced by `v7.10` and deleted), so the production commits
+  are recorded by hash: JC6416 `8d4db32dc3000fc33d533aa5423c92ff79b4187b`, JC4020
+  `225ed5ed5fa4fdae77f0cdf8763cc2ddb49d2e78`, JC6432 `7da8a8aaf6e6ed7f405bfeab928dd4c7bc653699`.
+  Details in `docs/baseline.md`, Sync 6.
+  - **Before the sync:** `63f997c` — `CLAUDE.md`: the contract-change rule replaces "No change to
+    NVS keys …", and approval of a sequential plan replaces the diff before editing (step 1 of
+    the saved 2a.3.3 plan, not applied until then).
+  - **Synced:** F13, S4, S6, S8; `PROJECT_VER` 7.09 → 7.10.
+  - **One-time exception** (owner's decision): `src/States/ConfigState.cpp:30-31` in JC4020 and
+    JC6432 (S8: `showStateScreen()` with 4 trailing spaces, `{ ` with 1). The editor tool strips
+    trailing whitespace, so the two lines were written by an exact byte replacement script.
+  - **Commit fix:** the staged `git rm` of the JC6432 `or_*` files first went into the JC6416
+    commit; restored to the index and the commit amended before anything else (local, not
+    pushed). Each model commit holds only its own files.
+  - **Recorded:** F23.
+  - **Verification** (reference: clean builds of `63f997c`, and clean builds of `git archive
+    <commit>` of production; `SOURCE_DATE_EPOCH=1763337600` in every build):
+
+    | Model | `firmware.bin` | RAM | Flash | Compiler warnings |
+    |---|---|---|---|---|
+    | JC6416 | 2,061,072 → 2,061,072 (0) | 61,172 | 2,054,501 | 0 |
+    | JC4020 | 2,055,680 → 2,055,680 (0) | 61,204 | 2,049,097 | 0 |
+    | JC6432 | 2,072,448 → 2,072,448 (0) | 61,924 | 2,065,869 | 0 |
+
+    - Versus production 709A, all three: `compare_bins.py` "Only metadata differs"; ELF after
+      `--strip-debug` byte-identical; `nm -C --size-sort` identical.
+    - Files: `platformio.ini`, `Area.cpp`, `Display.cpp`, `Clock.h`, `stamp_app_desc.py` have the
+      709A blob in all three. `ConfigState.cpp`, `OfekState.cpp`: the diff to 709A equals the diff
+      to v7.09 before the sync (2a lines only). `diff -r` of 709A and the repo: the same files and
+      content as before the sync, plus helper files that exist only in production.
+    - `prefs_contract.py check`: OK for all three. `count_prefs.py`: identical.
+    - `count_deps.py --compare` (tree of `63f997c`): JC6416 and JC4020 `Area -> Display` 29 → 28
+      (the definition of `display` moved to `Display.cpp`); JC6432 no change. Preference consumer
+      sums unchanged: 784 / 820 / 847.
+    - UUIDs, NVS namespaces and keys, advertisement prefix unchanged. `git ls-files --eol`: edited
+      files `w/crlf`, as before.
+  - **Docs:** `dependencies.md` regenerated (`gen_deps_doc.py write`; by hand: §1 and §4 totals
+    7,176 → 7,175, the §3 and §5.1 graphs 29 → 28, §5 "28 references from `Area`", §8 `display`
+    defined in `Display.cpp:3`); `check` OK (421 edges, 7,175 references). `notes.md` (`display` in
+    `Display.cpp`), `environment.md:95` (`HARDWARE_VERSION` removed, F13).
 
 ### Stage 2a — per-layer preference structs
 
@@ -1081,28 +1123,13 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     next production release" (sync note).
   - `CLAUDE.md`: stage line — 2a.3.0–2a.3.2 done; next 2a.3.3 (ownership in JC6416), then stop
     for review with the owner.
+- **2a.3.3 — plan for JC6416 alone cancelled** (owner's decision, Sync 6): 2a.3.3 is planned again
+  for all three models.
 
 ## Planned for next production release
 
 Decided by the owner. To be done outside this repo, then ported here with the next sync.
-F8, F11 and F16 were done in production 7.08; F17, F19, F21 and F22 in production 7.09.
-The rows below go into 7.10. They are already committed in production after `v7.09` and not
-released yet; they come in with the next sync. `PROJECT_VER` is already 7.10 in production
-(`b929601` JC6416, `fbf9eb9` JC4020, `8249d5e` JC6432). S* refer to
-`docs/architecture/models-plan.md` §4.
-
-| Finding | Change | Production commits |
-|---|---|---|
-| F13 | `stamp_app_desc.py` docstring (no `HARDWARE_VERSION` build flag) in all three models, copied from `ledhaarets-build`, where the source was already fixed | JC6416 `8d4db32`, JC4020 `225ed5e`, JC6432 `7da8a8a` |
-| S4 | `display` defined in `Display.cpp`, `extern` in `Display.h`, in all three models (JC6432 already was) | JC6416 `b929601`, JC4020 `fbf9eb9`; JC6432: none needed |
-| S6 | The four orphan `or_*` files in JC6432 (`or_TelAviv`, `or_Jerusalem`, `or_Haifa`, `or_BeerSheva`) deleted. The tables in use are included in `src/DB/Place.h:7-10` | JC6432 `8249d5e`; JC6416 / JC4020: not applicable |
-| S8 | Whitespace aligned with JC6416 | JC4020 `5d948bb`, JC6432 `916eac2`; JC6416: reference |
-
-**Sync note (from 2a.3.2):** `src/Preferences/UserPreferences.h` in this repo differs from
-production in all three models (2a.3.1 in all, the unified table in JC6416 / JC4020). The next
-production release touches this file (F22), so a patch conflict is expected there at the sync, and
-JC4020 and JC6432 also move to syncing through a patch. **Done in Sync 5 (7.09):** all three
-models synced by patch; `UserPreferences.h` taken from production as is.
+Nothing planned.
 
 ## Findings
 
@@ -1461,3 +1488,13 @@ Status updates inside older findings use `dcd2cdb` line numbers and say so.
   (Sync 5). Closed (7.09).
 - **Models:** same in all three. Also present in BA6416, BC6416, JC8040 and Laniado (owner's
   report), which are outside this repo. For those models: out of scope (owner's decision). Closed.
+
+### F23 — `stamp_app_desc.py`: two docstring lines joined
+
+- **Where:** `stamp_app_desc.py:12` (all three models, since Sync 6 / production 709A).
+- **What:** the F13 docstring fix joined two lines without a space: "…מזהה בוודאותדגם וגרסה — …"
+  (should be "בוודאות" + newline + "דגם וגרסה").
+- **Impact:** none. Docstring only; the script and the image are not affected.
+- **Source:** the file is copied from `ledhaarets-build`, so a fix belongs there and comes in with
+  a sync. Not changed here.
+- **Models:** same in all three.

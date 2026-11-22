@@ -65,7 +65,7 @@
 
 ### אימות
 
-הספירה נעשתה בסקריפט קריאה-בלבד. הסקריפט המקורי לא נשמר. הוא נכתב מחדש לפי הכללים שלמעלה, ונשמר ב-[tools/count_deps.py](../../tools/count_deps.py). הוראות שימוש בראש הקובץ. על `9c75812` הוא שחזר את כל 374 הקשתות של המפה הקודמת עם אותו מספר הפניות בדיוק (6,747). מספר המזהים היה זהה ב-372 קשתות, ובשתיים (`MainStateInfoSets→DayInfo`, `MainState→DayInfo`) הוא היה שונה בגלל תוויות של שרשראות עמוקות. על הבסיס הנוכחי: 421 קשתות, 7,176 הפניות.
+הספירה נעשתה בסקריפט קריאה-בלבד. הסקריפט המקורי לא נשמר. הוא נכתב מחדש לפי הכללים שלמעלה, ונשמר ב-[tools/count_deps.py](../../tools/count_deps.py). הוראות שימוש בראש הקובץ. על `9c75812` הוא שחזר את כל 374 הקשתות של המפה הקודמת עם אותו מספר הפניות בדיוק (6,747). מספר המזהים היה זהה ב-372 קשתות, ובשתיים (`MainStateInfoSets→DayInfo`, `MainState→DayInfo`) הוא היה שונה בגלל תוויות של שרשראות עמוקות. על הבסיס הנוכחי: 421 קשתות, 7,175 הפניות.
 
 חמשת התאים שנבדקו ידנית מול grep בספירה המקורית נבדקו שוב על הבסיס הנוכחי, והכלי נותן בהם את אותן תוצאות כמו grep:
 
@@ -167,7 +167,7 @@ flowchart TD
   LOGIC -->|32| SCREENS
   MAIN -->|31| BTN
   MAIN -->|30| STATES
-  RENDER -->|29| HW
+  RENDER -->|28| HW
   BTN -.->|"28 · לחיצה מדומה (מכוון) + דרייברים"| BLE
   LOGIC -->|22| DB
   CLK -.->|17| DB
@@ -285,10 +285,10 @@ flowchart TD
 | 67 | `main` | `BTN/Button` | 31 | 12 | `long_push_temp`×8, `Button`×4, `okButton.isPushed`×4 |  |
 | 68 | `States/MainState` | `Screens/Screens.h` | 30 | 11 | `mainScreen`×16, `mainScreen.colorBottomT`×3, `mainScreen.colorBottomV`×2 |  |
 | 69 | `States/SetInputText` | `Screens/Screens.h` | 30 | 11 | `menuScreen.kezev`×6, `textScreen.text2`×5, `mainScreen.iluyNishmat`×3 |  |
-| 70 | `Area` | `Display` | 29 | 1 | `display`×29 |  |
-| 71 | `States/MinhagState` | `Logic` | 29 | 4 | `bl.mainState`×14, `bl.configStates`×13, `Logic` |  |
-| 72 | `States/SetClockState` | `DB/Strings` | 29 | 11 | `strings.menuClock`×9, `strings.kivunShaon`×6, `strings.kavuy`×2 |  |
-| 73 | `main` | `States/State` | 29 | 12 | `currentState`×10, `currentState.showStateScreen`×9, `State` |  |
+| 70 | `States/MinhagState` | `Logic` | 29 | 4 | `bl.mainState`×14, `bl.configStates`×13, `Logic` |  |
+| 71 | `States/SetClockState` | `DB/Strings` | 29 | 11 | `strings.menuClock`×9, `strings.kivunShaon`×6, `strings.kavuy`×2 |  |
+| 72 | `main` | `States/State` | 29 | 12 | `currentState`×10, `currentState.showStateScreen`×9, `State` |  |
+| 73 | `Area` | `Display` | 28 | 1 | `display`×28 |  |
 | 74 | `BLE/CoreService` | `States/State` | 28 | 3 | `currentState`×17, `State`×6, `currentState.showStateScreen`×5 |  |
 | 75 | `States/SetTochenInfoState` | `Screens/Screens.h` | 28 | 4 | `menuScreen`×14, `menuScreen.kezev`×6, `menuScreen.netz`×6 |  |
 | 76 | `Preferences/PrefsViews` | `Preferences/LogicPrefs` | 27 | 27 | `logicPrefs.HAZ`, `logicPrefs.HMM`, `logicPrefs.IORT` |  |
@@ -642,7 +642,7 @@ flowchart TD
 
 </div>
 
-סה"כ 421 קשתות, 7,176 הפניות.
+סה"כ 421 קשתות, 7,175 הפניות.
 
 ## 5. גרף לכל תיקייה (ג)
 
@@ -678,7 +678,7 @@ flowchart LR
   HWH -->|4| META
   LOGIC -->|7| COLORS
   LOGIC -->|2| TEXT
-  AREA -->|29| DISPLAY
+  AREA -->|28| DISPLAY
   AREA -->|18| TEXT
   AREA -->|5| COLORS
   TEXT -->|5| FONTS
@@ -1135,7 +1135,7 @@ flowchart LR
 
 - **חברים:** `Area`, `Text`, `Colors`, `Fonts`, ו-`Display` מתחתם.
 - **מי משתמש:** `Screens` (723) ו-`States` (248). `States` משתמש בעיקר ב-`Area` של שדות המסכים, ב-`Text` וב-`Fonts`.
-- **מה מתחתם:** `Render` תלוי רק ב-`Display`, דרך `display`, 29 הפניות מ-`Area`.
+- **מה מתחתם:** `Render` תלוי רק ב-`Display`, דרך `display`, 28 הפניות מ-`Area`.
 
 **BLE Core.**
 
@@ -1219,7 +1219,7 @@ flowchart LR
 | `bl` | `Logic` | `Logic` | אין. `extern` בכל קובץ משתמש | `main.cpp:17` |
 | `userPreferences` | `UserPreferences` | `Preferences/UserPreferences` | `States.h:24`, `DayInfo.h:14`, `Place.h:111`, ובכל כותרת view (`DataPrefs.h:6` וכו') | `UserPreferences.cpp:5` |
 | `systemPrefs`, `userContent`, `presentationPrefs`, `displayPrefs`, `logicPrefs`, `dataPrefs` (ה-views, שלב 2a) | ה-struct של כל view (`SystemPrefs` …) | היחידה של ה-view (`Preferences/SystemPrefs` …) | הגדרה בכותרת, `inline constexpr`: `SystemPrefs.h:17`, `UserContent.h:17`, `PresentationPrefs.h:31`, `DisplayPrefs.h:25`, `LogicPrefs.h:43`, `DataPrefs.h:61` | כמו ההצהרה |
-| `display` | `MatrixPanel_I2S_DMA*` | `Display` | `Display.h:15` | `Area.cpp:3` |
+| `display` | `MatrixPanel_I2S_DMA*` | `Display` | `Display.h:15` | `Display.cpp:3` |
 | `now`, `currentHour` … `currentYear` | `DateTime`, `int` | `CLK/Clock` | `Clock.h:21-30` | `Clock.cpp:11-20` |
 | `db` | `DB` | `DB/DB` | אין. `extern` ב-`DayInfo.cpp:7` | `DB.cpp:4` |
 | `place`, `numOfOfeks`, `lonPre` … `latFrac`, `places[]` | `Place*`, `int`, `Place[]` | `DB/Place` | אין. `extern` בקבצים המשתמשים | `Place.cpp:4-13` |
@@ -1329,7 +1329,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 | **Logic** |  | 35 |  | · | 173 | 32 | 9 | 22 | 46 |  |  |  |
 | **States** |  | 11 |  | 143 | · | 1070 | 248 | 955 | 359 | 173 | 17 |  |
 | **Screens** |  |  |  |  |  | · | 723 | 42 | 120 |  | 12 | 4 |
-| **Render** |  |  |  |  |  |  | · |  |  |  | 29 |  |
+| **Render** |  |  |  |  |  |  | · |  |  |  | 28 |  |
 | **DB** |  |  |  |  |  |  |  | · | 221 |  |  |  |
 | **Prefs** |  |  |  |  |  |  |  |  | · |  |  |  |
 | **CLK** |  |  |  |  |  |  |  | 17 |  | · |  |  |
@@ -1419,7 +1419,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 | Logic | States 173, Prefs 46, BLE 35, Screens 32, DB 22, Render 9 |
 | Hardware.h | BTN 4, CLK 4, Metadata 4, (include BLE) |
 | Display | — |
-| Area | HW 29, (Render 23) |
+| Area | HW 28, (Render 23) |
 | Text | (Render: Fonts 5) |
 | Colors, Fonts, Metadata | — |
 | BLE/Bluetooth | States 7, Logic 3, Screens 3, Metadata 3, Prefs 2, (BLE 15) |

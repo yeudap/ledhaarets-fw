@@ -111,5 +111,5 @@
 - שעון קיץ: הזזת ה-RTC ושינוי `place->kaiz`.
 - אתחול יומי ב-03:01.
 - ~~`HARDWARE_MODEL` הקבוע ב-`Hardware.h` מול `HARDWARE_VERSION` ב-build flags.~~ **נסגרה ב-7.06:** שניהם הוסרו. דגם החומרה מזוהה בזמן ריצה: `detectHardwareModel` (מתח על GPIO35) → `configureHardware` → `Metadata::setHardwareVersion`. הערך נשמר ב-`hardwareModel` (`inline` ב-`Hardware.h` מ-7.07, F12), ו-`Metadata::HWversion` (6 תווים) נקבע בזמן ריצה. הוא לא נכתב ל-`esp_app_desc_t` (CLAUDE.md, חוזה 5).
-- מיקום הגלובליים: `strings`, `bl` ו-`currentState` ב-`main.cpp`, אובייקטי ה-Screen וה-`DayInfo` ב-`Logic.cpp`, ו-`display` ב-`Area.cpp`.
+- מיקום הגלובליים: `strings`, `bl` ו-`currentState` ב-`main.cpp`, אובייקטי ה-Screen וה-`DayInfo` ב-`Logic.cpp`, ו-`display` ב-`Display.cpp`.
 - `DB.cpp:34-35`: הקריאה של `molad_shaa` ו-`molad_daka`.

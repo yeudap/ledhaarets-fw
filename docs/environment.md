@@ -92,7 +92,7 @@ Oct 14, 2026 · @יהודה
 
 ### מטא-דאטה בתוך ה-bin
 
-- `build_flags` מגדירים `PROJECT_VER`, `PRODUCT_MANUFACTURER`, `HARDWARE_VERSION`, `DEVICE_MODEL`; `Metadata.h` אוכף אורכים קבועים ב-`static_assert`.
+- `build_flags` מגדירים `PROJECT_VER`, `PRODUCT_MANUFACTURER`, `DEVICE_MODEL`; `Metadata.h` אוכף אורכים קבועים ב-`static_assert`.
 - `stamp_app_desc.py` כותב דגם ל-`project_name` וגרסה ל-`version` ב-`esp_app_desc_t`, ומחשב מחדש XOR checksum ו-SHA-256. בלי שניהם ה-OTA נדחה וה-bootloader לא מאתחל.
 - מ-7.01 מספיקה קריאה אחת מ-`0x10000` לזיהוי דגם וגרסה; לגרסאות ישנות יש סריקה מדורגת (`detect_model`).
 
