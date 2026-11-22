@@ -73,8 +73,9 @@ baselines in `docs/contracts/prefs/`), 2a.3.1 (unused registry functions removed
 2a.3.2 (one preference table for all models, as in JC6432; documented contract change). Next:
 2a.3.3, move field ownership to the layer objects in JC6416, then stop for review with the owner.
 Before starting 2a.3.3, the saved plan ("2a.3 — plan") is re-checked against the new HEAD.
-No change to NVS keys or namespace, BLE indexes, types or defaults. Behavior must
-stay identical.
+Existing NVS keys, namespaces and types never change. Any change to the preference contract
+(new keys, BLE indexes, defaults) happens only as a documented contract-change step approved by
+the owner and recorded in refactor-log. Otherwise behavior stays identical.
 
 - **0** — Baseline: contracts extraction, dependency map, preference classification.
   Read-only except for files under `docs/`.
@@ -119,7 +120,9 @@ Only the user changes the current stage.
 - Never push, reset, checkout or switch branches; push is done by the owner only
   (`.claude/settings.json` blocks these commands).
 - Show a diff before editing only when the owner asks for it, or when the step has no binary
-  verification (documents only, tools).
+  verification (documents only, tools). When a plan is approved for sequential execution, that
+  approval replaces the diff before editing for every step in it, including document and tool
+  steps.
 - Do not change `PROJECT_VER` unless asked.
 - No reformatting, no fixing unrelated warnings or typos, no "improving" code being moved.
   Anything that looks like a bug goes to `docs/refactor-log.md` → Findings, not into the code.
