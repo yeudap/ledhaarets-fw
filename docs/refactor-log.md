@@ -1125,9 +1125,160 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     for review with the owner.
 - **2a.3.3 — plan for JC6416 alone cancelled** (owner's decision, Sync 6): 2a.3.3 is planned again
   for all three models.
+- **2a.3.3** (all models, one step; 2a.3.4 cancelled) — the layer objects own their preferences.
+  Commits: one per model (`src/Preferences/` only), then one docs commit.
+  - **Commit fix** (owner's decision): the staged `git rm` of `PrefsViews.cpp` in JC4020 and JC6432
+    first went into the JC6416 commit (as in Sync 6). The three commits were rebuilt with plumbing
+    (`read-tree` into a temporary index, `update-index --cacheinfo`, `write-tree`, `commit-tree`,
+    same messages and dates), `main` moved with `update-ref` after a backup branch; local, not
+    pushed. Final tree identical to the original (`HEAD^{tree}` = `76efa5c^{tree}`); each commit
+    holds only its model's files. Backup branch deleted after the checks. New rule in `CLAUDE.md`:
+    commit with a path in multi-model steps.
+  - **Method** (same in every model):
+    - Each layer has a header and its own `.cpp` (new: `DataPrefs.cpp`, `LogicPrefs.cpp`,
+      `PresentationPrefs.cpp`, `DisplayPrefs.cpp`, `SystemPrefs.cpp`, `UserContent.cpp`). Global objects
+      without `new` (`DataPrefs dataPrefs;` …), declared `extern` in the header instead of
+      `inline constexpr`. Fields are `UserPref<T>` without `&`; one constructor per struct that holds
+      `UserPref` fields (`PlacePrefs`, `ZmanimPrefs`, `MinhagimPrefs`, `LogicPrefs`, `LayoutPrefs`,
+      `PresentationPrefs`, `DisplayPrefs`, `SystemPrefs`, `UserContent`).
+    - Split: Data 26 (place 9, zmanim 14, minhagim 3), Logic 27, Presentation 8 (5 + layout 3),
+      Display 12, System 1, UserContent 50 = 124. `forceWrite` stays in the registry.
+    - Each `.cpp` has `static Preferences &prefs = userPreferences.prefs;`, so every definition line
+      (key, default, type, index, `&prefs`) and its comment lines moved as they are. The constructor
+      header is on its own line (`X::X() :`); the only change in a moved line is the dropped comma
+      after the last entry of each constructor (8 lines), and the `forceWrite` line
+      (`UserPreferences::UserPreferences() : forceWrite(...)`).
+    - `UserContent` keeps `std::vector<UserPrefBase *> &textPrefs` (first member, bound to
+      `userPreferences.textPrefs` in its constructor), so `userContent.textPrefs[i]` in
+      `TextCommandHandler` is unchanged.
+    - Registry (`UserPreferences.h`): the 124 members and the inline constructor removed; it keeps
+      `forceWrite`, the three vectors, `prefs`, `init`, `loadAll`, `resetSimplePrefs`,
+      `resetTextPrefs`, `printAll`, `UserPrefBase` / `UserPref` (unchanged). Its constructor is in
+      `UserPreferences.cpp`: the same 125 `push_back` lines in the same order and indentation, the
+      target changed only (`&textPlace` → `&dataPrefs.place.textPlace`, `&bt` → `&systemPrefs.bt`,
+      `&textInput1` → `&userContent.textInput1`), and the two `insert` lines as they were.
+    - `PrefsViews.cpp` deleted (`git rm`). `CoreService`, consumer code and the tools not changed.
+    - Static initialization: no constructor depends on another translation unit. Layer constructors
+      take only the address `&userPreferences.prefs`; the registry constructor stores constant
+      addresses and does not read through them; the first read is `setupPreferences()` in `setup()`.
+  - **Editing:** editor tools only. The deletions in `UserPreferences.h` matched the whitespace-only
+    lines with Edit, so the approved byte-range script fallback was not needed. Whitespace-only
+    lines in the moved block (71 × 24 spaces, 1 × 48) are empty in the new files.
+  - **Reference:** clean builds of `f084e48` (`SOURCE_DATE_EPOCH=1763337600` in reference and
+    candidate), `git archive HEAD` for `count_deps` / `count_prefs`.
+  - **Verification** (all passed in every model before the first commit):
+
+    | Model | `firmware.bin` | RAM | Flash | Compiler warnings |
+    |---|---|---|---|---|
+    | JC6416 | 2,061,072 → 2,061,744 (+672) | 61,172 → 61,172 (0) | 2,054,501 → 2,055,161 (+660) | 0 |
+    | JC4020 | 2,055,680 → 2,056,336 (+656) | 61,204 → 61,204 (0) | 2,049,097 → 2,049,753 (+656) | 0 |
+    | JC6432 | 2,072,448 → 2,073,120 (+672) | 61,924 → 61,924 (0) | 2,065,869 → 2,066,549 (+680) | 0 |
+
+    - Contract tool: `check` OK for all three, without `write` (75 / 50 / 125 / 126, `[serial] 0`).
+      With the `.cpp` files in reverse order (scratch wrapper around `source_files()`, `main.cpp`
+      last; MSVC runs the constructors in link order) the output is byte-identical to the baseline.
+    - Moved lines (script): only whitespace-only lines ignored, all other lines byte for byte. All 125
+      blocks (entry + comments) once each, in source order per constructor; the only differences are
+      the dropped last commas and the `forceWrite` line. Struct order = constructor order (no
+      `-Wreorder`), field types equal the removed registry members, 125 `push_back` in the same order
+      with the right layer path, `insert` lines identical.
+    - Across models after the step: all new files identical, except `DisplayPrefs.cpp` in JC6432
+      (`colorYom`, `colorParasha` default 1). `UserPreferences.h`: only the two lines that differed
+      before (`~UserPreferences` indentation in JC6432, a whitespace-only line in JC4020 / JC6432).
+    - `count_deps --compare` (archive of HEAD vs working tree): the same 19 edge changes in all three
+      models, all inside `Preferences/`: the 7 `PrefsViews` edges (150) removed;
+      `UserPreferences →` Data 26, Logic 27, Presentation 8, Display 12, System 1, UserContent 50
+      (124, the `push_back` lines); layer → `UserPreferences`: Data 54 → 29, Logic 56 → 30,
+      Display 26 → 15, Presentation 18 → 11, System 4 → 4, UserContent 4 → 55. These are
+      **references** on one edge each; "UserContent 4 → 55" is the reference count of the single edge
+      `UserContent → UserPreferences` (`UserPref` ×50, `UserPrefBase`, `UserPreferences`, `extern`,
+      `userPreferences.textPrefs`, `userPreferences.prefs`). Totals: JC6416 421 / 7,175 → 420 / 7,131;
+      JC4020 392 / 7,135 → 391 / 7,091; JC6432 439 / 7,891 → 438 / 7,847 (−1 edge, −44 references
+      each: −150 + 124 − 18). Consumer sums unchanged: 784 / 820 / 847.
+    - `count_prefs`: 124 differences per model, every one an added `UserPreferences r1/w0` (the
+      `push_back` lines). The split between existing and new output lines is not fixed (JC6416: 69 / 55;
+      five preferences had no mention before).
+    - RAM: `userPreferences` (4,512 bytes) became seven `.bss` objects — `dataPrefs` 688,
+      `displayPrefs` 288, `logicPrefs` 648, `presentationPrefs` 192, `systemPrefs` 24, `userContent`
+      2,604, `userPreferences` 68 — contiguous, 4,512 bytes, the same span, no gaps, in all three
+      models. The local `prefs` references take no memory (no symbol).
+    - Symbols added / removed (all three, script against the expected set): the 9 layer constructors,
+      `UserContent::~UserContent`, `_GLOBAL__sub_I/D_*` of the new files, the six layer objects;
+      removed `UserPreferences::~UserPreferences` (now inlined) and the old `_GLOBAL__sub_I/D_`. No
+      other data object changed size. `UserPreferences::UserPreferences()`: 8,918 → 2,145 bytes.
+    - Flash: every function whose size changed classified by the flash check below — JC6416 101,
+      JC4020 103, JC6432 114 functions; none left unexplained:
+
+      | Category | JC6416 | JC4020 | JC6432 |
+      |---|---|---|---|
+      | pref-addressing | 23 | 25 | 26 |
+      | rodata-moved | 6 | 8 | 7 |
+      | alignment | 43 | 44 | 47 |
+      | regalloc | 9 | 10 | 10 |
+      | scheduling | 8 | 8 | 9 |
+      | ref-indirection | 3 | 1 | 3 |
+      | same-effects | 7 | 5 | 10 |
+      | comdat | 1 | 1 | 1 |
+      | planned (registry constructor) | 1 | 1 | 1 |
+
+      Two-bases and registry-offset occur, always together with a later category, so no function is
+      counted under them alone (each function gets one category, the first level that matches).
+      `compare_bins.py`: code differs, as expected; not a criterion. The image fits the OTA slot (31.4%).
+    - Contract strings: no UUID, `LEDHAARETS`, namespace or `prefs.begin` line in any diff.
+    - `git ls-files --eol`: `UserPreferences.*` `w/crlf`; the headers and the six new `.cpp` `w/lf`
+      (F20 now also covers the new files). No mixed line endings (byte count). Scope: only
+      `<model>/src/Preferences/`.
+  - **Flash check when the image is not identical** (owner's decision; permanent criterion, applies
+    to 2a.4 too). It is a **filter for surprises, not a proof of equivalence**. The proofs are the
+    contract tool in both file orders, the moved source lines, `count_deps`, RAM, and the clock test.
+    - Scope: every function present in both images whose size changed (`nm -C -S`), plus the expected
+      set of added / removed symbols and data objects.
+    - Decoding (scratch script `flashcheck2.py`): instruction regions from `.xt.prop` (all
+      `.xt.prop*` sections), jump tables (`.rodata` words pointing into the function), exception
+      landing pads (unreached region starts and blocks after a jump or no-return call; entry state =
+      intersection of the states after every call). Calls to no-return functions end a block.
+    - A dataflow over the CFG tracks registers and stack slots holding a preference address; every
+      access is named by field and `UserPref` member (`[ofek._value]`). Non-preference literals: same
+      symbol, `.rodata` with the same bytes (moved), pointer words inside `.rodata` that point to the
+      same content, or the same constant. Calls through a literal (`l32r` + `callx`, linker
+      relaxation) count as calls to that function; argument registers by the callee's arity.
+    - Accepted categories, each function in exactly one (the first that matches):
+      pref-addressing (only preference addressing differs, e.g. a removed `addmi`), two-bases (the
+      number of preference base loads differs), registry-offset (offsets on `this` inside a
+      `UserPreferences` member), rodata-moved, alignment (narrow / wide forms, NOPs, zero fill),
+      regalloc (consistent register renaming), scheduling (same instructions per basic block, other
+      order), ref-indirection (the extra load of `userContent.textPrefs`; cost of the design, to be
+      revisited in 2a.4), same-effects, comdat (a template instance kept from another translation
+      unit; calls may differ only in inlined standard helpers), planned (the registry constructor).
+    - **Same-effects** ("different code, same effects"), mechanical, by multisets, not order: every
+      preference access maps to the same field and member, with the same kind (read / write) and the
+      same count; the same calls with the same count; every non-preference literal as above. A
+      function that fails is a deviation: stop.
+  - **Tools:** not changed. The docstrings of `count_deps.py` (`inline constexpr` view globals) and of
+    `prefs_contract.py` / `tools/prefs_contract/main.cpp` (`PrefsViews.cpp`) still describe the views;
+    correct for trees before 2a.3.3, to be updated in the docs step. The flash-check scripts are in
+    the scratchpad only; adding them to `tools/` is a separate step if the owner wants it.
+  - **Docs:** `dependencies.md` (`gen_deps_doc.py write`; by hand §1 unit rule and totals, §2,
+    §4 total, §5.6 graph and notes, §8 globals, §10 per-model totals after 2a.3.3, A.1 note);
+    `check` OK (420 edges, 7,131 references). `preferences.md` §1, §2, §7, §8. `notes.md` status.
+    `ble.md` not changed: it describes production, where the constructor is still in
+    `UserPreferences.h`.
+  - **Clock test (added to 2a.3.5, all three models):**
+    - Before flashing, on 709A: change at least one preference of every layer from its default (Data,
+      Logic, Presentation incl. layout, Display, System) and one text; note the values. After
+      flashing: all of them, and the rest of the settings, are kept.
+    - Change one preference from the clock menu, reboot: it is kept.
+    - BLE SYNC; READ / WRITE of one preference per layer, including `shita` and `ofek` (range check
+      and immediate apply).
+    - Text write and read (JC6416, JC6432; JC4020 by key with `PREF_OP_WRITE`, F3).
+    - "Reset settings" and "Reset texts", then reboot.
 
 ### Decisions
 
+- **Flash check when the image is not identical** (owner's decision, 2a.3.3; applies to 2a.4 and
+  later): a filter for surprises, not a proof of equivalence. Accepted categories and the
+  "same-effects" rule as recorded in 2a.3.3. The proofs are the contract tool in both file orders,
+  the moved source lines, `count_deps`, RAM and the clock test.
 - **New generation after the refactor (major 8)** (owner's decision, after Sync 6; also in
   `CLAUDE.md`, with the contract rule):
   - App and firmware versions depend on each other, and the app forces updates. No BLE

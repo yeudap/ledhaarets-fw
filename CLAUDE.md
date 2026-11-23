@@ -70,10 +70,11 @@ through the views, and `dependencies.md` is generated with `tools/gen_deps_doc.p
 synced into this repo. 2a.3 is planned with the owner (decisions in `refactor-log.md`, "2a.3 —
 plan"); done: 2a.3.0 (contract tool `tools/prefs_contract.py`, baselines in
 `docs/contracts/prefs/`), 2a.3.1 (unused registry functions removed, all models), 2a.3.2 (one
-preference table for all models, as in JC6432; documented contract change). **Next step: 2a.3.3
-in all three models** (move field ownership to the layer objects; to be planned with the owner).
-After 2a.3.3: a docs step that replaces `file:line` references with symbol references (file +
-function or class), keeping line numbers only where there is no other way.
+preference table for all models, as in JC6432; documented contract change), 2a.3.3 (the layer
+objects own their preferences, all three models in one step; 2a.3.4 cancelled; flash-check
+criterion for non-identical images in `refactor-log.md`, "Decisions"). **Next step:** a docs step
+that replaces `file:line` references with symbol references (file + function or class), keeping
+line numbers only where there is no other way. Clock test of 2a.3 (2a.3.5) by the owner.
 Existing NVS keys, namespaces and types never change. Any change to the preference contract
 (new keys, BLE indexes, defaults) happens only as a documented contract-change step approved by
 the owner and recorded in refactor-log. Otherwise behavior stays identical.
@@ -108,8 +109,8 @@ the owner and recorded in refactor-log. Otherwise behavior stays identical.
   `docs/architecture/notes.md`. Sub-steps:
   1. Structs as views onto the existing `userPreferences` fields. No consumer changes. (Done.)
   2. Move consumers to their layer's struct, one layer per step. (Done.)
-  3. Move field ownership into the structs; `UserPreferences` becomes the registry. (Now:
-     2a.3.0–2a.3.2 done.)
+  3. Move field ownership into the structs; `UserPreferences` becomes the registry. (Done:
+     2a.3.0–2a.3.3; clock test 2a.3.5 pending.)
 - **2** — Isolate the remaining layers behind interfaces and break couplings.
 - **Later, each approved separately** — applying preference changes from BLE immediately
   (shared apply functions with the menu); NVS namespace per layer with migration; one
@@ -133,6 +134,9 @@ Only the user changes the current stage.
 - Commit a step only after every verification check of that step passes, with a message in the
   existing style (subject `<step>: <what> (<model>)`, body with the counts and the verification
   result). If any check deviates from the expected result, stop before committing and report.
+- In a step with several models, every commit is made with a path (`git commit -m … -- <model>/`),
+  so only that path goes in, whatever else is in the index. Before each commit:
+  `git diff --cached --name-only -- <model>/`.
 - Never push, reset, checkout or switch branches; push is done by the owner only
   (`.claude/settings.json` blocks these commands).
 - Show a diff before editing only when the owner asks for it, or when the step has no binary

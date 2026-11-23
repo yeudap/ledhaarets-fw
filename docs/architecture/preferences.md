@@ -10,7 +10,7 @@
 ## 1. בסיס ושיטה
 
 - **בסיס:** `JC6416`. המסמך מתאר את הקוד הנוכחי. מספרי השורות במסמך לפי commit `dcd2cdb`, וב-`UserPreferences.h` וב-`CoreService.cpp` השורות הנוכחיות זזו בכמה שורות. הבדלים בדגמים האחרים מופיעים בסעיף 8.
-- **מקור ההגדרות:** בנאי `UserPreferences` ב-[Preferences/UserPreferences.h:487-846](../../JC6416/src/Preferences/UserPreferences.h#L487-L846).
+- **מקור ההגדרות:** מ-2a.3.3, הבנאים של השכבות, כל שכבה ב-`.cpp` שלה ([DataPrefs.cpp](../../JC6416/src/Preferences/DataPrefs.cpp), [LogicPrefs.cpp](../../JC6416/src/Preferences/LogicPrefs.cpp), [PresentationPrefs.cpp](../../JC6416/src/Preferences/PresentationPrefs.cpp), [DisplayPrefs.cpp](../../JC6416/src/Preferences/DisplayPrefs.cpp), [SystemPrefs.cpp](../../JC6416/src/Preferences/SystemPrefs.cpp), [UserContent.cpp](../../JC6416/src/Preferences/UserContent.cpp)), ו-`forceWrite` בבנאי הרישום ב-[UserPreferences.cpp](../../JC6416/src/Preferences/UserPreferences.cpp). סדר הרשימות (`push_back`) בבנאי הרישום. עד 2a.3.3: בנאי `UserPreferences` ב-`UserPreferences.h`.
 - **שכבות היעד:**
   - **נתונים**: מיקום, שיטה, מנהגים
   - **לוגיקה**: מה מוצג, מתי ולכמה זמן
@@ -19,7 +19,7 @@
   - **אבטחה**
   - **תוכן אישי**
   - **מערכת**
-- **ספירה:** כל אזכור של `userPreferences.<שם>` בקוד, אחרי סינון הערות, או של אותה העדפה דרך ה-view של השכבה (`dataPrefs.place.<שם>`, `logicPrefs.<שם>` וכו', שלב 2a). הגדרות ה-views עצמן לא נספרות.
+- **ספירה:** כל אזכור של `userPreferences.<שם>` בקוד, אחרי סינון הערות, או של אותה העדפה דרך ה-view של השכבה (`dataPrefs.place.<שם>`, `logicPrefs.<שם>` וכו', שלב 2a). הגדרות ה-views עצמן לא נספרות. מ-2a.3.3, `UserPreferences r1` לכל אחת מ-124 העדפות השכבות והטקסטים ב-`count_prefs` הוא שורת ה-`push_back` בבנאי הרישום, כלומר רישום ולא שימוש.
   - **כתיבה:** השמה (`=`), או קריאה ל-`setValue`/`reset`.
   - **קריאה:** כל שימוש אחר.
   - הסקריפט: [tools/count_prefs.py](../../tools/count_prefs.py), קריאה בלבד. הוראות שימוש בראש הקובץ.
@@ -35,7 +35,7 @@
 
 | namespace | מי מנהל | תוכן | גישה מ-BLE |
 | --- | --- | --- | --- |
-| `clk` | `UserPreferences` ([UserPreferences.cpp:9](../../JC6416/src/Preferences/UserPreferences.cpp#L9)) | 125 העדפות: 75 ב-`simplePrefs` (אינדקסים 1-76, ו-3 חור) ו-50 טקסטים ב-`textPrefs` | `PREF_OP_*` לפי מפתח, ו-`TEXT_OP_*` לפי מיקום ב-`textPrefs` |
+| `clk` | `UserPreferences` ([UserPreferences.cpp:149](../../JC6416/src/Preferences/UserPreferences.cpp#L149)) | 125 העדפות: 75 ב-`simplePrefs` (אינדקסים 1-76, ו-3 חור) ו-50 טקסטים ב-`textPrefs` | `PREF_OP_*` לפי מפתח, ו-`TEXT_OP_*` לפי מיקום ב-`textPrefs` |
 | `sec` | `AuthManager` ([Authmanager.cpp:11-13](../../JC6416/src/BLE/Authmanager.cpp#L11-L13)) | `pin` (u16), `trusted` (blob של 48B) | `pin` דרך `PREF_OP_WRITE` בלבד, כ-special-case ([CoreService.cpp:616-640](../../JC6416/src/BLE/CoreService.cpp#L616-L640)). `trusted` רק דרך `AUTH_OP_REGISTER` |
 | `sys` | `CoreService` ([CoreService.cpp:731-749](../../JC6416/src/BLE/CoreService.cpp#L731-L749)) | `dev_name` (string) | `SYS_OP_SET_NAME` |
 
@@ -324,13 +324,14 @@
 - **`States/ConfigState`:** `resetSimplePrefs` ו-`resetTextPrefs`, כל אחת משני מקומות: `SetResetPrefState`/`SetResetTextState` ו-`SetResetAllState`.
 - **`BLE/TextCommandHandler`:** `textPrefs[i]` (7 מקומות).
 - **`Preferences/UserPreferences`:** פונקציות הרישום הן `init` ו-`loadAll` (נקראות מתוך `setupPreferences`), `resetSimplePrefs` ו-`resetTextPrefs` (מ-`ConfigState`), ו-`printAll` (debug, לא נקראת בשום מקום).
+  - **מ-2a.3.3:** הרישום מחזיק רק את `forceWrite`, את שלוש הרשימות ואת מופע ה-`Preferences` של `clk`. 124 ההעדפות האחרות הן חברים של אובייקטי השכבות (`dataPrefs`, `logicPrefs`, `presentationPrefs`, `displayPrefs`, `systemPrefs`, `userContent`), והבנאי של הרישום ב-`UserPreferences.cpp` מכניס את הכתובות שלהן לרשימות באותו סדר. `userContent.textPrefs` הוא הפניה ל-`userPreferences.textPrefs`.
 
 ## 8. הבדלים בין דגמים
 
 ### JC4020
 
 - **הגדרות:** 75 ההגדרות זהות ל-JC6416: מפתח, אינדקס, טיפוס וברירת מחדל.
-- **views של שכבות:** זהים ל-JC6416: אותם מבנים, שדות וסדר. אין שדה ייחודי לדגם. `DisplayPrefs.h` ו-`PrefsViews.cpp` זהים בשלושת הדגמים.
+- **views של שכבות:** זהים ל-JC6416: אותם מבנים, שדות וסדר. אין שדה ייחודי לדגם. מ-2a.3.3 קבצי השכבות והרישום (`.h` ו-`.cpp`) זהים בשלושת הדגמים, חוץ מ-`DisplayPrefs.cpp` ב-JC6432 (ברירות המחדל של `colorYom` ו-`colorParasha`) ושתי שורות קיימות ב-`UserPreferences.h` (הזחה ושורת רווחים). `PrefsViews.cpp` נמחק.
 - **שימוש:**
   - `middleLine` ו-`upLine` בשימוש. עורכים: `SetTochenState` ו-`Logic (temp)`. ל-`middleLine` יש צרכן, `MainState` (4). ל-`upLine` אין צרכן.
   - `interval` מחליף את `intervalIluy`, `intervalTime` ו-`intervalInfo`. צרכן: `Logic`, שמזין את `mainState.intervalTimeSet`. עורך: `SetTochenState`. שלוש ההעדפות האחרות לא בשימוש.
@@ -356,7 +357,7 @@
 - **`dateFormat`:** נקרא גם ב-`Screens/MainScreen.cpp:92`, כלומר שכבת התצוגה קוראת העדפה ישירות. הפריסה משתנה כשאין תאריך לועזי.
 - **`loazi`:** יש לו עורך ואין לו צרכן.
 - **`MainStateInfoSets`:** מפוצל ל-`…1.cpp` ול-`…2.cpp`. הצרכנים של `tfila`, `moadim`, `IORT` ושאר בחירות התוכן מתחלקים בין שני הקבצים.
-- **views:** the same as JC6416 and JC4020 in all three models; `DisplayPrefs` ends with `colorIvri`, `colorLoazi`, `colorParashaV` (index order); `screen` in `layout`.
+- **views:** the same as JC6416 and JC4020 in all three models; `DisplayPrefs` ends with `colorIvri`, `colorLoazi`, `colorParashaV` (index order); `screen` in `layout`. Since 2a.3.3 the layer objects own the preferences; `DisplayPrefs.cpp` holds the JC6432 defaults of `colorYom` and `colorParasha` (1).
 
 ## 9. תשובות והחלטות
 
