@@ -1,8 +1,8 @@
 """flash_check.py — flash symbol check for a non-identical image (criterion: refactor-log.md, 2a.3.3,
 "Flash check when the image is not identical", and "Decisions"). A filter for surprises, not a proof of
 equivalence. Read-only. Every function present in both ELFs whose size changed gets exactly one category;
-`manual` means a deviation (stop). Needs flashcheck.py (same folder: layouts, ELF access, decoding
-helpers) and the xtensa-esp32 toolchain of PlatformIO (nm, objdump, c++filt).
+`manual` means a deviation (stop). Needs the xtensa-esp32 toolchain of PlatformIO (nm, objdump,
+c++filt).
 
 Usage (Git Bash, from the repo root; python -B keeps tools/ free of bytecode):
   python -I -B tools/flash_check.py <ref.elf> <cand.elf> <ref_UserPreferences.h> <cand_Preferences_dir>
@@ -15,6 +15,8 @@ The layouts are the 2a.3.3 ones (registry with all UserPref members in the refer
 the candidate); a later step that changes them (2a.4) must adapt ref_layout / cand_layout first.
 
 History: written for 2a.3.3 as flashcheck2.py (v2, dataflow); moved here without logic changes.
+Its base module flashcheck.py (layouts, ELF access, normalization; also v1 of the check, linear
+tracking) was merged into this file without logic changes, and v1 removed (docs step after 2a.3.5).
 
 Decoding: recursive descent from the entry (fallthrough, branch / jump / loop targets, jump tables =
 words in .flash.rodata that point into the function, which are successors of every `jx`). Bytes no
@@ -41,14 +43,277 @@ Categories (first level at which ref == cand):
 """
 import sys, os, re, struct, bisect, subprocess
 from collections import OrderedDict
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import flashcheck as F
+TC = os.path.expanduser('~/.platformio/packages/toolchain-xtensa-esp32/bin/xtensa-esp32-elf-')
 
-TC = F.TC
-PREF_OBJS = F.PREF_OBJS
-UNCOND = F.UNCOND
-NOWRITE = F.NOWRITE
-target_of = F.target_of
+# --------------------------------------------------------------------------- layouts
+
+SIZE = {'uint8_t': (24, 4), 'int8_t': (24, 4), 'uint16_t': (24, 4), 'int16_t': (24, 4),
+        'double_t': (40, 8), 'String': (52, 4)}
+VALUE = {'uint8_t': (20, 21), 'int8_t': (20, 21), 'uint16_t': (20, 22), 'int16_t': (20, 22),
+         'double_t': (24, 32), 'String': (20, 36)}
+BASE = {0: 'vptr', 4: '_key', 8: '_type', 12: '_index', 13: '_isModified', 16: '_prefs'}
+
+
+def userpref_member(t, inner):
+    v, d = VALUE[t]
+    if inner in BASE:
+        return BASE[inner]
+    if t == 'String':
+        if v <= inner < v + 16:
+            return '_value+%d' % (inner - v)
+        if d <= inner < d + 16:
+            return '_defaultValue+%d' % (inner - d)
+    else:
+        if inner == v:
+            return '_value'
+        if inner == d:
+            return '_defaultValue'
+        if t == 'double_t' and v < inner < v + 8:
+            return '_value+%d' % (inner - v)
+    return '?%d' % inner
+
+
+class Layout:
+    """fields: list of (offset, size, name, kind) where kind is a UserPref type or 'vector'/'prefs'/'ref'."""
+
+    def __init__(self):
+        self.objs = {}
+
+    def add(self, obj, members):
+        off, fields, align = 0, [], 4
+        for name, kind in members:
+            if isinstance(kind, list):           # nested struct
+                sub = Layout._struct(kind)
+                a = sub[2]
+                off = (off + a - 1) // a * a
+                for o, s, n, k in sub[0]:
+                    fields.append((off + o, s, name + '.' + n, k))
+                off += sub[1]
+                align = max(align, a)
+                continue
+            s, a = SIZE.get(kind, {'vector': (12, 4), 'prefs': (8, 4), 'ref': (4, 4)}.get(kind))
+            off = (off + a - 1) // a * a
+            fields.append((off, s, name, kind))
+            off += s
+            align = max(align, a)
+        size = (off + align - 1) // align * align
+        self.objs[obj] = (fields, size)
+        return size
+
+    @staticmethod
+    def _struct(members):
+        l = Layout()
+        size = l.add('x', members)
+        fields = l.objs['x'][0]
+        align = 8 if any(k == 'double_t' for _, _, _, k in fields) else 4
+        return fields, size, align
+
+    def resolve(self, obj, off):
+        fields, size = self.objs[obj]
+        for o, s, n, k in fields:
+            if o <= off < o + s:
+                inner = off - o
+                leaf = n.split('.')[-1]
+                if k in VALUE:
+                    return '%s.%s' % (leaf, userpref_member(k, inner))
+                return '%s+%d' % (leaf, inner)
+        return '%s?+%d' % (obj, off)
+
+
+def parse_members(text, struct):
+    body = re.search(r'(?:struct|class) %s\s*\{(.*?)\n\};' % struct, text, re.S).group(1)
+    out = []
+    for l in body.split('\n'):
+        m = re.match(r'^\s+UserPref<(\w+)> &?(\w+);', l)
+        if m:
+            out.append((m.group(2), m.group(1)))
+            continue
+        m = re.match(r'^\s+std::vector<UserPrefBase \*> (&?)(\w+);', l)
+        if m:
+            out.append((m.group(2), 'ref' if m.group(1) else 'vector'))
+            continue
+        m = re.match(r'^\s+Preferences (\w+);', l)
+        if m:
+            out.append((m.group(1), 'prefs'))
+            continue
+        m = re.match(r'^\s+(\w+Prefs) (\w+);', l)
+        if m:
+            out.append((m.group(2), m.group(1)))
+    return out
+
+
+def ref_layout(hdr):
+    t = open(hdr, encoding='utf-8').read().replace('\r\n', '\n')
+    L = Layout()
+    L.add('userPreferences', parse_members(t, 'UserPreferences'))
+    return L
+
+
+def cand_layout(pdir):
+    rd = lambda f: open(os.path.join(pdir, f), encoding='utf-8').read().replace('\r\n', '\n')
+    L = Layout()
+    d = rd('DataPrefs.h')
+    L.add('dataPrefs', [('place', parse_members(d, 'PlacePrefs')), ('zmanim', parse_members(d, 'ZmanimPrefs')),
+                        ('minhagim', parse_members(d, 'MinhagimPrefs'))])
+    L.add('logicPrefs', parse_members(rd('LogicPrefs.h'), 'LogicPrefs'))
+    p = rd('PresentationPrefs.h')
+    pm = [x for x in parse_members(p, 'PresentationPrefs') if x[1] != 'LayoutPrefs']
+    L.add('presentationPrefs', pm + [('layout', parse_members(p, 'LayoutPrefs'))])
+    L.add('displayPrefs', parse_members(rd('DisplayPrefs.h'), 'DisplayPrefs'))
+    L.add('systemPrefs', parse_members(rd('SystemPrefs.h'), 'SystemPrefs'))
+    L.add('userContent', parse_members(rd('UserContent.h'), 'UserContent'))
+    L.add('userPreferences', parse_members(rd('UserPreferences.h'), 'UserPreferences'))
+    return L
+
+
+# --------------------------------------------------------------------------- ELF access
+
+class ElfBase:
+    def __init__(self, path, layout):
+        self.path, self.layout = path, layout
+        out = subprocess.run([TC + 'nm', '-C', '-S', path], capture_output=True, text=True).stdout
+        self.syms, objs = {}, []
+        for l in out.splitlines():
+            m = re.match(r'^([0-9a-f]{8}) ([0-9a-f]{8}) (\S) (.*)$', l)
+            if m:
+                a, s = int(m.group(1), 16), int(m.group(2), 16)
+                self.syms.setdefault(m.group(4), []).append((a, s, m.group(3)))
+                if s:
+                    objs.append((a, s, m.group(4)))
+        objs.sort()
+        self.objs, self.starts = objs, [o[0] for o in objs]
+        self.data = open(path, 'rb').read()
+        self.sections = []
+        for l in subprocess.run([TC + 'objdump', '-h', path], capture_output=True, text=True).stdout.splitlines():
+            m = re.match(r'\s*\d+\s+(\S+)\s+([0-9a-f]+)\s+([0-9a-f]+)\s+[0-9a-f]+\s+([0-9a-f]+)', l)
+            if m and int(m.group(3), 16):
+                self.sections.append((m.group(1), int(m.group(3), 16), int(m.group(2), 16), int(m.group(4), 16)))
+        for name, va, size, off in self.sections:
+            if name == '.flash.rodata':
+                self.rodata = (va, size, off)
+            if name == '.flash.text':
+                self.text = (va, size)
+        # words in .flash.rodata that point into .flash.text (jump tables)
+        va, size, off = self.rodata
+        tv, ts = self.text
+        self.rod_ptrs = {}
+        for i in range(0, size - 3, 4):
+            w = struct.unpack_from('<I', self.data, off + i)[0]
+            if tv <= w < tv + ts:
+                self.rod_ptrs.setdefault(w, []).append(va + i)
+        self.ptr_keys = sorted(self.rod_ptrs)
+        for o in objs:
+            if o[2] in PREF_OBJS:
+                pass
+        self.pref = {n: self.syms[n][0][0] for n in PREF_OBJS if n in self.syms}
+
+    def read(self, addr, n):
+        for name, va, size, off in self.sections:
+            if va <= addr < va + size:
+                return self.data[off + addr - va: off + addr - va + n]
+        return None
+
+    def word(self, addr):
+        b = self.read(addr, 4)
+        return struct.unpack('<I', b)[0] if b and len(b) == 4 else None
+
+    def sym_at(self, v):
+        i = bisect.bisect_right(self.starts, v) - 1
+        if i >= 0:
+            a, s, n = self.objs[i]
+            if a <= v < a + s:
+                return n, v - a
+        return None, None
+
+    def in_rodata(self, v):
+        va, size, _ = self.rodata
+        return va <= v < va + size
+
+    def literal(self, v):
+        """('pref', obj, off) | ('sym', 'name+off') | ('str', content) | ('const', v)"""
+        for n, a in self.pref.items():
+            size = self.syms[n][0][1]
+            if a <= v < a + size:
+                return ('pref', n, v - a)
+        n, o = self.sym_at(v)
+        if n is not None and not self.in_rodata(v):
+            return ('sym', '%s+%d' % (n, o))
+        if self.in_rodata(v):
+            return ('str', self.rodata_key(v), n)
+        return ('const', v)
+
+    def rodata_key(self, v, depth=0):
+        """Content of .rodata at v: the string up to NUL when it is text; otherwise the first 3 words,
+        each word that points into .rodata or to a symbol replaced by what it points to."""
+        b = self.read(v, 64) or b''
+        s = b.split(b'\0')[0]
+        w0 = self.word(v) if v % 4 == 0 else None
+        tv, ts = self.text
+        va, vs, _ = self.rodata
+        if w0 is not None and (va <= w0 < va + vs or tv <= w0 < tv + ts):
+            s = b''           # starts with an address word: compare as words, not as text
+        try:
+            txt = s.decode('utf-8')
+            if s and all(c >= ' ' or c in '\n\r\t' for c in txt):
+                return s
+        except UnicodeDecodeError:
+            pass
+        words = []
+        for i in range(3):
+            w = self.word(v + 4 * i)
+            if w is None:
+                words.append(None)
+            elif self.in_rodata(w) and depth < 1:
+                words.append(('->', self.rodata_key(w, depth + 1)))
+            else:
+                n, o = self.sym_at(w)
+                words.append(('sym', n, o) if n is not None and not self.in_rodata(w) else w)
+        return ('words', tuple(words))
+
+    # ---------------------------------------------------------------- decoding
+    def decode_from(self, start, end):
+        out = subprocess.run([TC + 'objdump', '-d', '-z', '--start-address=%d' % start, '--stop-address=%d' % end,
+                              self.path], capture_output=True, text=True).stdout
+        ins = OrderedDict()
+        for l in out.splitlines():
+            m = re.match(r'^\s*([0-9a-f]+):\s+([0-9a-f]+)\s+(\S+)\s*(.*)$', l)
+            if m:
+                a = int(m.group(1), 16)
+                ins[a] = (len(m.group(2)) // 2, m.group(3), m.group(4).strip())
+        return ins
+
+
+UNCOND = {'j', 'jx', 'ret', 'ret.n', 'retw', 'retw.n', 'ill', 'ill.n', 'rfe', 'rfi', 'rfwo', 'rfwu'}
+PREF_OBJS = ['userPreferences', 'dataPrefs', 'logicPrefs', 'presentationPrefs', 'displayPrefs', 'systemPrefs',
+             'userContent']
+NOWRITE = re.compile(r'^(s8i|s16i|s32i|s32i\.n|s32c1i|ssi|ssip|b\w*|j|jx|call\w*|ret\w*|entry|loop\w*|memw|extw|nop'
+                     r'(\.n)?|isync|dsync|rsync|esync|wsr\w*|wur\w*|xsr\w*|ill(\.n)?|break(\.n)?|witlb|wdtlb|waiti)$')
+
+
+def target_of(op, args):
+    if op.startswith(('b', 'j', 'loop')) and op not in ('jx', 'break', 'break.n'):
+        m = re.search(r'([0-9a-f]{8}) <', args)
+        if m:
+            return int(m.group(1), 16)
+    return None
+
+
+def align_norm(toks):
+    out = []
+    for t in toks:
+        if re.match(r'^or a1, a1, a1$', t) or re.match(r'^nop(\.n)?\b', t):
+            continue
+        m = re.match(r'^or (a\d+), (a\d+), \2$', t)
+        if m:
+            t = 'mov %s, %s' % (m.group(1), m.group(2))
+        t = re.sub(r'^mov\.n ', 'mov ', t)
+        t = re.sub(r'^(\w+)\.n\b', r'\1', t)
+        out.append(t)
+    return out
+
+
+def reg_norm(toks):
+    return [re.sub(r'\ba\d+\b', 'aR', t) for t in toks]
 
 
 _ARITY = {}
@@ -95,7 +360,7 @@ def noreturn(op, args):
     return op.startswith('call') and not op.startswith('callx') and bool(NORETURN.search(args))
 
 
-class Elf(F.Elf):
+class Elf(ElfBase):
     def xtprop(self):
         """Instruction regions from .xt.prop (Xtensa property table, linked addresses):
         sorted list of (start, size, flags); flag 0x2 = instructions, 0x20 = branch target."""
@@ -164,7 +429,7 @@ class Elf(F.Elf):
         return r
 
     def function_heuristic(self, name):
-        """F.Elf.function, plus extra roots: every uncovered run that does not start with zero bytes
+        """The v1 decoder (Elf.function of the former flashcheck.py), plus extra roots: every uncovered run that does not start with zero bytes
         (exception landing pads, reached only through .gcc_except_table) is decoded from its first
         non-zero byte, until the whole function is covered or only zero bytes remain."""
         if not hasattr(self, '_fcache'):
@@ -464,10 +729,10 @@ def COMDAT_CALLS(a, b):
 
 
 STEPS = [('base', lambda t: t, {}),
-         ('alignment', lambda t: F.align_norm(t), {}),
-         ('regalloc', lambda t: F.reg_norm(F.align_norm(t)), {}),
-         ('scheduling', lambda t: F.reg_norm(F.align_norm(t)), {'blocks': True}),
-         ('ref-indirection', lambda t: F.reg_norm(F.align_norm(t)), {'indirection': True, 'blocks': True})]
+         ('alignment', lambda t: align_norm(t), {}),
+         ('regalloc', lambda t: reg_norm(align_norm(t)), {}),
+         ('scheduling', lambda t: reg_norm(align_norm(t)), {'blocks': True}),
+         ('ref-indirection', lambda t: reg_norm(align_norm(t)), {'indirection': True, 'blocks': True})]
 
 
 def blocks(fin):
@@ -584,8 +849,8 @@ def classify(R, C, fn):
 
 def main(argv):
     ref_elf, cand_elf, ref_hdr, cand_dir = argv[1:5]
-    R = Elf(ref_elf, F.ref_layout(ref_hdr))
-    C = Elf(cand_elf, F.cand_layout(cand_dir))
+    R = Elf(ref_elf, ref_layout(ref_hdr))
+    C = Elf(cand_elf, cand_layout(cand_dir))
     for E in (R, C):
         out = subprocess.run([TC + 'nm', E.path], capture_output=True, text=True).stdout
         dem = subprocess.run([TC + 'nm', '-C', E.path], capture_output=True, text=True).stdout
