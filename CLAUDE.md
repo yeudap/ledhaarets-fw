@@ -66,15 +66,15 @@ but the content differs in many places.
 
 **Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
 in all three models (verification rules in `refactor-log.md`); `count_deps.py` counts access
-through the views, and `dependencies.md` is generated with `tools/gen_deps_doc.py`. Production 709A (temporary tag; commit hashes in `docs/baseline.md`, Sync 6) is
+through the layer objects, and `dependencies.md` is generated with `tools/gen_deps_doc.py`. Production 709A (temporary tag; commit hashes in `docs/baseline.md`, Sync 6) is
 synced into this repo. 2a.3 is planned with the owner (decisions in `refactor-log.md`, "2a.3 —
 plan"); done: 2a.3.0 (contract tool `tools/prefs_contract.py`, baselines in
 `docs/contracts/prefs/`), 2a.3.1 (unused registry functions removed, all models), 2a.3.2 (one
 preference table for all models, as in JC6432; documented contract change), 2a.3.3 (the layer
 objects own their preferences, all three models in one step; 2a.3.4 cancelled; flash-check
-criterion for non-identical images in `refactor-log.md`, "Decisions"). **Next step:** a docs step
-that replaces `file:line` references with symbol references (file + function or class), keeping
-line numbers only where there is no other way. Clock test of 2a.3 (2a.3.5) passed on all three
+criterion for non-identical images in `refactor-log.md`, "Decisions"). Docs step done: references
+by symbol (file + function or class), line numbers only where there is no other way (rule and
+exceptions in `refactor-log.md`). **Next step:** set by the owner. Clock test of 2a.3 (2a.3.5) passed on all three
 models (23.11.2026).
 Existing NVS keys, namespaces and types never change. Any change to the preference contract
 (new keys, BLE indexes, defaults) happens only as a documented contract-change step approved by

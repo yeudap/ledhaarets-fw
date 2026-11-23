@@ -1296,6 +1296,34 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - Check after the merge and after the removal: flash_check on the three models (`f084e48` vs
     2a.3.3 builds, `SOURCE_DATE_EPOCH=1763337600`) gives output byte-identical to the run before
     the change: 101 / 103 / 114 functions, manual 0.
+- **Docs step: symbol references** (after 2a.3.5; plan approved by the owner) — `file:line`
+  references replaced by file + symbol (function, class, field, macro, `switch` case), and "view"
+  replaced by the layers as they are after 2a.3.3 (layer objects / layer units).
+  - Commits: `ble.md`; `preferences.md`; `dependencies.md`; `notes.md` + `models-plan.md` +
+    `baseline.md`; refactor-log Findings; tools (`count_deps.py` docstring and two comments,
+    `count_prefs.py`, `prefs_contract.py`, `tools/prefs_contract/main.cpp`; no code change); this
+    entry with `CLAUDE.md`. The firmware `main.cpp` has no comment on `PrefsViews` (the one was in
+    `tools/prefs_contract/main.cpp`), so no firmware file changed and no image was built for it.
+  - Base lines on line numbers dropped (`ble.md`, `preferences.md`, `notes.md`, Findings) or
+    narrowed (`dependencies.md`: only the generated §9 block).
+  - Line numbers left, each with its reason:
+    - `dependencies.md` §9, block `generated:includes` (9 lines): output of `gen_deps_doc.py`, written
+      only by the tool, current tree.
+    - References to the app source (outside the repo, as reported by the owner; symbols unknown):
+      `ble.md` (2), `preferences.md` (3), Findings F9 (1).
+    - refactor-log step entries (42 lines): history tied to the commit of each entry (owner's
+      decision). "view" in step entries, in `baseline.md` (2a.2.7 and the Sync 7.09 / Sync 6
+      results, marked as the state at that sync) and in `CLAUDE.md` stage 2a sub-step 1 is history too.
+    - Not a reference: the mermaid subgraph id `VIEWS` in `dependencies.md` §5.6 (its label says
+      layers).
+  - **Verification:** every relative link in the tracked `.md` files opens (scratch script: 77 links,
+    0 problems; no `#L` anchors left). `git grep` for `file.ext:N` and `#LN` leaves only the list
+    above. Every symbol added exists in the code (scratch check). `gen_deps_doc.py check` OK (420
+    edges, 7,131 references); `prefs_contract.py check` OK (all three); `count_deps` / `count_prefs`
+    output unchanged on the three models. flash_check on the three models identical to the run
+    before the tool changes (entry above). `git ls-files --eol`: line endings unchanged. No path
+    under `JC*/` changed.
+  - **Clock test:** not needed; no firmware change.
 
 ### Decisions
 
