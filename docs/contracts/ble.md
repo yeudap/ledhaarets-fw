@@ -5,12 +5,10 @@ The BLE protocol as implemented in production **7.09**, and in **709A**, which d
 How older firmware that the app may still meet behaves differently: §9. The OTA service contract
 (not written yet) and the advertisement contract (not written yet) are separate.
 
-**Line numbers refer to `dcd2cdb` (7.07)**, unless a line says otherwise. In
-`Preferences/UserPreferences.h` and `BLE/CoreService.cpp` the current lines are a few lines off
-from these.
-
-Line numbers refer to `JC6416/src/...` unless stated otherwise. Where a file is identical in
-all three models (verified by md5), the same line numbers apply to JC4020 and JC6432.
+References are to `JC6416/src/...` by file and symbol (function, class, macro, enum), unless
+stated otherwise. Where a file is identical in all three models (verified by md5), the same
+references apply to JC4020 and JC6432. The only line numbers are in references to the app source,
+as reported by the user.
 
 ## 0. Sources and per-model identity
 
@@ -24,14 +22,14 @@ all three models (verified by md5), the same line numbers apply to JC4020 and JC
 | `BLE/TextCommandHandler.h` | 6ceaa330 | same | same |
 | `BLE/TextCommandHandler.cpp` | 7b672581 | **a34f9a84 (differs)** | 7b672581 |
 | `Preferences/UserPreferences.h` | 1674adef | 1674adef | **b6fd22d0 (differs)** |
-| `States/States.h` (`numOfNameSets`) | 50 (`:29`) | **0 (`:28`)** | 50 (`:28`) |
+| `States/States.h` (`numOfNameSets`) | 50 | **0** | 50 |
 | `States/ShitaState.cpp` (called from PREF WRITE `shita`) | dd0d3011 | same | same |
 | `States/OfekState.cpp` / `ConfigState.cpp` | files differ per model | | |
 
 `OfekState.cpp` and `ConfigState.cpp` differ between models as files, but the functions the BLE
 contract depends on (`SetCustomState::printUpdateSucc`, `SetOfekState::printUpdateSucc`,
 `SetResetPassState::okAction`, `SetResetAllState::okAction`) are identical in all three
-(compared function by function). Their line numbers differ by 1–3 lines between models.
+(compared function by function).
 
 **Model differences in the BLE contract** (details in §6.3 and §8):
 1. **JC6432:** the firmware defaults of `colorYom` and `colorParasha` differ (§8). See
@@ -44,13 +42,13 @@ Everything else in this document is identical in all three models.
 
 | Item | Value | Source |
 |---|---|---|
-| Core service UUID | `7b79e39b-488a-4f76-a60f-bd3a29da174f` | `BLE/CoreService.h:8` |
-| CMD characteristic UUID | `326109ee-bcea-4809-88b1-5e0da1289a8c`, property `WRITE` | `CoreService.h:9`, `CoreService.cpp:919-922` |
-| EVT characteristic UUID | `fbe9b56e-270b-4765-a3ec-b917bb0ad0e1`, property `NOTIFY` | `CoreService.h:10`, `CoreService.cpp:925-927` |
-| OTA service UUID (OTA contract: not written yet) | `85564e0a-542d-4967-9d09-892b864a1b46` | `BLE/FirmwareService.h:12` |
-| GAP init name | `"LedHaarets"` | `BLE/Bluetooth.cpp:63` |
-| Preferred MTU | 517 (firmware preference only, see note) | `Bluetooth.cpp:64` |
-| Device name (GAP + scan response) | NVS `sys`/`dev_name`, default `"LedHaarets"`, max 24 bytes | `CoreService.cpp:731-760`, `CoreProtocol.h:287-290` |
+| Core service UUID | `7b79e39b-488a-4f76-a60f-bd3a29da174f` | `CORE_SERVICE_UUID` in `BLE/CoreService.h` |
+| CMD characteristic UUID | `326109ee-bcea-4809-88b1-5e0da1289a8c`, property `WRITE` | `CORE_CMD_CHAR_UUID` in `CoreService.h`; `initCoreService` in `CoreService.cpp` |
+| EVT characteristic UUID | `fbe9b56e-270b-4765-a3ec-b917bb0ad0e1`, property `NOTIFY` | `CORE_EVT_CHAR_UUID` in `CoreService.h`; `initCoreService` in `CoreService.cpp` |
+| OTA service UUID (OTA contract: not written yet) | `85564e0a-542d-4967-9d09-892b864a1b46` | `OTA_SERVICE_UUID` in `BLE/FirmwareService.h` |
+| GAP init name | `"LedHaarets"` | `NimBLEDevice::init` in `initBluetooth`, `BLE/Bluetooth.cpp` |
+| Preferred MTU | 517 (firmware preference only, see note) | `NimBLEDevice::setMTU` in `initBluetooth`, `Bluetooth.cpp` |
+| Device name (GAP + scan response) | NVS `sys`/`dev_name`, default `"LedHaarets"`, max 24 bytes | `loadDeviceName`, `applyDeviceName` in `CoreService.cpp`; `SYS_NAME_MAX_BYTES`, `SYS_DEFAULT_DEVICE_NAME` in `CoreProtocol.h` |
 
 **MTU note.** 517 is only what the firmware offers. The negotiated MTU is the minimum of both
 sides: the app requests **150** (`lib/services/ble_service/ble_connection.dart:64`, app source as
@@ -58,119 +56,124 @@ reported by the user). On Android the effective ATT payload is therefore ≤ 147
 (MTU − 3). Any frame size assumption must hold at 147 bytes. This is directly relevant to the
 OTA chunk size (`CHUNK_SIZE_DEFAULT` / `SAFE_CHUNK_SIZE` = 244; OTA contract: not written yet).
 
-Connection callbacks (`Bluetooth.cpp:17-47`): on connect and on disconnect the auth session is
+Connection callbacks (`MyServerCallbacks::onConnect` / `onDisconnect`, `Bluetooth.cpp`): on connect and on disconnect the auth session is
 reset (`authManager.resetSession()`); advertising restarts on disconnect.
 
 ## 2. Frame format
 
-CMD (app → clock, written to CMD char) — `CoreProtocol.h:8-11`:
+CMD (app → clock, written to CMD char) — header comment of `CoreProtocol.h`:
 
 ```
 [0] DOMAIN  [1] OPCODE  [2..N] PAYLOAD
 ```
 
-EVT (clock → app, Notify on EVT char) — `CoreProtocol.h:13-17`, built in `coreSendEvt` `CoreService.cpp:34-55`:
+EVT (clock → app, Notify on EVT char) — header comment of `CoreProtocol.h`, built in `coreSendEvt` (`CoreService.cpp`):
 
 ```
 [0] DOMAIN (echo)  [1] OPCODE (echo)  [2] STATUS  [3..N] DATA
 ```
 
-- `CORE_HEADER_SIZE` = 2, `CORE_EVT_HEADER_SIZE` = 3 (`CoreProtocol.h:32-33`).
-- On error: `STATUS = 0x01`, `DATA[0]` = error code (`sendErr`, `CoreService.cpp:58-61`).
-- CMD shorter than 2 bytes is dropped silently, no EVT (`CoreService.cpp:870-874`).
-- An EVT is sent only if connected and the EVT char exists (`CoreService.cpp:37-38`).
+- `CORE_HEADER_SIZE` = 2, `CORE_EVT_HEADER_SIZE` = 3 (`CoreProtocol.h`).
+- On error: `STATUS = 0x01`, `DATA[0]` = error code (`sendErr`, `CoreService.cpp`).
+- CMD shorter than 2 bytes is dropped silently, no EVT (`CoreCallbacks::onWrite`, `CoreService.cpp`).
+- An EVT is sent only if connected and the EVT char exists (`coreSendEvt`).
 
 ### Byte order
 
 | Field | Order | Source |
 |---|---|---|
-| PIN in `AUTH_OP_PIN` | **little-endian** u16 | `CoreService.cpp:130` |
-| PIN via `PREF_OP_WRITE "pin"` | **little-endian** u16 | `CoreService.cpp:629` |
-| Preference values I16/U16 (and I32/U32 in code, unused) | **little-endian** | `UserPreferences.h:231-258, 295-324` |
-| Preference BLOB (double) | raw 8 bytes, IEEE 754, little-endian (ESP32 native) | `UserPreferences.h:259-267, 325-331` |
-| **Year in TIME data** | **big-endian** (MSB first) | `CoreProtocol.h:182-183`, `CoreService.cpp:476, 511-512` |
+| PIN in `AUTH_OP_PIN` | **little-endian** u16 | `handleAuth`, `CoreService.cpp` |
+| PIN via `PREF_OP_WRITE "pin"` | **little-endian** u16 | `handlePref`, `CoreService.cpp` |
+| Preference values I16/U16 (and I32/U32 in code, unused) | **little-endian** | `UserPref<T>::toBytes` / `fromBytes`, `UserPreferences.h` |
+| Preference BLOB (double) | raw 8 bytes, IEEE 754, little-endian (ESP32 native) | `UserPref<T>::toBytes` / `fromBytes`, `UserPreferences.h` |
+| **Year in TIME data** | **big-endian** (MSB first) | time data comment in `CoreProtocol.h`; `handleTime` (SET and GET), `CoreService.cpp` |
 
 ## 3. Status and error codes
 
-STATUS (`CoreProtocol.h:38-39`): `0x00` OK, `0x01` ERROR.
+STATUS (`CORE_STATUS_OK`, `CORE_STATUS_ERROR` in `CoreProtocol.h`): `0x00` OK, `0x01` ERROR.
 
-| Code | Name | Meaning | Source |
-|---|---|---|---|
-| 0x01 | `CORE_ERR_UNKNOWN_DOMAIN` | unknown domain | `CoreProtocol.h:44` |
-| 0x02 | `CORE_ERR_UNKNOWN_OPCODE` | unknown opcode in domain | `:45` |
-| 0x03 | `CORE_ERR_INVALID_PAYLOAD` | payload too short / malformed | `:46` |
-| 0x04 | `CORE_ERR_INVALID_INDEX` | index out of range (TEXT) | `:47` |
-| 0x05 | `CORE_ERR_INVALID_VALUE` | invalid value | `:48` |
-| 0x06 | `CORE_ERR_EMPTY` | empty record | `:49` |
-| 0x07 | `CORE_ERR_WRITE_FAILED` | storage write failed | `:50` |
-| 0x08 | `CORE_ERR_TYPE_MISMATCH` | pref type ≠ key type | `:51` |
-| 0x09 | `CORE_ERR_INVALID_KEY` | pref key not found | `:52` |
-| 0x0A | `CORE_ERR_INVALID_TIME` | invalid date/time | `:53` |
-| 0x0B | `CORE_ERR_AUTH_REQUIRED` | HELLO: unknown clientId | `:54` |
-| 0x0C | `CORE_ERR_AUTH_FAILED` | wrong PIN (after 1 s) | `:55` |
-| 0x0D | `CORE_ERR_NOT_AUTHENTICATED` | non-AUTH command before auth | `:56` |
-| 0xFF | `CORE_ERR_INTERNAL` | internal | `:57` |
+Error codes: the `CORE_ERR_*` macros in `CoreProtocol.h`.
 
-SYS-specific: `SYS_ERR_NAME_TOO_LONG` = 0x01 (`CoreProtocol.h:284`) is defined but **not sent**;
-an over-long name returns `CORE_ERR_INVALID_VALUE` (`CoreService.cpp:814-817`). See refactor-log F7.
+| Code | Name | Meaning |
+|---|---|---|
+| 0x01 | `CORE_ERR_UNKNOWN_DOMAIN` | unknown domain |
+| 0x02 | `CORE_ERR_UNKNOWN_OPCODE` | unknown opcode in domain |
+| 0x03 | `CORE_ERR_INVALID_PAYLOAD` | payload too short / malformed |
+| 0x04 | `CORE_ERR_INVALID_INDEX` | index out of range (TEXT) |
+| 0x05 | `CORE_ERR_INVALID_VALUE` | invalid value |
+| 0x06 | `CORE_ERR_EMPTY` | empty record |
+| 0x07 | `CORE_ERR_WRITE_FAILED` | storage write failed |
+| 0x08 | `CORE_ERR_TYPE_MISMATCH` | pref type ≠ key type |
+| 0x09 | `CORE_ERR_INVALID_KEY` | pref key not found |
+| 0x0A | `CORE_ERR_INVALID_TIME` | invalid date/time |
+| 0x0B | `CORE_ERR_AUTH_REQUIRED` | HELLO: unknown clientId |
+| 0x0C | `CORE_ERR_AUTH_FAILED` | wrong PIN (after 1 s) |
+| 0x0D | `CORE_ERR_NOT_AUTHENTICATED` | non-AUTH command before auth |
+| 0xFF | `CORE_ERR_INTERNAL` | internal |
+
+SYS-specific: `SYS_ERR_NAME_TOO_LONG` = 0x01 (`CoreProtocol.h`) is defined but **not sent**;
+an over-long name returns `CORE_ERR_INVALID_VALUE` (`handleSys`, `SYS_OP_SET_NAME`,
+`CoreService.cpp`). See refactor-log F7.
 
 ## 4. Domains
 
-| Code | Domain | Handler | Source |
-|---|---|---|---|
-| 0x01 | NAV | `handleNav` | `CoreProtocol.h:62`, `CoreService.cpp:190` |
-| 0x02 | MENU | `handleMenu` | `:63`, `:225` |
-| 0x03 | TEXT | `handleText` | `:64`, `:260` |
-| 0x04 | TIME | `handleTime` | `:65`, `:452` |
-| 0x05 | PREF | `handlePref` | `:66`, `:533` |
-| 0x06 | AUTH | `handleAuth` | `:67`, `:77` |
-| 0x07 | SYS | `handleSys` | `:277`, `:786` |
+Domain codes: the `DOMAIN_*` macros in `CoreProtocol.h`. Handlers: `CoreService.cpp`.
 
-Dispatch: `CoreCallbacks::onWrite`, `CoreService.cpp:863-908`. Unknown domain →
-`UNKNOWN_DOMAIN`, echoing the received domain/opcode (`:903-906`).
+| Code | Domain | Handler |
+|---|---|---|
+| 0x01 | NAV | `handleNav` |
+| 0x02 | MENU | `handleMenu` |
+| 0x03 | TEXT | `handleText` |
+| 0x04 | TIME | `handleTime` |
+| 0x05 | PREF | `handlePref` |
+| 0x06 | AUTH | `handleAuth` |
+| 0x07 | SYS | `handleSys` |
+
+Dispatch: `CoreCallbacks::onWrite`, `CoreService.cpp`. Unknown domain → `UNKNOWN_DOMAIN`,
+echoing the received domain/opcode (the `default` case of the dispatch `switch`).
 
 ## 5. Authentication
 
 ### 5.1 Gate
 
-Single gate in `onWrite` (`CoreService.cpp:886-892`): any domain other than AUTH (0x06) while
-the session is not authenticated → `ERROR + NOT_AUTHENTICATED`, echoing the received
-domain/opcode. Session flag is per-connection and reset on connect/disconnect
-(`Bluetooth.cpp:23, 37`).
+Single gate in `CoreCallbacks::onWrite` (`CoreService.cpp`), before the dispatch: any domain other
+than AUTH (0x06) while the session is not authenticated → `ERROR + NOT_AUTHENTICATED`, echoing the
+received domain/opcode. Session flag is per-connection and reset on connect/disconnect
+(`MyServerCallbacks::onConnect` / `onDisconnect`, `Bluetooth.cpp`).
 
 **Scope:** the gate covers the Core service only. The OTA service (`FirmwareService.cpp`,
 `OtaProtocol.cpp`) does not reference `authManager`. See refactor-log F5.
 
-### 5.2 Opcodes (`CoreProtocol.h:231-246`, handler `CoreService.cpp:77-184`)
+### 5.2 Opcodes (`AUTH_OP_*` in `CoreProtocol.h`, handler `handleAuth` in `CoreService.cpp`)
 
 | Op | Name | CMD | EVT | Behavior |
 |---|---|---|---|---|
-| 0x01 | `AUTH_OP_HELLO` | `[06][01][clientId 16B]` (≥18 B) | `[06][01][STATUS]` | Trusted clientId → OK, `grantSession`, info message on screen. Otherwise `ERROR + AUTH_REQUIRED`. Short → `INVALID_PAYLOAD`. (`:86-116`) |
-| 0x02 | `AUTH_OP_PIN` | `[06][02][pin u16 LE][clientId 16B]` (≥20 B) | `[06][02][STATUS]` | Correct → OK, `grantSession` (no NVS write). Wrong → `delay(1000)` then `ERROR + AUTH_FAILED`. (`:122-154`) |
-| 0x03 | `AUTH_OP_REGISTER` | `[06][03]` | `[06][03][STATUS]` | Requires authenticated session, else `NOT_AUTHENTICATED`. Stores session clientId as trusted (FIFO). Idempotent. (`:160-178`) |
-| 0x04 | — | reserved for future UNREGISTER, not implemented (`CoreProtocol.h:246`) → `UNKNOWN_OPCODE` | | |
+| 0x01 | `AUTH_OP_HELLO` | `[06][01][clientId 16B]` (≥18 B) | `[06][01][STATUS]` | Trusted clientId → OK, `grantSession`, info message on screen. Otherwise `ERROR + AUTH_REQUIRED`. Short → `INVALID_PAYLOAD`. (`case AUTH_OP_HELLO`) |
+| 0x02 | `AUTH_OP_PIN` | `[06][02][pin u16 LE][clientId 16B]` (≥20 B) | `[06][02][STATUS]` | Correct → OK, `grantSession` (no NVS write). Wrong → `delay(1000)` then `ERROR + AUTH_FAILED`. (`case AUTH_OP_PIN`) |
+| 0x03 | `AUTH_OP_REGISTER` | `[06][03]` | `[06][03][STATUS]` | Requires authenticated session, else `NOT_AUTHENTICATED`. Stores session clientId as trusted (FIFO). Idempotent. (`case AUTH_OP_REGISTER`) |
+| 0x04 | — | reserved for future UNREGISTER, not implemented (comment after `AUTH_OP_REGISTER` in `CoreProtocol.h`) → `UNKNOWN_OPCODE` | | |
 
-### 5.3 PIN and trusted clients (`Authmanager.cpp`, `Authmanager.h`, `CoreProtocol.h:249-260`)
+### 5.3 PIN and trusted clients (`Authmanager.cpp`, `Authmanager.h`, the `AUTH_*` macros in `CoreProtocol.h`)
 
 | Item | Value | Source |
 |---|---|---|
-| clientId size | 16 bytes (raw UUID v4) | `CoreProtocol.h:219, 249` |
-| Trusted slots | 3, FIFO eviction (oldest = slot 0 dropped) | `CoreProtocol.h:254`, `Authmanager.cpp:102-120` |
-| All-zero clientId | never trusted, never stored | `Authmanager.cpp:70-71, 104-105` |
-| Default PIN / after factory reset | 1111 | `CoreProtocol.h:255`, `Authmanager.cpp:22, 141` |
-| PIN range | 0–9999 (> 9999 → `INVALID_VALUE`) | `CoreProtocol.h:256`, `CoreService.cpp:631-635` |
-| Wrong PIN delay | 1000 ms, blocking in NimBLE host task | `CoreProtocol.h:257`, `CoreService.cpp:150` |
-| PIN change | `PREF_OP_WRITE`, key `"pin"`, type must be U16 (0x03), value ≥ 2 B LE; routed to `authManager.setPin`; requires authenticated session | `CoreService.cpp:616-640` |
-| PIN readable? | No: `"pin"` is not in `simplePrefs`, so not readable via `PREF_OP_READ` and not in `PREF_OP_SYNC` | `CoreService.cpp:560-561`, `CoreProtocol.h:225-227` |
-| NVS writes | PIN only on change; slots only when a *new* client registers | `Authmanager.cpp:127-131, 107-109` |
-| Factory reset | PIN = 1111, all slots cleared, session reset. Two menu callers (below) | `Authmanager.cpp:139-149` |
+| clientId size | 16 bytes (raw UUID v4) | `AUTH_CLIENT_ID_SIZE` and the AUTH flow comment in `CoreProtocol.h` |
+| Trusted slots | 3, FIFO eviction (oldest = slot 0 dropped) | `AUTH_TRUSTED_SLOTS` in `CoreProtocol.h`; `AuthManager::addTrusted` in `Authmanager.cpp` |
+| All-zero clientId | never trusted, never stored | `AuthManager::isTrusted`, `AuthManager::addTrusted` (`_isAllZero`) |
+| Default PIN / after factory reset | 1111 | `AUTH_DEFAULT_PIN` in `CoreProtocol.h`; `AuthManager::init`, `AuthManager::factoryReset` |
+| PIN range | 0–9999 (> 9999 → `INVALID_VALUE`) | `AUTH_MAX_PIN` in `CoreProtocol.h`; `handlePref`, `"pin"` special case, `CoreService.cpp` |
+| Wrong PIN delay | 1000 ms, blocking in NimBLE host task | `AUTH_FAIL_DELAY_MS` in `CoreProtocol.h`; `handleAuth`, `case AUTH_OP_PIN` |
+| PIN change | `PREF_OP_WRITE`, key `"pin"`, type must be U16 (0x03), value ≥ 2 B LE; routed to `authManager.setPin`; requires authenticated session | `handlePref`, `"pin"` special case (`AUTH_PIN_PREF_KEY`), `CoreService.cpp` |
+| PIN readable? | No: `"pin"` is not in `simplePrefs`, so not readable via `PREF_OP_READ` and not in `PREF_OP_SYNC` | `handlePref`, `case PREF_OP_READ` (comment on the `simplePrefs` search); `AUTH_PIN_PREF_KEY` comment in `CoreProtocol.h` |
+| NVS writes | PIN only on change; slots only when a *new* client registers | `AuthManager::setPin`, `AuthManager::addTrusted` |
+| Factory reset | PIN = 1111, all slots cleared, session reset. Two menu callers (below) | `AuthManager::factoryReset` |
 
-`factoryReset()` callers (`States/ConfigState.cpp`, same lines in all three models):
+`factoryReset()` callers (`States/ConfigState.cpp`, the same functions in all three models):
 
-| Caller | What it does | Source |
-|---|---|---|
-| `SetResetPassState::okAction` | `factoryReset()`, then `ESP.restart()` | `:116-125` |
-| `SetResetAllState::okAction` (menu "שחזור הגדרות יצרן") | `factoryReset()`, `resetTextPrefs()`, `resetSimplePrefs()`, then `ESP.restart()`. Clears `sec` and resets all of `clk` to firmware defaults; `sys/dev_name` is not touched | `:136-147` |
+| Caller | What it does |
+|---|---|
+| `SetResetPassState::okAction` | `factoryReset()`, then `ESP.restart()` |
+| `SetResetAllState::okAction` (menu "שחזור הגדרות יצרן") | `factoryReset()`, `resetTextPrefs()`, `resetSimplePrefs()`, then `ESP.restart()`. Clears `sec` and resets all of `clk` to firmware defaults; `sys/dev_name` is not touched |
 
 There is no BLE opcode for factory reset. Both are menu states, reachable from the buttons (or
 by simulating them over NAV/MENU).
@@ -179,13 +182,13 @@ NVS keys (`sec` namespace): `pin` (u16) and `trusted` (blob); the NVS contract i
 
 ## 6. Domain details
 
-### 6.1 NAV (0x01) — `CoreProtocol.h:74-82`, `CoreService.cpp:190-219`
+### 6.1 NAV (0x01) — `NAV_*` in `CoreProtocol.h`, `handleNav` in `CoreService.cpp`
 
 | Op | CMD | EVT |
 |---|---|---|
 | 0x01 `NAV_OP_PRESS` | `[01][01][key]` (≥3 B) | `[01][01][STATUS]` |
 
-Key codes → internal `ButtonCommand` (`Commands.h:22-28`):
+Key codes → internal `ButtonCommand` (`enum class ButtonCommand`, `Commands.h`):
 
 | Key | Wire | `ButtonCommand` |
 |---|---|---|
@@ -195,15 +198,16 @@ Key codes → internal `ButtonCommand` (`Commands.h:22-28`):
 | OK | 0x04 | `OK` = 4 |
 
 Other key → `INVALID_VALUE`. Short packet → `INVALID_PAYLOAD` with opcode `NAV_OP_PRESS`
-(not echoed). Wire codes and internal enum values differ; mapping is explicit (`:207-216`).
+(not echoed). Wire codes and internal enum values differ; mapping is explicit (the key `switch`
+in `handleNav`).
 
-### 6.2 MENU (0x02) — `CoreProtocol.h:89-137`, `CoreService.cpp:225-255`
+### 6.2 MENU (0x02) — `MENU_*` in `CoreProtocol.h`, `handleMenu` in `CoreService.cpp`
 
 | Op | CMD | EVT |
 |---|---|---|
 | 0x01 `MENU_OP_GOTO` | `[02][01][menu_code]` (≥3 B) | `[02][01][STATUS]` |
 
-`menu_code` is cast directly to `MenuCommand` (`Commands.h:34-79`); values are identical to
+`menu_code` is cast directly to `MenuCommand` (`enum class MenuCommand`, `Commands.h`); values are identical to
 `MENU_CODE_*`:
 
 | Group | Codes |
@@ -217,9 +221,10 @@ Other key → `INVALID_VALUE`. Short packet → `INVALID_PAYLOAD` with opcode `N
 | Customs | 80 DIASPORA |
 
 Validation: only `0` (NONE) is rejected (`INVALID_VALUE`). Undefined values (e.g. 12, 99) are
-accepted with OK (`CoreService.cpp:243-254`), despite the comment at `:245`. See refactor-log F6.
+accepted with OK (`handleMenu`, the validity check after the cast to `MenuCommand`), despite the
+comment above that check. See refactor-log F6.
 
-### 6.3 TEXT (0x03) — `CoreProtocol.h:144-166`, `CoreService.cpp:260-447`, `TextCommandHandler.cpp`
+### 6.3 TEXT (0x03) — `TEXT_*` in `CoreProtocol.h`, `handleText` in `CoreService.cpp`, `TextCommandHandler.cpp`
 
 | Op | CMD | EVT data on OK |
 |---|---|---|
@@ -235,8 +240,8 @@ Slots: `numOfNameSets` (index 0..N-1), backed by NVS keys `textInput1`..`textInp
 Text encoding: **not UTF-8**. Same single-byte keyboard-layout encoding as PREF STR, see
 "STR wire format" in §6.5.
 
-Internal text error → CORE error mapping (`CoreService.cpp:436-447`; internal codes in
-`TextCommandHandler.h:19-27`):
+Internal text error → CORE error mapping (`_mapTextError`, `CoreService.cpp`; internal codes:
+the `ERR_*` macros in `TextCommandHandler.h`):
 
 | Internal | → CORE |
 |---|---|
@@ -246,19 +251,19 @@ Internal text error → CORE error mapping (`CoreService.cpp:436-447`; internal 
 | `ERR_WRITE_FAILED` 0x07 | `CORE_ERR_WRITE_FAILED` 0x07 |
 | anything else (`ERR_MEMORY`, `ERR_UNSUPPORTED`, `ERR_READ_FAILED`, `ERR_DELETE_FAILED`, …) | `CORE_ERR_INTERNAL` 0xFF |
 
-`TextCommandHandler.h:7-16` also defines legacy command codes (`READ_TEXT` 0xF8, `WRITE_TEXT`
+`TextCommandHandler.h` also defines legacy command codes (`READ_TEXT` 0xF8, `WRITE_TEXT`
 0xF7, `DELETE_TEXT` 0xFD, `DISPLAY_TEXT` 0xFC, `SWAP_TEXTS` 0xFB, `GET_TEXT_COUNT` 0xF9,
 `SUCCESS_CODE` 0x00, `ERROR_CODE` 0xFF). They are not used on the wire by the Core service.
 
 > **⚠ Model difference — JC4020**
-> - `numOfNameSets = 0` (`JC4020/src/States/States.h:28`): every index is invalid, so READ, WRITE,
+> - `numOfNameSets = 0` (`JC4020/src/States/States.h`): every index is invalid, so READ, WRITE,
 >   DELETE, DISPLAY, SWAP always return `ERROR + INVALID_INDEX (0x04)`; COUNT returns OK with `0`.
-> - Additionally `handleWriteText` (`JC4020/.../TextCommandHandler.cpp:63`) and
->   `handleDisplayText` (`:138`) have their bodies commented out and return
+> - Additionally `handleWriteText` and `handleDisplayText` (`JC4020/src/BLE/TextCommandHandler.cpp`)
+>   have their bodies commented out and return
 >   `ERR_INVALID_INDEX` unconditionally.
 > - JC6416 / JC6432: 50 slots, full behavior.
 
-### 6.4 TIME (0x04) — `CoreProtocol.h:173-189`, `CoreService.cpp:452-528`
+### 6.4 TIME (0x04) — `TIME_*` in `CoreProtocol.h`, `handleTime` in `CoreService.cpp`
 
 | Op | CMD | EVT |
 |---|---|---|
@@ -279,25 +284,25 @@ Time data (7 B, `TIME_DATA_SIZE`):
 
 **Year is big-endian**, unlike every other multi-byte field in this protocol.
 
-### 6.5 PREF (0x05) — `CoreProtocol.h:196-214`, `CoreService.cpp:533-726`
+### 6.5 PREF (0x05) — `PREF_*` in `CoreProtocol.h`, `handlePref` in `CoreService.cpp`
 
-| Op | CMD | EVT data on OK | Search scope |
+| Op | CMD | EVT data on OK | Search scope (`handlePref`, case of the op) |
 |---|---|---|---|
-| 0x01 `PREF_OP_READ` | `[05][01][key\0]` (≥4 B) | `[type][value bytes]` | `simplePrefs` only (`:562`) |
-| 0x02 `PREF_OP_WRITE` | `[05][02][type][key\0][value bytes]` (≥5 B) | — | `allPrefs` (= `textPrefs` + `simplePrefs`, `:643`) + special key `"pin"` |
-| 0x03 `PREF_OP_SYNC` | `[05][03]` | `[count][index…]` for every `simplePrefs` entry whose value ≠ default. Never contains index 3 (§8) | `simplePrefs` (`:704`) |
+| 0x01 `PREF_OP_READ` | `[05][01][key\0]` (≥4 B) | `[type][value bytes]` | `simplePrefs` only |
+| 0x02 `PREF_OP_WRITE` | `[05][02][type][key\0][value bytes]` (≥5 B) | — | `allPrefs` (= `textPrefs` + `simplePrefs`) + special key `"pin"` |
+| 0x03 `PREF_OP_SYNC` | `[05][03]` | `[count][index…]` for every `simplePrefs` entry whose value ≠ default. Never contains index 3 (§8) | `simplePrefs` |
 
 WRITE checks, in order:
 
 1. No `\0` after key → `INVALID_KEY`.
 2. Type ≠ declared type → `TYPE_MISMATCH`.
-3. **Range check (`:653-659`; with the zeet keys `:654-660` at `d01dd0f`)**,
+3. **Range check (`handlePref`, `case PREF_OP_WRITE`)**,
    before `fromBytes`, on the first value byte:
-   - index 4 (`shita`): value ≥ `numOfShitot` (`DB/Shita.h:10`, 10) → `INVALID_VALUE`;
+   - index 4 (`shita`): value ≥ `numOfShitot` (`DB/Shita.h`, 10) → `INVALID_VALUE`;
    - index 6 (`ofek`): value ≥ `numOfOfeks` (size of `places[]`, set in `initPlace`,
-     `DB/Place.cpp:115`) → `INVALID_VALUE`;
+     `DB/Place.cpp`) → `INVALID_VALUE`;
    - `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom`: value >
-     `numOfZeetCochavin` (`DB/Shita.h:12`, 28) → `INVALID_VALUE`. The upper bound is allowed
+     `numOfZeetCochavin` (`DB/Shita.h`, 28) → `INVALID_VALUE`. The upper bound is allowed
      (`>`, not `≥`), because `zeetMethod` has `numOfZeetCochavin + 1` rows (0–28). These four keys
      are identified by preference address, not by index;
    - empty value for any of these keys → `INVALID_VALUE`.
@@ -316,11 +321,13 @@ Both apply steps run inside the write callback, after the OK EVT. Each one tempo
 `currentState` to `bl.updateState`, calls the same function the menu uses, then restores
 `currentState` and redraws it. Every other key is saved only, with no apply step.
 
-| Idx | Key | Value | Function called | Source |
+The apply steps are in `handlePref`, `case PREF_OP_WRITE`, after `sendOk` (`CoreService.cpp`).
+
+| Idx | Key | Value | Function called | Defined in |
 |---|---|---|---|---|
-| 6 | `ofek` | 0 | `SetCustomState::printUpdateSucc` | `CoreService.cpp:669-678`, `OfekState.cpp:501-509` |
-| 6 | `ofek` | ≠ 0 | `SetOfekState::printUpdateSucc` | `CoreService.cpp:669-678`, `OfekState.cpp:510-519` |
-| 4 | `shita` | any (after range check) | `ShitaState::setShita` | `CoreService.cpp:679-687`, `ShitaState.cpp:36-42` |
+| 6 | `ofek` | 0 | `SetCustomState::printUpdateSucc` | `OfekState.cpp` |
+| 6 | `ofek` | ≠ 0 | `SetOfekState::printUpdateSucc` | `OfekState.cpp` |
+| 4 | `shita` | any (after range check) | `ShitaState::setShita` | `ShitaState.cpp` |
 
 - **`ofek` = 0 ("apply custom place"):** success message, `globalchangedOfek = false`,
   `initPlace()`, `ofek = 0`, `bl.configStates()`, `updateDayValues = true`. This is the last
@@ -340,7 +347,7 @@ Both apply steps run inside the write callback, after the OK EVT. Each one tempo
 Note: textInput keys are writable through `PREF_OP_WRITE` (they are in `allPrefs`) but are not
 readable through `PREF_OP_READ` and all share index 0.
 
-#### Type codes (`CoreProtocol.h:209-214`)
+#### Type codes (`PREF_TYPE_*` in `CoreProtocol.h`)
 
 The wire value is `static_cast<uint8_t>(PreferenceType)` from Arduino `Preferences.h`
 (`PT_I8, PT_U8, PT_I16, PT_U16, PT_I32, PT_U32, PT_I64, PT_U64, PT_STR, PT_BLOB` = 0..9).
@@ -355,8 +362,10 @@ The wire value is `static_cast<uint8_t>(PreferenceType)` from Arduino `Preferenc
 | 0x09 | `PREF_TYPE_BLOB` | `double` (`double_t`) | 8 B IEEE 754 LE | `nz_lat`, `nz_long` |
 
 **BLOB = double (verified).** `PT_BLOB` is the Arduino enum name; in this firmware it is used
-only for `UserPref<double_t>` (`UserPreferences.h:410-411, 566, 569`). Wire encoding is a raw
-`memcpy` of the 8-byte double (`toBytes` `:259-267`, `fromBytes` `:325-331`, requires ≥ 8 B),
+only for `UserPref<double_t>` (`nz_lat`, `nz_long`; production: members and constructor of
+`UserPreferences` in `UserPreferences.h`; in this repo since 2a.3.3: `PlacePrefs` in
+`DataPrefs.h` / `DataPrefs.cpp`). Wire encoding is a raw `memcpy` of the 8-byte double
+(`UserPref<T>::toBytes` / `fromBytes`, `double` branch, in `UserPreferences.h`; requires ≥ 8 B),
 little-endian on ESP32. In NVS it is stored with `putDouble`, which the framework implements as
 `putBytes` (8 B blob). This matches the app (`lib/config/core_protocol.dart:147`, 8-byte double,
 as reported by the user). Naming note only, not a Finding.
@@ -368,30 +377,31 @@ as reported by the user). Naming note only, not a Finding.
   (`codeUnits`). The same encoding is used for TEXT domain strings (§6.3). App-side maximum:
   70 characters. (App source as reported by the user.) The firmware stores and returns the bytes
   as-is; the display maps them to Hebrew glyphs. The default `textPlace` value `"whaht otwun"`
-  is in this encoding. The comment "UTF-8" at `CoreProtocol.h:213` does not describe the actual
-  encoding.
+  is in this encoding. The comment "UTF-8" on `PREF_TYPE_STR` in `CoreProtocol.h` does not describe
+  the actual encoding.
 - **Only `SYS_OP_SET_NAME` is UTF-8** (app: `utf8.encode`; firmware validates length in bytes,
   §6.6).
 - **Terminator:** `PREF_OP_READ` returns the string bytes **plus a trailing `0x00`**
-  (`toBytes`, `UserPreferences.h:268-275`), contrary to the comment at `CoreProtocol.h:213`.
-  `PREF_OP_WRITE` parses the value as a C string (`:334`), i.e. up to the first `\0`. The app
+  (`UserPref<T>::toBytes`, `String` branch, `UserPreferences.h`), contrary to the comment on
+  `PREF_TYPE_STR` in `CoreProtocol.h`. `PREF_OP_WRITE` parses the value as a C string
+  (`UserPref<T>::fromBytes`, `String` branch), i.e. up to the first `\0`. The app
   truncates at the first `\0` on read and appends `\0` on write
   (`lib/services/user_preferences_service.dart`). **The format with `\0` is what both sides
   expect.** See refactor-log F4.
 
-### 6.6 SYS (0x07) — `CoreProtocol.h:277-290`, `CoreService.cpp:786-856`
+### 6.6 SYS (0x07) — `SYS_*` in `CoreProtocol.h`, `handleSys` in `CoreService.cpp`
 
 | Op | CMD | EVT | Behavior |
 |---|---|---|---|
-| 0x01 `SYS_OP_RESTART` | `[07][01]` | `[07][01][00]` | OK sent first; `esp_restart()` after 500 ms timer (`:770-781, 796-804`) |
-| 0x02 `SYS_OP_SET_NAME` | `[07][02][UTF-8 name]` | `[07][02][STATUS]` | > 24 bytes → `INVALID_VALUE`. Empty → delete NVS key, use default `"LedHaarets"`. Applies to GAP name + scan response immediately (`:810-837`) |
-| 0x03 `SYS_OP_GET_MAC` | `[07][03]` | `[07][03][00][MAC 6B]` | `esp_efuse_mac_get_default` (`:844-850`) |
+| 0x01 `SYS_OP_RESTART` | `[07][01]` | `[07][01][00]` | OK sent first; `esp_restart()` after 500 ms timer (`scheduleRestart`, `restartTimerCallback`; `case SYS_OP_RESTART`) |
+| 0x02 `SYS_OP_SET_NAME` | `[07][02][UTF-8 name]` | `[07][02][STATUS]` | > 24 bytes → `INVALID_VALUE`. Empty → delete NVS key, use default `"LedHaarets"`. Applies to GAP name + scan response immediately (`case SYS_OP_SET_NAME`, `applyDeviceName`) |
+| 0x03 `SYS_OP_GET_MAC` | `[07][03]` | `[07][03][00][MAC 6B]` | `esp_efuse_mac_get_default` (`case SYS_OP_GET_MAC`) |
 
 ## 7. Version gate
 
-`MIN_FW_MAJOR_VERSION` = 7 (`CoreProtocol.h:27`): documented as "a clock with major < 7 must
+`MIN_FW_MAJOR_VERSION` = 7 (`CoreProtocol.h`): documented as "a clock with major < 7 must
 be OTA-updated before use". The firmware itself does not reference it; it is a constant shared
-with the app. Protocol version per comment: 1.1 (`CoreProtocol.h:19`).
+with the app. Protocol version per comment: 1.1 (header comment of `CoreProtocol.h`).
 
 ## 8. Preference indexes
 
@@ -399,110 +409,111 @@ Indexes are returned by `PREF_OP_SYNC`, and the app maps them to keys. Keys and 
 also the NVS keys in namespace `clk` (NVS contract: not written yet).
 
 **Firmware defaults are part of the contract.** `PREF_OP_SYNC` returns only the indexes whose
-value differs from the *firmware* default (`CoreService.cpp:704-708`, `_hasChangedFromDefault`
-`UserPreferences.h:214-217`). For every index not returned, the app assumes its *own* default.
+value differs from the *firmware* default (`handlePref`, `case PREF_OP_SYNC`, `CoreService.cpp`;
+`UserPref<T>::_hasChangedFromDefault`, `UserPreferences.h`). For every index not returned, the app assumes its *own* default.
 Changing a firmware default therefore changes what the app displays for clocks still at
 default, and any mismatch between app and firmware defaults is visible to the user.
 Known mismatches: refactor-log F9 (marked † in the table below).
 
 **Index 3 is not used.** SYNC returns `getIndex()` of the `simplePrefs` entries only
-(`CoreService.cpp:709-712` at `d01dd0f`), and no entry has index 3. Clocks may still hold the key
+(`handlePref`, `case PREF_OP_SYNC`), and no entry has index 3. Clocks may still hold the key
 `dayIndex` in `clk` as an orphan NVS entry; nothing reads it.
 
-Declarations: `UserPreferences.h` constructor, JC6416/JC4020 lines 487–846, JC6432 lines 490–856.
-JC4020 `UserPreferences.h` is byte-identical to JC6416. The `UserPref` template (lines 1–345,
-load/save/toBytes/fromBytes) is identical in all three.
+Declarations: one initializer per key (key, default, type, index). Production: the
+`UserPreferences` constructor in `UserPreferences.h`. In this repo since 2a.3.3: the constructors
+of the layer objects (`Preferences/<Layer>.cpp`, e.g. `PlacePrefs::PlacePrefs` in
+`DataPrefs.cpp`); the list order is the registry constructor (`UserPreferences::UserPreferences`
+in `UserPreferences.cpp`). JC4020 `UserPreferences.h` is byte-identical to JC6416. The `UserPref`
+template (load/save/toBytes/fromBytes) is identical in all three.
 
 `textInput1`..`textInput50`: type STR, default `""`, index **0** (all), in `textPrefs` only, not
-reported by SYNC (JC6416 `:488-537`).
+reported by SYNC.
 
-| Idx | Key | Type | Default JC6416 / JC4020 | Default JC6432 | Line 6416/4020 | Line 6432 |
-|---|---|---|---|---|---|---|
-| 1 | forceWrite | U8 | 0 | 0 | 487 | 490 |
-| 2 | textPlace | STR | `"whaht otwun"` | same | 539 | 542 |
-| 3 | — (gap. READ / WRITE look up by key, and the key `dayIndex` is in neither `simplePrefs` nor `allPrefs`, so both return `INVALID_KEY`: `CoreService.cpp:581` / `:697` at `d01dd0f`. SYNC never returns 3, see above) | — | — | — | — | — |
-| 4 | shita | U8 | 0 | 0 | 545 | 548 |
-| 5 | eda | U8 | 1 | 1 | 555 | 558 |
-| 6 | ofek | U8 | 1 | 1 | 563 | 566 |
-| 7 | nz_lat | BLOB (double) | 32.07 | 32.07 | 566 | 569 |
-| 8 | nz_long | BLOB (double) | 34.78 | 34.78 | 569 | 572 |
-| 9 | nz_height | I16 | 20 | 20 | 572 | 575 |
-| 10 | nz_hul | U8 | 0 | 0 | 575 | 578 |
-| 11 | timezone | I8 | 2 | 2 | 580 | 583 |
-| 12 | brightness | U8 | 200 | 200 | 583 | 586 |
-| 13 | safa | U8 | 1 | 1 | 586 | 589 |
-| 14 | colorUp | U8 | 1 | 1 | 590 | 593 |
-| 15 | colorMiddle | U8 | 6 | 6 | 593 | 596 |
-| 16 | colorBottomT | U8 | 1 | 1 | 596 | 599 |
-| 17 | colorBottomV | U8 | 6 | 6 | 599 | 602 |
-| 18 † | colorYom | U8 | 6 | **1** | 602 | 605 |
-| 19 † | colorParasha | U8 | 6 | **1** | 605 | 608 |
-| 20 | colorIluy | U8 | 6 | 6 | 608 | 611 |
-| 21 | clockFont | U8 | 0 | 0 | 611 | 614 |
-| 22 | dateFormat | U8 | 1 | 1 | 614 | 617 |
-| 23 | clockFormat | U8 | 24 | 24 | 624 | 627 |
-| 24 | timeFormat | U8 | 0 | 0 | 628 | 631 |
-| 25 | shaonKaiz | U8 | 1 | 1 | 631 | 634 |
-| 26 | middleLine | U8 | 1 | 1 | 636 | 639 |
-| 27 | upLine | U8 | 1 | 1 | 640 | 643 |
-| 28 | zriha | U8 | 2 | 2 | 645 | 648 |
-| 29 | shkiaa | U8 | 3 | 3 | 650 | 653 |
-| 30 | rabenuTam | U8 | 20 | 20 | 655 | 658 |
-| 31 | zeetCochavim | U8 | 8 | 8 | 658 | 661 |
-| 32 | zmanTalit | U8 | 4 | 4 | 661 | 664 |
-| 33 | alotHashahar | U8 | 4 | 4 | 664 | 667 |
-| 34 | minhaG | U8 | 3 | 3 | 667 | 670 |
-| 35 | sozksMga | U8 | 1 | 1 | 670 | 673 |
-| 36 | soztMga | U8 | 1 | 1 | 673 | 676 |
-| 37 | plagMinha | U8 | 1 | 1 | 676 | 679 |
-| 38 | zeetShabat | U8 | 16 | 16 | 679 | 682 |
-| 39 | zeetZom | U8 | 14 | 14 | 682 | 685 |
-| 40 | nerot | U8 | 22 | 22 | 685 | 688 |
-| 41 | homa | U8 | 0 | 0 | 689 | 692 |
-| 42 | hul | U8 | 0 | 0 | 693 | 696 |
-| 43 | leil | U8 | 1 | 1 | 697 | 700 |
-| 44 | netzClk | U8 | 0 | 0 | 702 | 705 |
-| 45 | shanim | U8 | 0 | 0 | 706 | 709 |
-| 46 | interval | U16 | 30 | 30 | 711 | 714 |
-| 47 | intervalIluy | U16 | 30 | 30 | 716 | 719 |
-| 48 | intervalTime | U16 | 30 | 30 | 721 | 724 |
-| 49 | intervalInfo | U16 | 30 | 30 | 726 | 729 |
-| 50 | dafHayomi | U8 | 1 | 1 | 731 | 734 |
-| 51 | yerushalmi | U8 | 0 | 0 | 734 | 737 |
-| 52 | yom | U8 | 0 | 0 | 737 | 740 |
-| 53 | parasha | U8 | 0 | 0 | 740 | 743 |
-| 54 | haftara | U8 | 1 | 1 | 743 | 746 |
-| 55 | ivri | U8 | 0 | 0 | 746 | 749 |
-| 56 | loazi | U8 | 0 | 0 | 749 | 752 |
-| 57 | tfila | U8 | 1 | 1 | 752 | 755 |
-| 58 | moadim | U8 | 1 | 1 | 755 | 758 |
-| 59 | showIsraeli | U8 | 1 | 1 | 758 | 761 |
-| 60 | TAZ | U8 | 1 | 1 | 761 | 764 |
-| 61 | SOZT | U8 | 1 | 1 | 767 | 770 |
-| 62 | SOZKS | U8 | 1 | 1 | 773 | 776 |
-| 63 | HMM | U8 | 1 | 1 | 779 | 782 |
-| 64 | PSZ | U8 | 1 | 1 | 785 | 788 |
-| 65 | HAZ | U8 | 1 | 1 | 791 | 794 |
-| 66 | ZSZ1 | U8 | 1 | 1 | 797 | 800 |
-| 67 | ZSZ | U8 | 1 | 1 | 804 | 807 |
-| 68 | ZYS | U8 | 3 | 3 | 811 | 814 |
-| 69 | ZPS | U8 | 0 | 0 | 818 | 821 |
-| 70 | IPO | U8 | 2 | 2 | 825 | 828 |
-| 71 | IORT | U8 | 2 | 2 | 832 | 835 |
-| 72 | colorIvri | U8 | 6 | 6 | — | 842 |
-| 73 | colorLoazi | U8 | 1 | 1 | — | 845 |
-| 74 | colorParashaV | U8 | 6 | 6 | — | 848 |
-| 75 | screen | U8 | 2 | 2 | — | 851 |
-| 76 | bt | U8 | 1 | 1 | — | 856 |
-
-Rows 72–76 have no line in the base commit for JC6416 / JC4020.
+| Idx | Key | Type | Default JC6416 / JC4020 | Default JC6432 |
+|---|---|---|---|---|
+| 1 | forceWrite | U8 | 0 | 0 |
+| 2 | textPlace | STR | `"whaht otwun"` | same |
+| 3 | — (gap. READ / WRITE look up by key, and the key `dayIndex` is in neither `simplePrefs` nor `allPrefs`, so both return `INVALID_KEY` (`handlePref`, `case PREF_OP_READ` / `case PREF_OP_WRITE`). SYNC never returns 3, see above) | — | — | — |
+| 4 | shita | U8 | 0 | 0 |
+| 5 | eda | U8 | 1 | 1 |
+| 6 | ofek | U8 | 1 | 1 |
+| 7 | nz_lat | BLOB (double) | 32.07 | 32.07 |
+| 8 | nz_long | BLOB (double) | 34.78 | 34.78 |
+| 9 | nz_height | I16 | 20 | 20 |
+| 10 | nz_hul | U8 | 0 | 0 |
+| 11 | timezone | I8 | 2 | 2 |
+| 12 | brightness | U8 | 200 | 200 |
+| 13 | safa | U8 | 1 | 1 |
+| 14 | colorUp | U8 | 1 | 1 |
+| 15 | colorMiddle | U8 | 6 | 6 |
+| 16 | colorBottomT | U8 | 1 | 1 |
+| 17 | colorBottomV | U8 | 6 | 6 |
+| 18 † | colorYom | U8 | 6 | **1** |
+| 19 † | colorParasha | U8 | 6 | **1** |
+| 20 | colorIluy | U8 | 6 | 6 |
+| 21 | clockFont | U8 | 0 | 0 |
+| 22 | dateFormat | U8 | 1 | 1 |
+| 23 | clockFormat | U8 | 24 | 24 |
+| 24 | timeFormat | U8 | 0 | 0 |
+| 25 | shaonKaiz | U8 | 1 | 1 |
+| 26 | middleLine | U8 | 1 | 1 |
+| 27 | upLine | U8 | 1 | 1 |
+| 28 | zriha | U8 | 2 | 2 |
+| 29 | shkiaa | U8 | 3 | 3 |
+| 30 | rabenuTam | U8 | 20 | 20 |
+| 31 | zeetCochavim | U8 | 8 | 8 |
+| 32 | zmanTalit | U8 | 4 | 4 |
+| 33 | alotHashahar | U8 | 4 | 4 |
+| 34 | minhaG | U8 | 3 | 3 |
+| 35 | sozksMga | U8 | 1 | 1 |
+| 36 | soztMga | U8 | 1 | 1 |
+| 37 | plagMinha | U8 | 1 | 1 |
+| 38 | zeetShabat | U8 | 16 | 16 |
+| 39 | zeetZom | U8 | 14 | 14 |
+| 40 | nerot | U8 | 22 | 22 |
+| 41 | homa | U8 | 0 | 0 |
+| 42 | hul | U8 | 0 | 0 |
+| 43 | leil | U8 | 1 | 1 |
+| 44 | netzClk | U8 | 0 | 0 |
+| 45 | shanim | U8 | 0 | 0 |
+| 46 | interval | U16 | 30 | 30 |
+| 47 | intervalIluy | U16 | 30 | 30 |
+| 48 | intervalTime | U16 | 30 | 30 |
+| 49 | intervalInfo | U16 | 30 | 30 |
+| 50 | dafHayomi | U8 | 1 | 1 |
+| 51 | yerushalmi | U8 | 0 | 0 |
+| 52 | yom | U8 | 0 | 0 |
+| 53 | parasha | U8 | 0 | 0 |
+| 54 | haftara | U8 | 1 | 1 |
+| 55 | ivri | U8 | 0 | 0 |
+| 56 | loazi | U8 | 0 | 0 |
+| 57 | tfila | U8 | 1 | 1 |
+| 58 | moadim | U8 | 1 | 1 |
+| 59 | showIsraeli | U8 | 1 | 1 |
+| 60 | TAZ | U8 | 1 | 1 |
+| 61 | SOZT | U8 | 1 | 1 |
+| 62 | SOZKS | U8 | 1 | 1 |
+| 63 | HMM | U8 | 1 | 1 |
+| 64 | PSZ | U8 | 1 | 1 |
+| 65 | HAZ | U8 | 1 | 1 |
+| 66 | ZSZ1 | U8 | 1 | 1 |
+| 67 | ZSZ | U8 | 1 | 1 |
+| 68 | ZYS | U8 | 3 | 3 |
+| 69 | ZPS | U8 | 0 | 0 |
+| 70 | IPO | U8 | 2 | 2 |
+| 71 | IORT | U8 | 2 | 2 |
+| 72 | colorIvri | U8 | 6 | 6 |
+| 73 | colorLoazi | U8 | 1 | 1 |
+| 74 | colorParashaV | U8 | 6 | 6 |
+| 75 | screen | U8 | 2 | 2 |
+| 76 | bt | U8 | 1 | 1 |
 
 - Same keys, types and indexes in all three models: 75 `simplePrefs` entries, highest index 76.
   Snapshot of the table as the code builds it: `docs/contracts/prefs/<model>.txt`
   (`tools/prefs_contract.py`).
 - Defaults that differ per model: `colorYom` and `colorParasha` (†).
 - `screen` has a different meaning per model: JC6416 / JC4020 1–4 = layout variants (no consumer on
-  these models); JC6432 1 = Big, 2 = Small (`:852-854`).
+  these models); JC6432 1 = Big, 2 = Small (comment after the `screen` initializer).
 - `colorIvri`, `colorLoazi`, `colorParashaV` are read only on JC6432; on JC6416 / JC4020 they are in
   the table, with no consumer.
 - Per the app source (`lib/config/preference_constants.dart`, as reported by the user) the app's
