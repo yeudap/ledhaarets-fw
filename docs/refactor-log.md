@@ -1327,9 +1327,8 @@ Nothing planned.
 
 ## Findings
 
-Line numbers in F1–F9 refer to commit `e9c7639`; in F10–F18, to commit `dcd2cdb` (7.07); from
-F19 on, to commit `d01dd0f` (7.08).
-Status updates inside older findings use `dcd2cdb` line numbers and say so.
+References are by file and symbol (`src/` = `JC6416/src/` unless a model is named). Line numbers
+remain only in references to the app source (as reported by the user).
 Only findings that describe the current state are kept (open, accepted, intentional, won't fix,
 documentation only). Fixed findings were removed; their text is in git at `707d5d2`. Numbers are
 not reused.
@@ -1337,19 +1336,20 @@ not reused.
 ### F3 — JC4020: TEXT write and display over BLE are disabled
 
 - **Where:** `JC4020/src/BLE/TextCommandHandler.cpp`
-  - `handleWriteText` (`:63`) — body commented out; always returns `ERR_INVALID_INDEX`.
-  - `handleDisplayText` (`:138`) — the `if` is commented out but its block remains, so it
+  - `handleWriteText` — body commented out; always returns `ERR_INVALID_INDEX`.
+  - `handleDisplayText` — the `if` is commented out but its block remains, so it
     always returns `ERR_INVALID_INDEX`; the `try` block below is unreachable.
-  - `handleDeleteText` — `numOfValidTexts` refresh commented out (`:126`).
+  - `handleDeleteText` — `numOfValidTexts` refresh commented out.
 - **What:** JC6416 and JC6432 (identical file) implement these operations; JC4020 rejects them.
   Likely intentional (no free-text display on JC4020), but it is a per-model difference in
   BLE behavior for `TEXT_OP_WRITE` / `TEXT_OP_DISPLAY`.
-- **Also:** `JC4020/src/States/States.h:28` sets `numOfNameSets = 0` (JC6416/JC6432: 50), so on
+- **Also:** `JC4020/src/States/States.h` sets `numOfNameSets = 0` (JC6416/JC6432: 50), so on
   JC4020 every index is invalid: READ, DELETE and SWAP also return `INVALID_INDEX`, and COUNT
   returns 0. The commented-out code in write/display does not change the wire behavior.
 - **Models:** JC4020 differs; JC6416 and JC6432 are identical.
-- **Also (JC4020):** the settings menu without `resetText` (`src/States/ConfigState.cpp:23`, `:26`
-  at Sync 5) is intentional: JC4020 has no texts.
+- **Also (JC4020):** the settings menu without `resetText` (`ResetPrefState::showStateScreen`,
+  `ResetPassState::showStateScreen` in `JC4020/src/States/ConfigState.cpp`) is intentional: JC4020
+  has no texts.
 - **Status:** closed as a finding (owner's decision); moved to the refactor plan
   (`docs/architecture/models-plan.md` §6). Goal: the BLE layer is the same in all three models,
   and the decision whether to accept texts moves to the logic layer when logic is separated from
@@ -1358,10 +1358,11 @@ not reused.
 
 ### F4 — PREF STR value: READ returns a trailing `\0`, protocol comment says it doesn't
 
-- **Where:** `src/Preferences/UserPreferences.h:268-275` (`toBytes` appends `0`) vs.
-  `src/BLE/CoreProtocol.h:213` ("ללא null terminator בערך עצמו").
+- **Where:** `UserPref<T>::toBytes`, `String` branch, in `src/Preferences/UserPreferences.h`
+  (appends `0`) vs. the comment on `PREF_TYPE_STR` in `src/BLE/CoreProtocol.h` ("ללא null
+  terminator בערך עצמו").
 - **What:** `PREF_OP_READ` for a STR key (`textPlace`) returns `[type][bytes…][0x00]`.
-  `PREF_OP_WRITE` parses the value as a C string (`UserPreferences.h:334`).
+  `PREF_OP_WRITE` parses the value as a C string (`UserPref<T>::fromBytes`, `String` branch).
 - **Impact:** comment-only mismatch. The app truncates at the first `\0` on read and appends
   `\0` on write (`lib/services/user_preferences_service.dart`, as reported by the user), so the
   format with `\0` is what both sides expect and is the contract. The same comment also says
@@ -1372,7 +1373,7 @@ not reused.
 
 ### F5 — OTA service is not behind the Core auth gate
 
-- **Where:** gate in `src/BLE/CoreService.cpp:867-873` applies only to the Core CMD
+- **Where:** the gate in `CoreCallbacks::onWrite` (`src/BLE/CoreService.cpp`) applies only to the Core CMD
   characteristic. `src/BLE/FirmwareService.cpp` and `src/BLE/OtaProtocol.cpp` do not reference
   `authManager`.
 - **Impact:** a connected client can run OTA without HELLO/PIN. Recorded for awareness;
@@ -1383,27 +1384,31 @@ not reused.
 
 ### F6 — `MENU_OP_GOTO` accepts undefined menu codes
 
-- **Where:** `src/BLE/CoreService.cpp:242-253`
-- **What:** the comment at `:244` says undefined values are rejected, but only `0` (NONE) is.
+- **Where:** `handleMenu` (`src/BLE/CoreService.cpp`), the validity check after the cast to
+  `MenuCommand`.
+- **What:** the comment above that check says undefined values are rejected, but only `0` (NONE) is.
   Any other byte is cast to `MenuCommand` and acknowledged with OK.
 - **Status:** documentation only (owner's decision). An undefined code is cast and acknowledged;
-  `Logic::goToMenuCommand` returns `&mainState` in its `default` branch (`src/Logic.cpp:961`
-  JC6416, `:953` JC4020, `:994` JC6432, at Sync 5), so the clock returns to the home screen.
+  `Logic::goToMenuCommand` (`src/Logic.cpp`, all three models) returns `&mainState` in its
+  `default` branch, so the clock returns to the home screen.
 - **Models:** same in all three.
 
 ### F7 — `SYS_ERR_NAME_TOO_LONG` is defined but never sent
 
-- **Where:** defined `src/BLE/CoreProtocol.h:284`; `SYS_OP_SET_NAME` over 24 bytes returns
-  `CORE_ERR_INVALID_VALUE` (0x05) instead (`src/BLE/CoreService.cpp:795-798`).
+- **Where:** defined in `src/BLE/CoreProtocol.h`; `SYS_OP_SET_NAME` over 24 bytes returns
+  `CORE_ERR_INVALID_VALUE` (0x05) instead (`handleSys`, `case SYS_OP_SET_NAME`,
+  `src/BLE/CoreService.cpp`).
 - **Impact:** the app sees 0x05. The 0x05 response is the contract.
 - **Models:** same in all three.
 - **Status:** documentation only (owner's decision). 0x05 is the contract. Closed.
 
 ### F9 — Preference defaults differ between the app and the firmware
 
-- **Where (firmware):** `src/Preferences/UserPreferences.h`
-  - `colorYom` (18): JC6416 / JC4020 `6` (`:602`); JC6432 `1` (`:605`).
-  - `colorParasha` (19): JC6416 / JC4020 `6` (`:605`); JC6432 `1` (`:608`).
+- **Where (firmware):** the `colorYom` and `colorParasha` initializers (production: the
+  `UserPreferences` constructor in `src/Preferences/UserPreferences.h`; in this repo since 2a.3.3:
+  `DisplayPrefs::DisplayPrefs` in `src/Preferences/DisplayPrefs.cpp`)
+  - `colorYom` (18): JC6416 / JC4020 `6`; JC6432 `1`.
+  - `colorParasha` (19): JC6416 / JC4020 `6`; JC6432 `1`.
 - **Where (app, as reported by the user):** `lib/config/preference_constants.dart`,
   `lib/models/app_preferences.dart:90`, `lib/providers/ble/ble_preferences_mixin.dart:154-180`.
   App defaults: `colorYom` = 6, `colorParasha` = 6.
@@ -1418,13 +1423,14 @@ not reused.
 
 ### F10 — Selecting a city overwrites `nz_hul`
 
-- **Where:** `src/States/OfekState.cpp:510-519` (`SetOfekState::printUpdateSucc`), lines `:516-517`.
-  Called from the menu (`SetOfekState::okAction`, `:67-71`) and from BLE `PREF_OP_WRITE ofek` ≠ 0
-  (`src/BLE/CoreService.cpp:669-678`).
+- **Where:** `SetOfekState::printUpdateSucc` (`src/States/OfekState.cpp`), the writes of `nz_hul`
+  and `hul`. Called from the menu (`SetOfekState::okAction`) and from BLE `PREF_OP_WRITE ofek` ≠ 0
+  (`handlePref`, `case PREF_OP_WRITE`, `src/BLE/CoreService.cpp`).
 - **What:** the function writes `nz_hul` (and `hul`) from `places[ofek].hul` of the selected
   city. Afterwards, when the user goes back to the custom place (`ofek` = 0), `nz_hul`
   still holds the city's value, not the value the custom place had before.
-- **Impact:** `nz_hul` selects the DST rules (`src/DB/DayInfo.cpp:198-199`, Israel or USA) and
+- **Impact:** `nz_hul` selects the DST rules (`DayInfo::setShaonKaitzHoref`, `src/DB/DayInfo.cpp`,
+  Israel or USA) and
   `zmanTalit` in `myZmanim::setDefault` (F15).
 - **Status:** intentional. `nz_hul` is the Israel/abroad flag of the *active* place, and selecting
   a city sets it, even at the expense of the custom place's value. Closed.
@@ -1433,15 +1439,17 @@ not reused.
 ### F11 — A rollback below 7.05 with a new `shita` or zeet value stored
 
 - **What:** `numOfShitot` is 10 (`shita` 0–9: `myZmanim` = 8, `pozen` = 9) and
-  `numOfZeetCochavin` 28 (`zeetMethod` rows 0–28; method 28 = 7.08°) (`src/DB/Shita.h:10,
-  12-13`). Firmware below 7.05 has 8 and 27. The arrays are indexed with the stored value without
-  a check:
-  - `shitot[userPreferences.shita]` in `DayInfo::initDay` (`src/DB/DayInfo.cpp:20`), at every day
-    calculation including boot. Also `src/States/MinhagState.cpp:309-642` (10 places) and
-    `src/States/ShitaState.cpp:38`.
-  - `zeetMethod[...]` in the menu states (`src/States/MinhagState.cpp:310, 347, 606, 643`), with
-    the temp value taken from `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom`
-    (`src/Logic.cpp:68-77`, `MinhagState.cpp:315, 352, 611, 648`). The same list serves all four
+  `numOfZeetCochavin` 28 (`zeetMethod` rows 0–28; method 28 = 7.08°) (`numOfShitot`,
+  `numOfZeetCochavin`, `zeetMethod` in `src/DB/Shita.h`). Firmware below 7.05 has 8 and 27. The
+  arrays are indexed with the stored value without a check:
+  - `shitot[userPreferences.shita]` in `DayInfo::initDay` (`src/DB/DayInfo.cpp`), at every day
+    calculation including boot. Also in the `showStateScreen` of the ten method menu states in
+    `src/States/MinhagState.cpp` (`SetZeetCochavimState` … `SetZeetZomState`) and in
+    `ShitaState::setShita` (`src/States/ShitaState.cpp`).
+  - `zeetMethod[...]` in the menu states (`showStateScreen` of `SetZeetCochavimState`,
+    `SetRabenuTamState`, `SetZeetShabatState`, `SetZeetZomState`), with the temp value taken from
+    `zeetCochavim`, `rabenuTam`, `zeetShabat`, `zeetZom` (`Logic::configStates`, and the
+    `menuAction` of the same four states). The same list serves all four
     keys. The calculation itself (`Shita::zeetCochavimMethods`) is a `switch` with a `default`
     branch and does not index the array.
 - **Risk:** rolling back to firmware below 7.05 with a new value already stored: `shitot[8]` /
@@ -1457,13 +1465,13 @@ not reused.
 
 ### F15 — `zmanTalit` is not updated after selecting a city
 
-- **Where:** `src/DB/Shita.cpp:421-422` (`myZmanim::setDefault`, `:415-430`);
-  `src/States/OfekState.cpp:510-519` (`SetOfekState::printUpdateSucc`).
+- **Where:** `myZmanim::setDefault` (`src/DB/Shita.cpp`), the choice of `zmanTalit`;
+  `SetOfekState::printUpdateSucc` (`src/States/OfekState.cpp`).
 - **What:** `myZmanim::setDefault` picks `zmanTalit` by `nz_hul`: 7 (10.2°) when `nz_hul` = 1,
   otherwise 10 (11.5°). Selecting a city changes `nz_hul` (F10), but the shita's `setDefault`
   does not run again, so `zmanTalit` stays as computed for the previous `nz_hul`.
-- **Order in `SetOfekState::printUpdateSucc`:** success message; `nerot`, `homa` from the city
-  (`:513-514`); `initPlace()` (`:515`); `nz_hul`, `hul` from the city (`:516-517`);
+- **Order in `SetOfekState::printUpdateSucc`:** success message; `nerot`, `homa` from the city;
+  `initPlace()`; `nz_hul`, `hul` from the city;
   `configStates()`; `updateDayValues`. So `initPlace()` builds `places[0]` with the *previous*
   `nz_hul`. No effect when `ofek` ≠ 0, because `place` points to `places[ofek]`, not `places[0]`.
 - **Status:** won't fix (owner's decision: keep as is). Closed.
@@ -1471,29 +1479,30 @@ not reused.
 
 ### F18 — `SetTimeFormat`: self-assignment in `menuAction` and `okAction`
 
-- **Where:** `src/States/SetClockState.cpp:229` (`menuAction`) and `:243` (`okAction`)
-  (`dcd2cdb`; `:230` / `:244` after 2a.2.2).
+- **Where:** `SetTimeFormat::menuAction` and `SetTimeFormat::okAction`
+  (`src/States/SetClockState.cpp`).
 - **What:** both assign `timeFormat` to itself. Both sides are `UserPref<uint8_t>`, so overload
   resolution picks the implicit copy assignment, not `UserPref::operator=(T)`
-  (`src/Preferences/UserPreferences.h:86`): a memberwise self-copy, no write to NVS. The actual
-  write happens immediately in `upAction` / `downAction` (`:233-234`, `:238-239`), unlike the
+  (`src/Preferences/UserPreferences.h`): a memberwise self-copy, no write to NVS. The actual
+  write happens immediately in `SetTimeFormat::upAction` / `downAction`, unlike the
   other menu states, which edit a temp value and write it in `okAction`.
 - **Impact:** none on behavior. The two lines are no-ops; the menu writes `timeFormat` to NVS on
   every up/down press.
 - **Status:** documentation only (owner's decision). No code change.
-- **Models:** same in all three (JC6416 / JC4020 `:229`, `:243`; JC6432 `:230`, `:244`).
+- **Models:** same in all three.
 
-### F20 — Layer view files are LF in the working copy
+### F20 — Layer files are LF in the working copy
 
-- **What:** the 7 view files under `src/Preferences/` (`DataPrefs.h` … `PrefsViews.cpp`) are LF in
-  the working copy, in all three models. All other
+- **What:** the layer files under `src/Preferences/` are LF in the working copy, in all three
+  models: the six layer headers (`DataPrefs.h` … `UserContent.h`) and, since 2a.3.3, their six
+  `.cpp` files (`PrefsViews.cpp`, LF too, was deleted in 2a.3.3). All other
   source files are CRLF in the working copy (`core.autocrlf=true`; the index is LF for all). The
   editor tool writes
   LF, and the files have not been checked out since they were created.
 - **Impact:** none on the build or the image. Git warns "LF will be replaced by CRLF the next time
   Git touches it".
 - **Status:** closed, no action needed (owner's decision) — working copy only; the index is LF for all files, and a fresh
-  checkout makes the views CRLF like the rest.
+  checkout makes them CRLF like the rest.
 - **Models:** JC6416, JC4020, JC6432.
 
 ### F22 — `fromBytes<String>` is not bounded by the value length
@@ -1503,7 +1512,7 @@ scope).
 
 ### F23 — `stamp_app_desc.py`: two docstring lines joined
 
-- **Where:** `stamp_app_desc.py:12` (all three models).
+- **Where:** the module docstring of `stamp_app_desc.py` (all three models).
 - **What:** the docstring text that dropped `HARDWARE_VERSION` joined two lines without a space: "…מזהה בוודאותדגם וגרסה — …"
   (should be "בוודאות" + newline + "דגם וגרסה").
 - **Impact:** none. Docstring only; the script and the image are not affected.
