@@ -7,14 +7,14 @@ extern UserPreferences userPreferences;
 
 // ---------------------------------------------------------------------------
 // SystemPrefs: העדפות שכבת המערכת
-// חלון (הפניות) לשדות הקיימים ב-userPreferences.
+// הבעלים של ההעדפות (UserPref) של השכבה; ההגדרות ב-SystemPrefs.cpp.
 // ---------------------------------------------------------------------------
 struct SystemPrefs
 {
-    UserPref<uint8_t> &bt;
+    UserPref<uint8_t> bt;
+    SystemPrefs();
 };
 
-inline constexpr SystemPrefs systemPrefs{
-    userPreferences.bt};
+extern SystemPrefs systemPrefs;
 
 #endif
