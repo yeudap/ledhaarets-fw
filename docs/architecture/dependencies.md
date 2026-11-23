@@ -7,7 +7,7 @@
 
 ## 1. בסיס ושיטה
 
-**בסיס:** פרויקט `JC6416`, העץ `src/` הנוכחי (הגישה להעדפות עוברת דרך ה-views). הבלוקים שנוצרים בכלי (§4, §9, נספח A) עדכניים (`gen_deps_doc.py check`), וכך גם המספרים של ה-views ב-§5.6. שאר מספרי השורות במסמך לפי `7b60c79`. הספירה נעשתה בכלי [tools/count_deps.py](../../tools/count_deps.py). הבדלים ב-JC4020 וב-JC6432 מופיעים רק כהערות, בסעיף 10.
+**בסיס:** פרויקט `JC6416`, העץ `src/` הנוכחי (הגישה להעדפות עוברת דרך אובייקטי השכבות). הבלוקים שנוצרים בכלי (§4, §9, נספח A) עדכניים (`gen_deps_doc.py check`), וכך גם המספרים של השכבות ב-§5.6. ההפניות לקוד הן לפי קובץ וסמל. מספרי שורות מופיעים רק בבלוק שנוצר ב-§9 (פלט הכלי, לפי העץ הנוכחי). הספירה נעשתה בכלי [tools/count_deps.py](../../tools/count_deps.py). הבדלים ב-JC4020 וב-JC6432 מופיעים רק כהערות, בסעיף 10.
 
 ### יחידה
 
@@ -19,7 +19,7 @@
 - `Screens/Screens.h` ו-`States/States.h` הן כותרות משותפות שמצהירות על כל המחלקות. כל `.cpp` תחתיהן הוא תת-יחידה נפרדת. הכותרת עצמה מופיעה כיחידה בשם `Screens/Screens.h` או `States/States.h`.
 - `States/State` (מחלקת הבסיס) ו-`States/Digit` הן יחידות רגילות.
 - `DB/DataBase/*` (101 טבלאות) ו-`Fonts/*` (25 קבצים) הן יחידות נתונים בשם `DataBase` ו-`Fonts`.
-- ה-views של שלב 2a (`Preferences/SystemPrefs`, `UserContent`, `PresentationPrefs`, `DisplayPrefs`, `LogicPrefs`, `DataPrefs`) הן יחידות רגילות של `.h`/`.cpp`. מ-2a.3.3 כל אחת מהן הבעלים של ההעדפות שלה (הגלובלי וההגדרות ב-`.cpp`). `Preferences/PrefsViews` נמחק ב-2a.3.3.
+- יחידות השכבות של שלב 2a (`Preferences/SystemPrefs`, `UserContent`, `PresentationPrefs`, `DisplayPrefs`, `LogicPrefs`, `DataPrefs`) הן יחידות רגילות של `.h`/`.cpp`. מ-2a.3.3 כל אחת מהן הבעלים של ההעדפות שלה (הגלובלי וההגדרות ב-`.cpp`). `Preferences/PrefsViews` נמחק ב-2a.3.3.
 
 ### הפניה
 
@@ -40,7 +40,7 @@
   - `Logic`, הטיפוס של `bl`.
   - `States/States.h`, השדה של `MainState`.
 - קריאה למתודה נספרת ביחידה שבה המתודה ממומשת. למשל `bl.updateState.showUpdateProgress` נספר ב-`States/UpdateState`.
-- גישה דרך view של שלב 2a, למשל `dataPrefs.zmanim.shita`, נספרת **פעם אחת** ביחידת ה-view (`Preferences/DataPrefs`), והמזהה הוא השרשרת עד ההעדפה. היא לא נספרת ב-`Preferences/UserPreferences`, גם כשקוראים למתודה של ההעדפה. `userContent.textPrefs` נספר כ-`userContent`, כמו ש-`userPreferences.textPrefs` נספר כ-`userPreferences` (סוג חבר עם namespace לא נעקב).
+- גישה דרך אובייקט שכבה של שלב 2a, למשל `dataPrefs.zmanim.shita`, נספרת **פעם אחת** ביחידת השכבה (`Preferences/DataPrefs`), והמזהה הוא השרשרת עד ההעדפה. היא לא נספרת ב-`Preferences/UserPreferences`, גם כשקוראים למתודה של ההעדפה. `userContent.textPrefs` נספר כ-`userContent`, כמו ש-`userPreferences.textPrefs` נספר כ-`userPreferences` (סוג חבר עם namespace לא נעקב).
 
 ### עוצמה
 
@@ -54,12 +54,12 @@
 - התנגשויות שמות:
   - `Place::orHachaim` מול המחלקה `orHachaim`.
   - `Strings::model` ופרמטר `model` מול `Metadata::model`. Metadata נספר רק דרך `Metadata::`.
-  - השדות `place` ו-`zmanim` של `DataPrefs` (`DataPrefs.h:56-57`) מול הגלובלי `place` (`DB/Place`) והמערך `zmanim` (`DB/Shita`). מוחרג מ-2a.2.10.
+  - השדות `place` ו-`zmanim` של `DataPrefs` (`DataPrefs.h`) מול הגלובלי `place` (`DB/Place`) והמערך `zmanim` (`DB/Shita`). מוחרג מ-2a.2.10.
 - פונקציות עזר ב-`.cpp` שאף כותרת לא מצהירה עליהן נחשבות פנימיות לקובץ. דוגמאות: `getZriha()` ב-`MinhagState.cpp`, `loaziStr()` ב-`SetTochenTimeState.cpp`.
 
 ### מגבלות ידועות של הכלי (לא הוחרגו)
 
-- **includes בסוגריים משולשים** (`#include <States/States.h>`) לא מזוהים. שניים כאלה רלוונטיים (`UserPreferences.cpp:3`, `Bluetooth.cpp:5`). הם מופיעים ביד ב-§9, ולא בנספח.
+- **includes בסוגריים משולשים** (`#include <States/States.h>`) לא מזוהים. שניים כאלה רלוונטיים (ב-`UserPreferences.cpp` וב-`Bluetooth.cpp`). הם מופיעים ביד ב-§9, ולא בנספח.
 
 ### אימות
 
@@ -100,11 +100,11 @@
 | 2 · זרימה | `Logic`; `States/State`; `States/States.h`; כל `States/*.cpp` חוץ מ-`Digit` ו-`UpdateState` |
 | 3 · תצוגה | `Screens/*`; `Area`; `Text`; `Colors`; `Fonts`; `States/Digit`; `States/UpdateState`; `DB/Strings` |
 | 3 · דומיין | `DB/*` חוץ מ-`Strings`; `DataBase` |
-| 4 · שירותי מערכת | `Preferences/UserPreferences`; ה-views של שלב 2a (`Preferences/SystemPrefs`, `UserContent`, `PresentationPrefs`, `DisplayPrefs`, `LogicPrefs`, `DataPrefs`); `CLK/Clock` |
+| 4 · שירותי מערכת | `Preferences/UserPreferences`; יחידות השכבות של שלב 2a (`Preferences/SystemPrefs`, `UserContent`, `PresentationPrefs`, `DisplayPrefs`, `LogicPrefs`, `DataPrefs`); `CLK/Clock` |
 | 5 · חומרה | `Display`; `Hardware.h`; `BTN/ButtonDriver`; `BTN/ButtonLH1022`; `BTN/ButtonLH0826`; `CLK/ClockDriver`; `CLK/ClockDS3231`; `CLK/ClockRV3028` |
 | תצורה | `Metadata` |
 
-ה-views נמצאים ברמה 4 יחד עם `UserPreferences`, כמו התיקייה `Preferences/`. השיוך של כל view לשכבה שלו הוא החלטה של שלב 2, ולא של המפה הזו.
+יחידות השכבות נמצאות ברמה 4 יחד עם `UserPreferences`, כמו התיקייה `Preferences/`. השיוך של כל יחידת שכבה לשכבת היעד שלה הוא החלטה של שלב 2, ולא של המפה הזו.
 
 ## 3. גרף ברמת נושא
 
@@ -960,7 +960,7 @@ flowchart LR
 - כל הקשתות מ-Screens מגיעות מ-`RegsScreen`.
 - **מה שנשאר ישיר ל-`UserPreferences`** (50): הרישום (`userPreferences.simplePrefs` / `allPrefs`, שנספרים כ-`userPreferences`; `resetSimplePrefs`, `resetTextPrefs`), הטיפוסים `UserPreferences` ו-`UserPref` (הצהרות `extern` וחתימות), ו-`setupPreferences`. אין גישה ישירה לשדה של העדפה.
 - **שכבה → `UserPreferences`** (מ-2a.3.3, כשהשכבות הן הבעלים): הטיפוס `UserPref` לכל שדה, הטיפוס `UserPreferences` וההצהרה `extern UserPreferences userPreferences;`, ו-`userPreferences.prefs` (ההפניה המקומית `prefs` בכל `.cpp`, מופע ה-`Preferences` של `clk` ששייך לרישום). ב-`UserContent` גם `UserPrefBase` ו-`userPreferences.textPrefs` (ההפניה `textPrefs` לווקטור של הרישום): 50 + 5 = 55.
-- **`UserPreferences` → שכבות** (124): שורות ה-`push_back` בבנאי הרישום (`UserPreferences.cpp`), כתובת אחת לכל העדפה של שכבה: Data 26, Logic 27, Presentation 8, Display 12, System 1, UserContent 50. זה צימוד דו-כיווני בתוך התיקייה (הרישום מחזיק את הרשימות, השכבות משתמשות בטיפוסים ובמופע `prefs` שלו); 2a.4 בונה את הרישום מחדש. בנוסף יש לרישום include ל-`States/States.h` ב-`UserPreferences.cpp:3` (סוגריים משולשים, §9).
+- **`UserPreferences` → שכבות** (124): שורות ה-`push_back` בבנאי הרישום (`UserPreferences.cpp`), כתובת אחת לכל העדפה של שכבה: Data 26, Logic 27, Presentation 8, Display 12, System 1, UserContent 50. זה צימוד דו-כיווני בתוך התיקייה (הרישום מחזיק את הרשימות, השכבות משתמשות בטיפוסים ובמופע `prefs` שלו); 2a.4 בונה את הרישום מחדש. בנוסף יש לרישום include ל-`States/States.h` ב-`UserPreferences.cpp` (סוגריים משולשים, §9).
 
 ### 5.7 `Screens/`
 
@@ -1093,7 +1093,7 @@ flowchart LR
 
 - `MAING → SETG` (30): `ColorState`, `FontState`, `SetInputText` ו-`SetTochen*` קוראים ל-`bl.mainState.*`, למשל `showStateScreen`, `stateLoop`, `timeSet*` ו-`infoSet*`.
 - `DB` כולל `Strings`, 422 מתוך 955: מסך ראשי 72, הגדרות 310, בסיס 40.
-- `Preferences` (מסך ראשי 80, הגדרות 277, בסיס 2) עובר כמעט כולו דרך ה-views. הפירוט לפי view נמצא ב-§5.6.
+- `Preferences` (מסך ראשי 80, הגדרות 277, בסיס 2) עובר כמעט כולו דרך אובייקטי השכבות. הפירוט לפי שכבה נמצא ב-§5.6.
 
 ## 6. קבוצות שקשורות חזק (ד)
 
@@ -1101,7 +1101,7 @@ flowchart LR
 
 - **חברים:** `MainState`, `MainStateInfoSets`, `MainStateTimeSets`, `Digit`, `MainScreen` ו-`Screens.h` (השדות של `MainScreen`), `DayInfo`.
 - **מה עושה:** בוחרת בכל רגע איזה מידע מוצג בשורות התחתונות ומציירת אותו.
-- **קשתות פנימיות:** `MainState*` → `mainScreen` 468, `dayInfo`/`DayInfo` 270, `Strings` 72, `Prefs` 80 (דרך views: `LogicPrefs` 64, `DataPrefs` 10, `PresentationPrefs` 5, `DisplayPrefs` 1), `Clock` 92.
+- **קשתות פנימיות:** `MainState*` → `mainScreen` 468, `dayInfo`/`DayInfo` 270, `Strings` 72, `Prefs` 80 (דרך השכבות: `LogicPrefs` 64, `DataPrefs` 10, `PresentationPrefs` 5, `DisplayPrefs` 1), `Clock` 92.
 - **קשר לאחרים:** מעט. `main` קורא ל-`setNewDay` ומפעיל את ה-loop דרך `currentState`, ומצבי ההגדרות קוראים ל-`bl.mainState.*`.
 
 **חישוב יום (דומיין).**
@@ -1167,38 +1167,38 @@ flowchart LR
 
 | # | מ- | אל | רמה → רמה | הפניות | מזהים | דוגמה |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `Logic` | `BLE/Commands` | זרימה → קלט | 34 | `MenuCommand` | `Logic.h:6`, `Logic.h:210`, `Logic.cpp:911-958` |
-| 2 | `Logic` | `BLE/TextCommandHandler` | זרימה → קלט | 1 | `handleGetTextCount` | `Logic.cpp:3`, `Logic.cpp:66` |
-| 3 | `States/SetInputText` | `BLE/TextCommandHandler` | זרימה → קלט | 6 | `getTextByIndex`, `handleDeleteText` | `SetInputText.cpp:3`, `:128-143`, `:170` |
-| 4 | `States/MainState` | `BLE/TextCommandHandler` | זרימה → קלט | 1 | `getTextByIndex` | `MainState.cpp:3`, `:146` |
-| 5 | `States/ConfigState` | `BLE/Bluetooth` | זרימה → קלט | 2 | `bleApplyState` | `ConfigState.cpp:3`, `:63-64` |
-| 6 | `States/ConfigState` | `BLE/Authmanager` | זרימה → קלט | 2 | `authManager.factoryReset` | `ConfigState.cpp:2`, `:121` (`SetResetPassState`), `:141` (`SetResetAllState`) |
-| 7 | `States/UpdateState` | `Logic` | תצוגה → זרימה | 8 | `bl.updateState`, `bl.mainState` | `UpdateState.cpp:21-61` |
-| 8 | `States/UpdateState` | `States/State` | תצוגה → זרימה | 7 | `currentState`, `State` | `UpdateState.cpp:5`, `:21`, `:43`, `:61` |
-| 9 | `States/UpdateState` | `States/States.h` | תצוגה → זרימה | 7 | `UpdateState` (המחלקה מוצהרת ב-`States.h`) | `States.h:618-628` |
-| 10 | `CLK/Clock` | `DB/Zman` | שירותי מערכת → דומיין | 17 | `Zman` | `Clock.h:6`, `:44-53` |
-| 11 | `Preferences/UserPreferences` | `States/States.h` | שירותי מערכת → זרימה | include בלבד | — | `UserPreferences.cpp:3` |
-| 12 | `Hardware.h` | `BTN/Button` | חומרה → קלט | 4 | `selectButtonDriver`, `ButtonDriverType` | `Hardware.h:5`, `:64`, `:70` |
-| 13 | `Hardware.h` | `BLE/Bluetooth` | חומרה → קלט | include בלבד | — | `Hardware.h:6` |
-| 14 | `Hardware.h` | `CLK/Clock` | חומרה → שירותי מערכת | 4 | `selectClock`, `ClockType` | `Hardware.h:7`, `:63`, `:69` |
-| 15 | `BTN/ButtonLH0826` | `BLE/Commands` | חומרה → קלט | 9 | `ButtonCommand` | `ButtonLH0826.h:11`, `ButtonLH0826.cpp:9-34` |
-| 16 | `BTN/ButtonLH1022` | `BLE/Commands` | חומרה → קלט | 8 | `ButtonCommand` | `ButtonLH1022.h:11`, `ButtonLH1022.cpp:11-23` |
-| 17 | `BTN/ButtonDriver` | `BLE/Commands` | חומרה → קלט | 1 | `ButtonCommand` | `ButtonDriver.h:4`, `:10` |
+| 1 | `Logic` | `BLE/Commands` | זרימה → קלט | 34 | `MenuCommand` | include של `BLE/Commands.h` ב-`Logic.h`; `Logic::goToMenuCommand` (`Logic.h`, `Logic.cpp`) |
+| 2 | `Logic` | `BLE/TextCommandHandler` | זרימה → קלט | 1 | `handleGetTextCount` | include ב-`Logic.cpp`; `Logic::configStates` |
+| 3 | `States/SetInputText` | `BLE/TextCommandHandler` | זרימה → קלט | 6 | `getTextByIndex`, `handleDeleteText` | include ב-`SetInputText.cpp`; `SetTohenIluyStateTextList::showStateScreen`, `removeTextByIndex` |
+| 4 | `States/MainState` | `BLE/TextCommandHandler` | זרימה → קלט | 1 | `getTextByIndex` | include ב-`MainState.cpp`; `MainState::UpdateNameSet` |
+| 5 | `States/ConfigState` | `BLE/Bluetooth` | זרימה → קלט | 2 | `bleApplyState` | include ב-`ConfigState.cpp`; `SetBTState::okAction` |
+| 6 | `States/ConfigState` | `BLE/Authmanager` | זרימה → קלט | 2 | `authManager.factoryReset` | include ב-`ConfigState.cpp`; `SetResetPassState::okAction`, `SetResetAllState::okAction` |
+| 7 | `States/UpdateState` | `Logic` | תצוגה → זרימה | 8 | `bl.updateState`, `bl.mainState` | המתודות `UpdateState::showUpdate*Screen` ב-`UpdateState.cpp` |
+| 8 | `States/UpdateState` | `States/State` | תצוגה → זרימה | 7 | `currentState`, `State` | `extern State* currentState` ב-`UpdateState.cpp`; `showUpdateStartScreen`, `showUpdateCancelledScreen`, `showUpdateFailedScreen` |
+| 9 | `States/UpdateState` | `States/States.h` | תצוגה → זרימה | 7 | `UpdateState` (המחלקה מוצהרת ב-`States.h`) | `class UpdateState` ב-`States.h` |
+| 10 | `CLK/Clock` | `DB/Zman` | שירותי מערכת → דומיין | 17 | `Zman` | include של `DB/Zman.h` ב-`Clock.h`; `zmanToDateTime`, `dateTimeToZman`, `zmanPlusDakot`, `zmanMinusDakot`, `isTimeInRange` (`Clock.h`) |
+| 11 | `Preferences/UserPreferences` | `States/States.h` | שירותי מערכת → זרימה | include בלבד | — | include של `<States/States.h>` ב-`UserPreferences.cpp` |
+| 12 | `Hardware.h` | `BTN/Button` | חומרה → קלט | 4 | `selectButtonDriver`, `ButtonDriverType` | include של `BTN/Button.h` ב-`Hardware.h`; `configureHardware` |
+| 13 | `Hardware.h` | `BLE/Bluetooth` | חומרה → קלט | include בלבד | — | include של `BLE/Bluetooth.h` ב-`Hardware.h` |
+| 14 | `Hardware.h` | `CLK/Clock` | חומרה → שירותי מערכת | 4 | `selectClock`, `ClockType` | include של `CLK/Clock.h` ב-`Hardware.h`; `configureHardware` |
+| 15 | `BTN/ButtonLH0826` | `BLE/Commands` | חומרה → קלט | 9 | `ButtonCommand` | `ButtonLH0826::isPushed` (`ButtonLH0826.h`); `ButtonLH0826::readAdcButton` (`ButtonLH0826.cpp`) |
+| 16 | `BTN/ButtonLH1022` | `BLE/Commands` | חומרה → קלט | 8 | `ButtonCommand` | `ButtonLH1022::isPushed` (`ButtonLH1022.h`); `ButtonLH1022::pinForCommand` (`ButtonLH1022.cpp`) |
+| 17 | `BTN/ButtonDriver` | `BLE/Commands` | חומרה → קלט | 1 | `ButtonCommand` | include של `<BLE/Commands.h>` ב-`ButtonDriver.h`; `IButtonDriver::isPushed` |
 
 ### 7.2 קשתות מסומנות (מכוון)
 
 | מ- | אל | הפניות | סימון |
 | --- | --- | --- | --- |
-| `BTN/Button` | `BLE/Commands` | 10 | מכוון: לחיצה מדומה. `Button.cpp:5`, `:21` (שתי היחידות ברמת הקלט) |
-| `BLE/OtaProtocol` | `States/UpdateState` | 8 | מכוון: מסך התקדמות OTA. `OtaProtocol.cpp:283`, `:720` ועוד |
+| `BTN/Button` | `BLE/Commands` | 10 | מכוון: לחיצה מדומה. `extern ButtonCommand currentButtonCommand` ו-`Button::isPushed` ב-`Button.cpp` (שתי היחידות ברמת הקלט) |
+| `BLE/OtaProtocol` | `States/UpdateState` | 8 | מכוון: מסך התקדמות OTA. `OtaProtocol::_handleStart`, `OtaProtocol::_workerTaskLoop` ועוד (`OtaProtocol.cpp`) |
 
 ### 7.3 קשתות צדדיות, ברמה 3 בין תצוגה לדומיין (מידע)
 
 | מ- | אל | כיוון | הפניות | מזהים | דוגמה |
 | --- | --- | --- | --- | --- | --- |
-| `DB/DayInfo` | `DB/Strings` | דומיין → תצוגה | 15 | `strings.*`, `Strings` | `DayInfo.h:8`, `DayInfo.cpp:6` |
+| `DB/DayInfo` | `DB/Strings` | דומיין → תצוגה | 15 | `strings.*`, `Strings` | include של `Strings.h` ב-`DayInfo.h`; `extern Strings strings` ב-`DayInfo.cpp` |
 | `Screens/RegsScreen` | `DB/Place` | תצוגה → דומיין | 18 | `lonPre`, `lonInt`, `lonFrac`, `latPre`, `latInt`, `latFrac` | `RegsScreen.cpp` |
-| `Screens/Screens.h` | `DB/DayInfo` | תצוגה → דומיין | include | דרך הכותרת הזו מגיעים `Zman` ו-`Strings` | `Screens.h:5` |
+| `Screens/Screens.h` | `DB/DayInfo` | תצוגה → דומיין | include | דרך הכותרת הזו מגיעים `Zman` ו-`Strings` | include של `DB/DayInfo.h` ב-`Screens.h` |
 | `Screens/Screens.h` | `DB/Zman` | תצוגה → דומיין | 2 | `Zman` | `Screens.h` (`MainScreen::update`, `MenuScreen::addZman`) |
 | `Screens/MainScreen` | `DB/Zman` | תצוגה → דומיין | 1 | `Zman` | |
 | `Screens/MenuScreen` | `DB/Zman` | תצוגה → דומיין | 1 | `Zman` | |
@@ -1209,30 +1209,30 @@ flowchart LR
 
 | גלובלי | טיפוס | נספר ב- | הצהרה בכותרת | הגדרה |
 | --- | --- | --- | --- | --- |
-| `currentState` | `State*` | `States/State` | אין. `extern` בכל קובץ משתמש | `main.cpp:15` |
-| `strings` | `Strings` | `DB/Strings` | `Screens.h:7` | `main.cpp:16` |
-| `bl` | `Logic` | `Logic` | אין. `extern` בכל קובץ משתמש | `main.cpp:17` |
-| `userPreferences` | `UserPreferences` | `Preferences/UserPreferences` | `States.h:24`, `DayInfo.h:14`, `Place.h:111`, ובכל כותרת view (`DataPrefs.h:6` וכו') | `UserPreferences.cpp:145` |
-| `systemPrefs`, `userContent`, `presentationPrefs`, `displayPrefs`, `logicPrefs`, `dataPrefs` (השכבות, שלב 2a) | ה-struct של כל שכבה (`SystemPrefs` …) | היחידה של השכבה (`Preferences/SystemPrefs` …) | `extern` בכותרת: `SystemPrefs.h:18`, `UserContent.h:68`, `PresentationPrefs.h:33`, `DisplayPrefs.h:29`, `LogicPrefs.h:44`, `DataPrefs.h:64` | `SystemPrefs.cpp:14`, `UserContent.cpp:60`, `PresentationPrefs.cpp:54`, `DisplayPrefs.cpp:45`, `LogicPrefs.cpp:141`, `DataPrefs.cpp:118` |
-| `display` | `MatrixPanel_I2S_DMA*` | `Display` | `Display.h:15` | `Display.cpp:3` |
-| `now`, `currentHour` … `currentYear` | `DateTime`, `int` | `CLK/Clock` | `Clock.h:21-30` | `Clock.cpp:11-20` |
-| `db` | `DB` | `DB/DB` | אין. `extern` ב-`DayInfo.cpp:7` | `DB.cpp:4` |
-| `place`, `numOfOfeks`, `lonPre` … `latFrac`, `places[]` | `Place*`, `int`, `Place[]` | `DB/Place` | אין. `extern` בקבצים המשתמשים | `Place.cpp:4-13` |
-| `shitot[]` | `Shita*[10]` (`numOfShitot` = 10) | `DB/Shita` | אין. `extern` בקבצים המשתמשים | `Shita.cpp:17` |
-| `mainScreen`, `menuScreen`, `brightnessScreen`, `colorScreen`, `aboutScreen`, `logoScreen`, `versionScreen`, `regsScreen`, `setClockScreen`, `resetScreen`, `textScreen`, `messageScreen` | מחלקות `Screens.h` | `Screens/Screens.h` (והמתודות ב-`Screens/*.cpp`) | `States.h:12-23` | `Logic.cpp:9-20` |
-| `dayInfo`, `dayInfoYesterday`, `dayInfoTomorrow`, `dayInfoNextShishi`, `dayInfoNextShabat` | `DayInfo` | `DB/DayInfo` | אין. `extern` בקבצים המשתמשים | `Logic.cpp:22-26` |
-| `authManager` | `AuthManager` | `BLE/Authmanager` | `Authmanager.h:86` | `Authmanager.cpp:8` |
-| `otaService` | `FirmwareService` | `BLE/FirmwareService` | `FirmwareService.h:117` | `FirmwareService.cpp:4` |
-| `deviceConnected` | `bool` | `BLE/Bluetooth` | `Bluetooth.h:9` | `Bluetooth.cpp:13` |
-| `currentButtonCommand`, `currentMenuCommand` | `ButtonCommand`, `MenuCommand` | `BLE/Commands` | `Commands.h:86-87` | `CoreService.cpp:23-24` |
-| `loadDeviceName()`, `applyDeviceName()` (פונקציות) | — | `BLE/CoreService` (לפי ההגדרה) | `Bluetooth.h:13-14` | `CoreService.cpp:737`, `:759` |
-| `menuButton`, `upButton`, `downButton`, `okButton` | `Button` | `BTN/Button` | `Button.h:29-32` | `Button.cpp:46-49` |
-| `long_push_temp` | `int` | `BTN/Button` | אין. `extern` ב-`main.cpp:9` | `Button.cpp:7` |
-| `font_list[]` | `const GFXfont*[5]` | `Text` | אין. `extern` ב-`Logic.cpp:28` וב-`FontState.cpp:5` | `Text.cpp:3` |
-| `color_list[]` | `const int[7]` | `Colors` | `Colors.h:17` (הגדרה בכותרת) | `Colors.h:17` |
-| `hardwareModel` | `HardwareModel` | `Hardware` | הגדרה בכותרת, `inline` (בכל הדגמים) | `Hardware.h:14` |
-| `Metadata::HWversion` | `char[7]` | `Metadata` | `Metadata.h:38` | `metadata.cpp:9`. נקבע בזמן ריצה ב-`Metadata::setHardwareVersion` |
-| `showAll`, `globalchanged`, `globalchangedOfek` | `bool` | בשימוש רק בקובץ המגדיר | — | `MainStateInfoSets.cpp:7`, `SetClockState.cpp:15`, `OfekState.cpp:16` |
+| `currentState` | `State*` | `States/State` | אין. `extern` בכל קובץ משתמש | `main.cpp` |
+| `strings` | `Strings` | `DB/Strings` | `Screens.h` | `main.cpp` |
+| `bl` | `Logic` | `Logic` | אין. `extern` בכל קובץ משתמש | `main.cpp` |
+| `userPreferences` | `UserPreferences` | `Preferences/UserPreferences` | `States.h`, `DayInfo.h`, `Place.h`, ובכל כותרת שכבה (`DataPrefs.h` וכו') | `UserPreferences.cpp` |
+| `systemPrefs`, `userContent`, `presentationPrefs`, `displayPrefs`, `logicPrefs`, `dataPrefs` (השכבות, שלב 2a) | ה-struct של כל שכבה (`SystemPrefs` …) | היחידה של השכבה (`Preferences/SystemPrefs` …) | `extern` בכותרת של השכבה (`SystemPrefs.h` …) | ה-`.cpp` של השכבה (`SystemPrefs.cpp` …) |
+| `display` | `MatrixPanel_I2S_DMA*` | `Display` | `Display.h` | `Display.cpp` |
+| `now`, `currentHour` … `currentYear` | `DateTime`, `int` | `CLK/Clock` | `Clock.h` | `Clock.cpp` |
+| `db` | `DB` | `DB/DB` | אין. `extern` ב-`DayInfo.cpp` | `DB.cpp` |
+| `place`, `numOfOfeks`, `lonPre` … `latFrac`, `places[]` | `Place*`, `int`, `Place[]` | `DB/Place` | אין. `extern` בקבצים המשתמשים | `Place.cpp` |
+| `shitot[]` | `Shita*[10]` (`numOfShitot` = 10) | `DB/Shita` | אין. `extern` בקבצים המשתמשים | `Shita.cpp` |
+| `mainScreen`, `menuScreen`, `brightnessScreen`, `colorScreen`, `aboutScreen`, `logoScreen`, `versionScreen`, `regsScreen`, `setClockScreen`, `resetScreen`, `textScreen`, `messageScreen` | מחלקות `Screens.h` | `Screens/Screens.h` (והמתודות ב-`Screens/*.cpp`) | `States.h` | `Logic.cpp` |
+| `dayInfo`, `dayInfoYesterday`, `dayInfoTomorrow`, `dayInfoNextShishi`, `dayInfoNextShabat` | `DayInfo` | `DB/DayInfo` | אין. `extern` בקבצים המשתמשים | `Logic.cpp` |
+| `authManager` | `AuthManager` | `BLE/Authmanager` | `Authmanager.h` | `Authmanager.cpp` |
+| `otaService` | `FirmwareService` | `BLE/FirmwareService` | `FirmwareService.h` | `FirmwareService.cpp` |
+| `deviceConnected` | `bool` | `BLE/Bluetooth` | `Bluetooth.h` | `Bluetooth.cpp` |
+| `currentButtonCommand`, `currentMenuCommand` | `ButtonCommand`, `MenuCommand` | `BLE/Commands` | `Commands.h` | `CoreService.cpp` |
+| `loadDeviceName()`, `applyDeviceName()` (פונקציות) | — | `BLE/CoreService` (לפי ההגדרה) | `Bluetooth.h` | `CoreService.cpp` |
+| `menuButton`, `upButton`, `downButton`, `okButton` | `Button` | `BTN/Button` | `Button.h` | `Button.cpp` |
+| `long_push_temp` | `int` | `BTN/Button` | אין. `extern` ב-`main.cpp` | `Button.cpp` |
+| `font_list[]` | `const GFXfont*[5]` | `Text` | אין. `extern` ב-`Logic.cpp` וב-`FontState.cpp` | `Text.cpp` |
+| `color_list[]` | `const int[7]` | `Colors` | `Colors.h` (הגדרה בכותרת) | `Colors.h` |
+| `hardwareModel` | `HardwareModel` | `Hardware` | הגדרה בכותרת, `inline` (בכל הדגמים) | `Hardware.h` |
+| `Metadata::HWversion` | `char[7]` | `Metadata` | `Metadata.h` | `metadata.cpp`. נקבע בזמן ריצה ב-`Metadata::setHardwareVersion` |
+| `showAll`, `globalchanged`, `globalchangedOfek` | `bool` | בשימוש רק בקובץ המגדיר | — | `MainStateInfoSets.cpp`, `SetClockState.cpp`, `OfekState.cpp` |
 
 ## 9. includes שלא מלוות בהפניה ישירה (מידע)
 
@@ -1254,19 +1254,19 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 
 **includes בסוגריים משולשים** (לא מזוהים בכלי, נבדקו ביד):
 
-- `Preferences/UserPreferences.cpp:3` → `<States/States.h>`. אין הפניה ל-`States`.
-- `BLE/Bluetooth.cpp:5` → `<Display.h>`. אין הפניה ל-`Display`.
+- `Preferences/UserPreferences.cpp` → `<States/States.h>`. אין הפניה ל-`States`.
+- `BLE/Bluetooth.cpp` → `<Display.h>`. אין הפניה ל-`Display`.
 
 **פרשנות:**
 
-- `Screens/Screens.h:5` → `DB/DayInfo.h`: השימוש בפועל הוא ב-`Zman` וב-`Strings`.
-- `States/MainState.cpp:2` ו-`States/SetClockState.cpp:2` → `DB/DB.h`: השימוש בפועל הוא ב-`Place`.
-- `main.cpp:2` → `DB/DB.h`: השימוש בפועל הוא ב-`initPlace` מ-`Place.h`.
-- `States/States.h:8` → `CLK/Clock.h`, `Text.h:7` → `Colors.h`, `BLE/Bluetooth.h:7` → `Commands.h`, `BLE/FirmwareService.h:6` → `Bluetooth.h`: הכלי מצא אותן, והרשימה הידנית הקודמת לא כללה אותן. השימוש בפועל לא נבדק.
+- `Screens/Screens.h` → `DB/DayInfo.h`: השימוש בפועל הוא ב-`Zman` וב-`Strings`.
+- `States/MainState.cpp` ו-`States/SetClockState.cpp` → `DB/DB.h`: השימוש בפועל הוא ב-`Place`.
+- `main.cpp` → `DB/DB.h`: השימוש בפועל הוא ב-`initPlace` מ-`Place.h`.
+- `States/States.h` → `CLK/Clock.h`, `Text.h` → `Colors.h`, `BLE/Bluetooth.h` → `Commands.h`, `BLE/FirmwareService.h` → `Bluetooth.h`: הכלי מצא אותן, והרשימה הידנית הקודמת לא כללה אותן. השימוש בפועל לא נבדק.
 
 ## 10. הבדלים בין דגמים (הערות)
 
-הסעיף נבדק מול JC4020 ו-JC6432 כמו שהם ב-`ae29f42`. בשלושת הדגמים הגישה להעדפות עוברת דרך ה-views.
+הסעיף נבדק מול JC4020 ו-JC6432 כמו שהם ב-`ae29f42`. בשלושת הדגמים הגישה להעדפות עוברת דרך אובייקטי השכבות.
 
 אחרי 2a.3.3 (נבדק בשלושת הדגמים): הקשתות של `Preferences/` זהות בשלושת הדגמים, וגם השינוי שלהן ב-2a.3.3 (19 קשתות, אותן הפניות). הסיכום לכל דגם, קשתות / הפניות: JC6416 421 / 7,175 → 420 / 7,131; JC4020 392 / 7,135 → 391 / 7,091; JC6432 439 / 7,891 → 438 / 7,847. סכומי הצרכנים לא השתנו: 784 / 820 / 847.
 
@@ -1286,11 +1286,11 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 - **MainStateInfoSets:** מפוצל ל-`MainStateInfoSets1.cpp` ול-`MainStateInfoSets2.cpp`.
 - **ההעדפה `screen`:** שולטת ב-`MainScreen::setScreen`, שנקרא מ-`Logic`, מ-`FontState`, מ-`SetClockState` ומ-`MainState` (לחיצה למעלה או למטה במסך הראשי).
 - **Fonts:** `Text.h` מכליל ארבעה פונטים נוספים.
-- **`Screens/MainScreen → Preferences/PresentationPrefs`** 1 (`presentationPrefs.dateFormat`, `MainScreen.cpp:92`): שכבת התצוגה קוראת העדפה ישירות. קשת כלפי מטה (3 → 4), ולכן לא ב-7.1. צימוד בין שכבות לשלב בידוד השכבות ([notes.md](notes.md), מודל הפריסה).
+- **`Screens/MainScreen → Preferences/PresentationPrefs`** 1 (`presentationPrefs.dateFormat`, `MainScreen::Small`): שכבת התצוגה קוראת העדפה ישירות. קשת כלפי מטה (3 → 4), ולכן לא ב-7.1. צימוד בין שכבות לשלב בידוד השכבות ([notes.md](notes.md), מודל הפריסה).
 
 ### העדפות לפי דגם
 
-בשלושת הדגמים הגישה להעדפות עוברת דרך ה-views. נספרים רק צרכנים: יחידות ה-view ו-`UserPreferences` לא נכללות. בכל תא: הפניות / צרכנים. הפירוט לכל צעד, לפני ואחרי ולכל צרכן, נמצא ב-[refactor-log.md](../refactor-log.md) (2a.2 של כל דגם).
+בשלושת הדגמים הגישה להעדפות עוברת דרך אובייקטי השכבות. נספרים רק צרכנים: יחידות השכבות ו-`UserPreferences` לא נכללות. בכל תא: הפניות / צרכנים. הפירוט לכל צעד, לפני ואחרי ולכל צרכן, נמצא ב-[refactor-log.md](../refactor-log.md) (2a.2 של כל דגם).
 
 | יעד | JC6416 | JC4020 | JC6432 |
 | --- | --- | --- | --- |
@@ -1336,8 +1336,8 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 
 </div>
 
-`inc` = include בלבד, כמו שהכלי מזהה אותו (רק במירכאות). ב-DB נכללים `Strings` ו-`DataBase`. ב-Prefs נכללים ה-views.
-- `Prefs → States` הוא include בלבד (`UserPreferences.cpp:3`), בסוגריים משולשים, ולכן לא מופיע כאן (§9).
+`inc` = include בלבד, כמו שהכלי מזהה אותו (רק במירכאות). ב-DB נכללים `Strings` ו-`DataBase`. ב-Prefs נכללות יחידות השכבות.
+- `Prefs → States` הוא include בלבד (`UserPreferences.cpp`), בסוגריים משולשים, ולכן לא מופיע כאן (§9).
 
 ### א.2 קבצי States × נושא
 
