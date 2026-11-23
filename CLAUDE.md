@@ -74,7 +74,8 @@ preference table for all models, as in JC6432; documented contract change), 2a.3
 objects own their preferences, all three models in one step; 2a.3.4 cancelled; flash-check
 criterion for non-identical images in `refactor-log.md`, "Decisions"). **Next step:** a docs step
 that replaces `file:line` references with symbol references (file + function or class), keeping
-line numbers only where there is no other way. Clock test of 2a.3 (2a.3.5) by the owner.
+line numbers only where there is no other way. Clock test of 2a.3 (2a.3.5) passed on all three
+models (23.11.2026).
 Existing NVS keys, namespaces and types never change. Any change to the preference contract
 (new keys, BLE indexes, defaults) happens only as a documented contract-change step approved by
 the owner and recorded in refactor-log. Otherwise behavior stays identical.
@@ -110,7 +111,7 @@ the owner and recorded in refactor-log. Otherwise behavior stays identical.
   1. Structs as views onto the existing `userPreferences` fields. No consumer changes. (Done.)
   2. Move consumers to their layer's struct, one layer per step. (Done.)
   3. Move field ownership into the structs; `UserPreferences` becomes the registry. (Done:
-     2a.3.0–2a.3.3; clock test 2a.3.5 pending.)
+     2a.3.0–2a.3.3; clock test 2a.3.5 passed.)
 - **2** — Isolate the remaining layers behind interfaces and break couplings.
 - **Later, each approved separately** — applying preference changes from BLE immediately
   (shared apply functions with the menu); NVS namespace per layer with migration; one

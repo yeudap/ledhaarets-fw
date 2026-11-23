@@ -1277,6 +1277,10 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       and immediate apply).
     - Text write and read (JC6416, JC6432; JC4020 by key with `PREF_OP_WRITE`, F3).
     - "Reset settings" and "Reset texts", then reboot.
+- **2a.3.5** (all models) — clock test of 2a.3, by the owner: **passed** on JC6416, JC4020 and
+  JC6432 (23.11.2026), per the lists in 2a.3.2 ("Clock test in 2a.3.5") and 2a.3.3 ("Clock test
+  (added to 2a.3.5)"). The preferences and the text changed on 709A were kept after flashing. The
+  contract checks, READ / WRITE from every layer, texts and both resets passed.
 
 ### Decisions
 
