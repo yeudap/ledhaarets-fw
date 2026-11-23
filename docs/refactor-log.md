@@ -1254,10 +1254,15 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       preference access maps to the same field and member, with the same kind (read / write) and the
       same count; the same calls with the same count; every non-preference literal as above. A
       function that fails is a deviation: stop.
+    - **Tool:** `tools/flash_check.py` (with its base module `tools/flashcheck.py`); usage in the
+      header. `python -I -B tools/flash_check.py <ref.elf> <cand.elf> <ref UserPreferences.h>
+      <cand Preferences/>`. The layouts are those of 2a.3.3; 2a.4 adapts them first.
   - **Tools:** not changed. The docstrings of `count_deps.py` (`inline constexpr` view globals) and of
     `prefs_contract.py` / `tools/prefs_contract/main.cpp` (`PrefsViews.cpp`) still describe the views;
-    correct for trees before 2a.3.3, to be updated in the docs step. The flash-check scripts are in
-    the scratchpad only; adding them to `tools/` is a separate step if the owner wants it.
+    correct for trees before 2a.3.3, to be updated in the docs step. The flash check was added to
+    `tools/` in a separate commit ("tools: flash symbol check"), without logic changes (copied byte
+    for byte, then only the header docstrings edited); run from `tools/` on JC6416 it gives a
+    byte-identical classification.
   - **Docs:** `dependencies.md` (`gen_deps_doc.py write`; by hand §1 unit rule and totals, §2,
     §4 total, §5.6 graph and notes, §8 globals, §10 per-model totals after 2a.3.3, A.1 note);
     `check` OK (420 edges, 7,131 references). `preferences.md` §1, §2, §7, §8. `notes.md` status.
