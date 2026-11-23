@@ -1281,13 +1281,28 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   JC6432 (23.11.2026), per the lists in 2a.3.2 ("Clock test in 2a.3.5") and 2a.3.3 ("Clock test
   (added to 2a.3.5)"). The preferences and the text changed on 709A were kept after flashing. The
   contract checks, READ / WRITE from every layer, texts and both resets passed.
+- **tools: flash_check** (after 2a.3.5) — `tools/flashcheck.py` merged into `tools/flash_check.py`
+  (only the parts it used, byte for byte; v1 of the check removed), then dead code removed:
+  - The second fixpoint loop of `analyze()` (`changed = False; while changed`) never ran. The first
+    loop exits only after a full pass with no change (propagation, new landing-pad roots,
+    landing-pad states), so one more pass of the same propagation cannot change anything. Its body
+    has no `changed = False`, so enabling it as written would never end. Leftover of a version
+    before the landing pads were handled in the first loop. Experiment (scratch copy, one extra
+    pass without `while`, state compared before and after): 226 / 222 / 258 calls of `analyze()` on
+    JC6416 / JC4020 / JC6432, covering all 101 / 103 / 114 functions; no state changed. Removed.
+  - `Elf.function_heuristic`: never called (decoding is `Elf.function`, by `.xt.prop`). Removed.
+  - Kept, recorded only (no effect): in `analyze()` the lines `IN = {a: init}`, `work = [a]`,
+    `for t in tables.values(): pass`; in `ElfBase.__init__` the loop `for o in objs: … pass`.
+  - Check after the merge and after the removal: flash_check on the three models (`f084e48` vs
+    2a.3.3 builds, `SOURCE_DATE_EPOCH=1763337600`) gives output byte-identical to the run before
+    the change: 101 / 103 / 114 functions, manual 0.
 
 ### Decisions
 
 - **Flash check when the image is not identical** (owner's decision, 2a.3.3; applies to 2a.4 and
   later): a filter for surprises, not a proof of equivalence. Accepted categories and the
   "same-effects" rule as recorded in 2a.3.3. The proofs are the contract tool in both file orders,
-  the moved source lines, `count_deps`, RAM and the clock test.
+  the moved source lines, `count_deps`, RAM and the clock test. Tool: `tools/flash_check.py`.
 - **New generation after the refactor (major 8)** (owner's decision, after Sync 6; also in
   `CLAUDE.md`, with the contract rule):
   - App and firmware versions depend on each other, and the app forces updates. No BLE

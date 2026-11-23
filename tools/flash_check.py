@@ -428,69 +428,6 @@ class Elf(ElfBase):
         self._fcache[name] = r
         return r
 
-    def function_heuristic(self, name):
-        """The v1 decoder (Elf.function of the former flashcheck.py), plus extra roots: every uncovered run that does not start with zero bytes
-        (exception landing pads, reached only through .gcc_except_table) is decoded from its first
-        non-zero byte, until the whole function is covered or only zero bytes remain."""
-        if not hasattr(self, '_fcache'):
-            self._fcache = {}
-        if name in self._fcache:
-            return self._fcache[name]
-        a, s, _ = self.syms[name][0]
-        end = a + s
-        decoded = {}
-
-        def at(addr):
-            if addr not in decoded:
-                for k, v in self.decode_from(addr, end).items():
-                    decoded.setdefault(k, v)
-                if addr not in decoded:
-                    raise RuntimeError('%s: cannot decode at 0x%x' % (name, addr))
-            return decoded[addr]
-        lo = bisect.bisect_left(self.ptr_keys, a)
-        hi = bisect.bisect_left(self.ptr_keys, end)
-        table_targets = self.ptr_keys[lo:hi]
-        body = self.read(a, s)
-        reach, roots = {}, []
-        work = [a] + table_targets
-        while True:
-            while work:
-                p = work.pop()
-                while a <= p < end and p not in reach:
-                    ln, op, args = at(p)
-                    reach[p] = (ln, op, args)
-                    t = target_of(op, args)
-                    if t is not None and a <= t < end:
-                        work.append(t)
-                    if op in UNCOND:
-                        break
-                    p += ln
-            covered = set()
-            for p, (ln, _, _) in reach.items():
-                covered.update(range(p, p + ln))
-            nxt = None
-            x = a
-            while x < end:
-                if x not in covered and body[x - a] != 0 and (x == a or (x - 1) in covered or body[x - 1 - a] == 0):
-                    nxt = x
-                    break
-                x += 1
-            if nxt is None:
-                break
-            roots.append(nxt)
-            work = [nxt]
-        gaps = [x for x in range(a, end) if x not in covered]
-        fill = bytes(body[x - a] for x in gaps)
-        tables = OrderedDict()
-        for t in table_targets:
-            for w in self.rod_ptrs[t]:
-                tables[w] = t
-        self.roots = getattr(self, 'roots', {})
-        self.roots[name] = roots
-        r = (a, end, OrderedDict(sorted(reach.items())), fill, tables)
-        self._fcache[name] = r
-        return r
-
     def cfg(self, name):
         a, end, reach, fill, tables = self.function(name)
         succ = {}
@@ -653,21 +590,6 @@ def analyze(E, fn, opts):
                 if new != cur:
                     INs[r] = new
                     changed = True
-    changed = False
-    while changed:
-        for p in order:
-            if INs[p] is None:
-                continue
-            out, _ = transfer(E, p, reach[p], INs[p], opts)
-            for s in succ[p]:
-                if INs[s] is None:
-                    INs[s] = dict(out)
-                    changed = True
-                else:
-                    new = {k: v for k, v in INs[s].items() if out.get(k) == v}
-                    if new != INs[s]:
-                        INs[s] = new
-                        changed = True
     toks = []
     for p in order:
         if INs[p] is None:
