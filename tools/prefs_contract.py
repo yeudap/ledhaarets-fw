@@ -7,12 +7,14 @@ code and its binary, so this output (not the image) is the reference for the pre
 NVS keys, value types and namespace, BLE indexes and type codes, defaults, list order and load order.
 
 What is compiled:
-    <src>/Preferences/*.cpp, except PrefsViews.cpp (compile-time checks only), plus
-    tools/prefs_contract/main.cpp. Include path: tools/prefs_contract/stub (String, Serial,
-    Preferences, an empty States/States.h) and <src>/Preferences.
-    RULE TO MAINTAIN: when the preference files move (layer folders, stage 1, or the per-layer
-    owner files of 2a.3.3), update source_files() below so that every .cpp that defines a
-    preference object or the registry is compiled, and nothing that needs the rest of the firmware.
+    <src>/Preferences/*.cpp (since 2a.3.3: the registry UserPreferences.cpp and the six layer
+    files, which own the preference objects), plus tools/prefs_contract/main.cpp. The filter on
+    PrefsViews.cpp in source_files() is for trees before 2a.3.3 (it held compile-time checks only).
+    Include path: tools/prefs_contract/stub (String, Serial, Preferences, an empty
+    States/States.h) and <src>/Preferences.
+    RULE TO MAINTAIN: when the preference files move (layer folders, stage 1), update
+    source_files() below so that every .cpp that defines a preference object or the registry is
+    compiled, and nothing that needs the rest of the firmware.
 
 What is printed (deterministic; one line per entry, tab-separated, in list order):
     [simplePrefs] N / [textPrefs] N / [allPrefs] N

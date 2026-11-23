@@ -15,11 +15,13 @@ Implements the counting rules of docs/architecture/dependencies.md §1:
     Metadata counted only through `Metadata::`, the `DataPrefs` fields `place` / `zmanim` vs the
     global `place` (DB/Place) and the array `zmanim` (DB/Shita);
   * free functions defined only in a .cpp (not declared in any header) are internal to it;
-  * access through a preference view (stage 2a; units in VIEW_UNITS, e.g. `dataPrefs.zmanim.shita`)
-    counts once toward the view unit (`Preferences/DataPrefs`), with the chain up to the
+  * access through a layer object (stage 2a; units in VIEW_UNITS, e.g. `dataPrefs.zmanim.shita`)
+    counts once toward the layer unit (`Preferences/DataPrefs`), with the chain up to the
     preference as identifier. It does not count toward `Preferences/UserPreferences`, also when a
-    method is called on the preference. The view globals (`inline constexpr <Struct> <name>{...}`)
-    are recognized only in the view units.
+    method is called on the preference. Since 2a.3.3 the layer objects are ordinary globals
+    (`extern <Struct> <name>;` in the layer header, defined in its .cpp) that own their `UserPref`
+    fields. The brace-initialized globals of the 2a.2 views (`inline constexpr <Struct> <name>{...}`,
+    trees before 2a.3.3) are still recognized, only in the layer units.
 
 The parser is heuristic (regex + brace matching, no preprocessor, no real C++ front end).
 Validation: on JC6416 at commit 9c75812 it reproduces all 374 edges of the previous map
@@ -63,8 +65,9 @@ from collections import defaultdict, OrderedDict
 
 SRC_EXT = ('.h', '.hpp', '.cpp', '.c')
 
-# Units that define the per-layer preference views (stage 2a). Each holds one global, declared
-# `inline constexpr <Struct> <name>{...};`, whose members are references to `userPreferences` fields.
+# Units of the per-layer preference objects (stage 2a). Each holds one global: since 2a.3.3
+# `extern <Struct> <name>;` in the header, defined in the .cpp, owning its `UserPref` fields; before,
+# a view `inline constexpr <Struct> <name>{...};` whose members were references to `userPreferences` fields.
 VIEW_UNITS = {'Preferences/SystemPrefs', 'Preferences/UserContent', 'Preferences/PresentationPrefs',
               'Preferences/DisplayPrefs', 'Preferences/LogicPrefs', 'Preferences/DataPrefs'}
 
@@ -315,8 +318,9 @@ def handle_block(head, body, unit, is_header, m, cls, ns):
         handle_stmt(h, unit, is_header, m, cls, ns, has_init=True)
         return
     if unit in VIEW_UNITS and not cls and not ns and '(' not in h:
-        # view global: `inline constexpr DataPrefs dataPrefs{...};` (brace init, no `=`).
-        # Registered as a plain global, not as a const, so that access chains are followed.
+        # 2a.2 view global: `inline constexpr DataPrefs dataPrefs{...};` (brace init, no `=`; trees
+        # before 2a.3.3). Registered as a plain global, not as a const, so that access chains are
+        # followed. Since 2a.3.3 the layer globals are plain `extern` declarations (handle_stmt).
         mv = re.match(r'(.*\b)([A-Za-z_]\w*)$', h, re.S)
         if mv and base_type(mv.group(1)):
             m.var_decl[mv.group(2)].append((unit, is_header, False, base_type(mv.group(1))))

@@ -3,10 +3,11 @@ count_prefs.py — reads / writes of every user preference, per unit. Read-only.
 
 Implements the counting rule of docs/architecture/preferences.md §1:
   * every mention of `userPreferences.<name>` in code, after removing comments, or of the same
-    preference through its layer view (stage 2a): `systemPrefs.<name>`, `userContent.<name>`,
+    preference through its layer object (stage 2a): `systemPrefs.<name>`, `userContent.<name>`,
     `presentationPrefs.<name>`, `presentationPrefs.layout.<name>`, `displayPrefs.<name>`,
     `logicPrefs.<name>`, `dataPrefs.place|zmanim|minhagim.<name>`;
-  * the units that define the views (VIEW_UNITS) are skipped: they bind, they do not use;
+  * the units that define the layer objects (VIEW_UNITS) are skipped: they define, they do not use
+    (since 2a.3.3 they own the preferences; before, as views, they bound references);
   * write = assignment (`=`, `+=`, ..., `++`, `--`) or a call to `.setValue(` / `.reset(`;
   * read  = any other mention;
   * unit  = file name without extension (`Shita.cpp` and `Shita.h` -> `Shita`).

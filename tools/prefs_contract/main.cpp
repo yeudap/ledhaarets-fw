@@ -1,5 +1,5 @@
 // main.cpp — host program of tools/prefs_contract.py. Never part of the firmware.
-// Compiled together with a model's src/Preferences/*.cpp (except PrefsViews.cpp) against the stubs
+// Compiled together with a model's src/Preferences/*.cpp (registry and layer files) against the stubs
 // in stub/. Runs setupPreferences() as the firmware's setup() does, then prints the registry as
 // built: simplePrefs, textPrefs, allPrefs (one line per entry, in list order), the NVS calls made
 // during setupPreferences(), and anything printed to Serial meanwhile.
