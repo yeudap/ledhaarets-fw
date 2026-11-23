@@ -96,7 +96,7 @@
 - **דגלי יכולת מוצעים:** `HAS_TEXTS` (JC6416, JC6432), `HAS_SCREEN_SWITCH` (JC6432). ב-JC4020 התשובות של `TEXT_OP_*`
   נשארות `INVALID_INDEX`, כי הן חלק מהחוזה (F3). רק המקום שבו ההחלטה מתקבלת משתנה: שכבת ה-BLE תהיה זהה
   בשלושת הדגמים, וההחלטה אם לקבל טקסטים תעבור ללוגיקה כשהלוגיקה תופרד מ-BLE. התפריט של JC4020 בלי `resetText`
-  (`ConfigState.cpp:23`, `:26`) מכוון.
+  (`ResetPrefState::showStateScreen`, `ResetPassState::showStateScreen` ב-`ConfigState.cpp`) מכוון.
 
 ## אימות
 - אין שינוי קוד, ולכן אין `pio run`. אוודא ש-`git status` מראה רק את `docs/architecture/models.md` כקובץ חדש.

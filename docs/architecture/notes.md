@@ -3,7 +3,7 @@
 תשובות של בעל הפרויקט לשאלות שעלו במיפוי (שלב 0, משימה ב). הקובץ הזה הוא מקור האמת להיגיון ולאילוצים
 שלא נראים מהקוד. המיפוי עצמו נמצא ב-[dependencies.md](dependencies.md).
 
-בסיס: JC6416. מספרי השורות לפי commit `9c75812` או `dcd2cdb`, אלא אם כתוב אחרת.
+בסיס: JC6416. ההפניות לקוד הן לפי קובץ וסמל.
 
 ## מטרת המיפוי
 
@@ -35,7 +35,7 @@
 - **`TextCommandHandler`** ([BLE/TextCommandHandler.cpp](../../JC6416/src/BLE/TextCommandHandler.cpp)): מתאם בין BLE לשירות הטקסטים. שייך לשכבת BLE/פרוטוקול.
 - **`Commands.h`** ([BLE/Commands.h](../../JC6416/src/BLE/Commands.h)): שייך ל-BLE. ממפה מצבים ולחיצות למספרים, כדי שהאפליקציה תוכל לשלוח מצב רצוי או לדמות לחיצה. יש בו שני חלקים:
   - `MenuCommand` משמש רק את BLE.
-  - `ButtonCommand` ו-`currentButtonCommand` משותפים. `Button::isPushed()` ([BTN/Button.cpp:18-28](../../JC6416/src/BTN/Button.cpp#L18-L28)) מאחד לחיצה פיזית (דרך `activeButtonDriver`) ולחיצה מדומה מ-BLE (`currentButtonCommand`, שמוגדר ב-`CoreService.cpp`).
+  - `ButtonCommand` ו-`currentButtonCommand` משותפים. `Button::isPushed()` ([BTN/Button.cpp](../../JC6416/src/BTN/Button.cpp)) מאחד לחיצה פיזית (דרך `activeButtonDriver`) ולחיצה מדומה מ-BLE (`currentButtonCommand`, שמוגדר ב-`CoreService.cpp`).
   - זה מכוון. במיפוי, הקשת BTN → BLE מסומנת כקשת הזו.
 
 ## שיוך לשכבה של יחידות שהיו לא ברורות
@@ -84,7 +84,7 @@
   - `screen` היא בחירת הפריסה (JC6432).
   - `upLine` ו-`middleLine` הן גרסאות אזור (JC4020). "יום לצד שעון" בתפריט הוא `middleLine` = 2, ואין לו מפתח נפרד.
 - **לא בפריסה:** `yom` (52, "יום בשבוע") הוא פריט תוכן ברוטציה של השורה התחתונה, ולכן נשאר בלוגיקה.
-- **צימוד בין שכבות (JC6432):** `Screens/MainScreen.cpp:92` (שכבת התצוגה) קורא את `dateFormat` מ-Presentation, ובוחר לפיו את האזור של השורה העליונה (יש תאריך לועזי או אין). צריך לטפל בזה בשלב בידוד השכבות (שלב 2). לא משתנה ב-2a.
+- **צימוד בין שכבות (JC6432):** `MainScreen::Small` (`Screens/MainScreen.cpp`, שכבת התצוגה) קורא את `dateFormat` מ-Presentation, ובוחר לפיו את האזור של השורה העליונה (יש תאריך לועזי או אין). צריך לטפל בזה בשלב בידוד השכבות (שלב 2). לא משתנה ב-2a.
 - **צבעים לפי אזור (כיוון, לא לביצוע ב-2a):**
   - היום העדפות `color*` מתוארות לפי שם של אזור (`yom`, `parasha`, `ivri`), אבל ההתאמה בפועל לאזור במסך לא תמיד לפי השם. לכל דגם יכולות להיות כמה פריסות.
   - הכיוון: מספרים לאזורים בפריסה, והעדפות `colorAreaN`, כדי שהאפליקציה תוכל להציג את המסך עם אזורים שאפשר לבחור.
@@ -107,4 +107,4 @@
 - שעון קיץ: הזזת ה-RTC ושינוי `place->kaiz`.
 - אתחול יומי ב-03:01.
 - מיקום הגלובליים: `strings`, `bl` ו-`currentState` ב-`main.cpp`, אובייקטי ה-Screen וה-`DayInfo` ב-`Logic.cpp`, ו-`display` ב-`Display.cpp`.
-- `DB.cpp:34-35`: הקריאה של `molad_shaa` ו-`molad_daka`.
+- `DB::LoadCommonValues` (`DB.cpp`): הקריאה של `molad_shaa` ו-`molad_daka`.

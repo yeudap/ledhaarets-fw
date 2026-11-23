@@ -119,7 +119,8 @@ Changes in 7.09:
 - `PROJECT_VER` 7.08 → 7.09.
 
 Result: in all three models the compiled content is identical to production v7.09 (procedure
-below). The repo tree differs from production only in the 2a views and their consumers.
+below). The repo tree differs from production only in the 2a views and their consumers (state at
+that sync).
 Not in 7.09: F13 (`stamp_app_desc.py` docstring, to be fixed in `ledhaarets-build` (open)).
 
 ### Procedure: comparing the repo with a production release (from Sync 5)
@@ -144,7 +145,8 @@ Not in 7.09: F13 (`stamp_app_desc.py` docstring, to be fixed in `ledhaarets-buil
 `709A` is a temporary production tag, not a release. It will be replaced by `v7.10` and deleted;
 the commit hashes above are the reference. Method: patch (`git diff v7.09..709A`) in all three
 models, applied with the editor tool on top of 2a.1–2a.3.2. One-time exception (owner's decision):
-the trailing whitespace of `src/States/ConfigState.cpp:30-31` in JC4020 and JC6432, which the editor
+the trailing whitespace of the first two lines of `MemoryMapState::showStateScreen`
+(`src/States/ConfigState.cpp`) in JC4020 and JC6432, which the editor
 tool strips, was written by an exact byte replacement script.
 
 Changes in 709A (after v7.09):
@@ -158,5 +160,6 @@ Changes in 709A (after v7.09):
 `Preferences/` and `BLE/` unchanged.
 
 Result: in all three models the compiled content is identical to production 709A (procedure above,
-reference built from the commit hash). The repo tree differs from production only in the 2a views
-and their consumers.
+reference built from the commit hash). At that sync the repo tree differed from production only in
+the 2a views and their consumers. Since 2a.3.3 it also differs in `Preferences/`: the layer objects
+own their preferences, and the registry keeps only the lists and load / save.
