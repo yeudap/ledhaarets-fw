@@ -126,6 +126,14 @@ Only the user changes the current stage.
   files will change, what will change, and why) and stop for approval. Once a plan is approved
   for sequential execution, carry out its steps without stopping; stop only on a deviation or
   where the plan says to stop.
+- Check every plan against `docs/architecture/roadmap.md` and state in the plan what in it
+  prepares for a roadmap item or blocks one.
+- Code is not sacred: much of it grew from quick fixes. While working, collect improvement
+  proposals (P#) in refactor-log: inconsistencies between models/menu/app/comments, temporary
+  solutions, special cases that block uniformity, logic worth reshaping. Each proposal: current
+  behavior, why it matters, suggested change, impact on field clocks / app / contract. Never
+  implement a proposal without the owner's explicit decision; refactor steps stay
+  behavior-identical.
 - Never mix a move and a content change in one step.
 - Never touch anything outside this repository, especially the production projects and
   `ledhaarets-build`.
