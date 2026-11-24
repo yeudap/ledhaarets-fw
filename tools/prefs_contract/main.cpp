@@ -15,11 +15,18 @@ extern UserPreferences userPreferences;
 
 namespace
 {
-// Reads the protected UserPrefBase::_prefs without changing the firmware classes.
-struct PrefsPeek : UserPrefBase
+// Reads the protected Preferences pointer without changing the firmware classes: UserPrefBase::_prefs
+// (trees before 2a.4) or UserPrefBase::_meta->prefs (since 2a.4: the definition is a table entry in
+// flash). The overload is chosen by which member exists (SFINAE); call as PrefsPeek::of(p, 0).
+template <typename B>
+struct PrefsPeekT : B
 {
-    static Preferences *of(const UserPrefBase *p) { return p->*(&PrefsPeek::_prefs); }
+    template <typename Q = B, typename = decltype(&PrefsPeekT<Q>::_meta)>
+    static Preferences *of(const B *p, int) { return (p->*(&PrefsPeekT<Q>::_meta))->prefs; }
+    template <typename Q = B, typename = decltype(&PrefsPeekT<Q>::_prefs)>
+    static Preferences *of(const B *p, long) { return p->*(&PrefsPeekT<Q>::_prefs); }
 };
+using PrefsPeek = PrefsPeekT<UserPrefBase>;
 
 const char *const TYPE_NAMES[] = {"PT_I8", "PT_U8", "PT_I16", "PT_U16", "PT_I32", "PT_U32",
                                   "PT_I64", "PT_U64", "PT_STR", "PT_BLOB", "PT_INVALID"};
@@ -47,7 +54,9 @@ bool describe(const UserPrefBase *p, std::string &cxx, std::string &def)
            describeAs<String>(p, "String", cxx, def);
 }
 
-int printList(const char *name, const std::vector<UserPrefBase *> &list)
+// list: std::vector<UserPrefBase *> (trees before 2a.4) or the registry's PrefList (since 2a.4).
+template <typename List>
+int printList(const char *name, const List &list)
 {
     std::printf("[%s] %u\n", name, static_cast<unsigned>(list.size()));
     for (const UserPrefBase *p : list)
@@ -60,7 +69,7 @@ int printList(const char *name, const std::vector<UserPrefBase *> &list)
         }
         unsigned t = static_cast<unsigned>(p->getType());
         const char *tname = t < sizeof TYPE_NAMES / sizeof TYPE_NAMES[0] ? TYPE_NAMES[t] : "?";
-        Preferences *prefs = PrefsPeek::of(p);
+        Preferences *prefs = PrefsPeek::of(p, 0);
         std::printf("%s\t%s(%u)\t%u\t%s\t%s\t%s\n", p->getKey(), tname, t,
                     static_cast<unsigned>(p->getIndex()), def.c_str(), cxx.c_str(),
                     prefs ? prefs->ns().c_str() : "(null)");
