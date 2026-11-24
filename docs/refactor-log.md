@@ -1851,13 +1851,10 @@ scope).
   `SetTohenBottomLineHAZ1::okAction`, also sets `HAZ = 1`). Choosing "on time" for plag hamincha –
   shkiaa – zeet hacochavim changes the HAZ setting and leaves PSZ as it was.
 - **Impact:** a menu choice is not applied; BLE writes of `PSZ` are not affected.
-- **Status:** fixed in production 7.10, JC4020 only (`userPreferences.PSZ = 1`, applied by the owner; JC4020
-  commit `0a7e50c`, tag `v7.10`). This repo gets the fix with Sync 7, after the 7.10 release; no separate
-  hotfix port. No NVS migration: a wrong `HAZ = 1`
-  already stored stays after the update and cannot be detected (1 is also the default and a valid choice). A user
-  who chose "on time" for PSZ in the menu has to choose it again and check the HAZ choice (menu or app).
-  Clock test passed on production 7.10 (JC4020): on 7.09 choosing PSZ "on time" changed HAZ; on 7.10 PSZ
-  changes and HAZ does not.
+- **Status:** fixed in production `v7.10`, JC4020 only (commit `0a7e50c`); clock test passed (PSZ changes, HAZ
+  does not). No NVS migration: a wrong `HAZ = 1` already stored stays and cannot be detected (1 is also the
+  default); a user who chose PSZ "on time" in the menu chooses it again and checks HAZ (menu or app). Into this
+  repo with Sync 7.
 - **Models:** JC4020 only (JC6416 / JC6432 have other menu files).
 
 ### F25 — `PREF_OP_WRITE` has no range check for array-indexed preferences; `textPlace` can overflow
@@ -1873,31 +1870,16 @@ scope).
   `Place::name[20]` **can overflow in normal use**. Off-step values make the step menus run past their limit
   (P4).
 - **Impact:** reads past arrays. For `textPlace`:
-  - *Observed on production 7.09 (clock test):* names of 22 / 40 / 70 characters sent from the app showed
-    garbage after the name in the "choose ofek" menu; place and zmanim stayed correct. In a photo of 7.09 (a
-    name of 27 letters, place Rome) the name is followed by "3333" and "((": they match the 0x33 bytes of
-    `nz_lat` (41.9) and the 0x28 bytes of `nz_long` (12.48), as read with SYNC. This supports the analysis below
-    without proving it.
-  - *Analyzed on the repo build (JC6416 ELF, not production):* `Place::Place` runs `strcpy` before it assigns
-    the fields, so up to 79 bytes the overwritten fields of the temporary are written again; `name` is left
-    without a terminator, and the menu reads on into the bytes after it (`nz_lat` / `nz_long` by the `Place`
-    layout), which is the garbage. From 84 bytes the copy reaches the stack canary of `initPlace`:
-    `__stack_chk_fail` in `setup` (before BLE and the reset-button check), a boot loop. In this build a name of
-    20–23 bytes would show complete (the terminator lands in the padding, which the copy carries); on the
-    clock 22 showed garbage, so the code generated for `initPlace` differs between the builds, and these
-    limits are not verified for production. The app sends at most 70 characters; longer values need another
-    BLE client.
-  - *7.10:* all lengths are covered, the copy is bounded in the constructor.
-- **Status:** the `textPlace` overflow is fixed in production 7.10, all three models (`Place::Place` copies at
-  most 19 bytes, always terminated, and keeps the last bytes: the name is stored reversed, so they hold the
-  beginning of the name; applied by the owner, as `strcpy` from the last 19 bytes; commits JC6416 `ab8b65f`,
-  JC4020 `f864ded`, JC6432 `b61a53d`, tag `v7.10`). No BLE rejection and no NVS change: the stored value and
-  `PREF_OP_READ` keep the full string. This repo gets the fix with Sync 7, after the 7.10 release; no separate
-  hotfix port. Clock test passed on production 7.10: on 7.09 names of 22 / 40 / 70 characters showed garbage in
-  the "choose ofek" menu, while place and zmanim stayed correct; on 7.10 the name is cut to its first 19
-  characters, without garbage, also after power off and on (a 27-letter name shows its first 19 letters, the
-  app reads the full name, a short name shows complete). The range check for the other preferences is still
-  open; it belongs to 2b (P1, `roadmap.md`); not changed in refactor steps.
+  - *Observed (7.09):* a 27-letter name showed garbage after the name in the "choose ofek" menu, matching the
+    bytes of `nz_lat` / `nz_long`.
+  - *Analyzed (repo build only, not verified for production):* the fields overwritten by `strcpy` are written
+    again up to 79 bytes; from 84 bytes `__stack_chk_fail` in `setup`, a boot loop. The app sends at most 70
+    characters.
+- **Status:** `textPlace` fixed in production `v7.10`, all three models (`Place::Place` copies the last 19
+  bytes, terminated: the beginning of the reversed name; commits JC6416 `ab8b65f`, JC4020 `f864ded`, JC6432
+  `b61a53d`). The stored value and `PREF_OP_READ` keep the full string. Clock test passed: first 19 letters
+  without garbage, the app reads the full name, a short name shows complete, also after power off and on. Into
+  this repo with Sync 7. The range check for the other preferences stays open (2b, P1, `roadmap.md`).
 - **Models:** same in all three (`screen` only matters in JC6432).
 
 ### F26 — Preference definition comments disagree with the code
