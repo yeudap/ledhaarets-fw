@@ -1873,7 +1873,10 @@ scope).
   (P4).
 - **Impact:** reads past arrays. For `textPlace`:
   - *Observed on production 7.09 (clock test):* names of 22 / 40 / 70 characters sent from the app showed
-    garbage after the name in the "choose ofek" menu; place and zmanim stayed correct.
+    garbage after the name in the "choose ofek" menu; place and zmanim stayed correct. In a photo of 7.09 (a
+    name of 27 letters, place Rome) the name is followed by "3333" and "((": they match the 0x33 bytes of
+    `nz_lat` (41.9) and the 0x28 bytes of `nz_long` (12.48), as read with SYNC. This supports the analysis below
+    without proving it.
   - *Analyzed on the repo build (JC6416 ELF, not production):* `Place::Place` runs `strcpy` before it assigns
     the fields, so up to 79 bytes the overwritten fields of the temporary are written again; `name` is left
     without a terminator, and the menu reads on into the bytes after it (`nz_lat` / `nz_long` by the `Place`
