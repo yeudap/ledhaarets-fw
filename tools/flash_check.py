@@ -9,10 +9,14 @@ Usage (Git Bash, from the repo root; python -B keeps tools/ free of bytecode):
   python -I -B tools/flash_check.py ... --detail "<demangled function name>"   # diff of one function
   <ref.elf>                 reference build (e.g. a copy of .pio/build/esp32dev/firmware.elf before the step)
   <cand.elf>                candidate build
-  <ref_UserPreferences.h>   the reference tree's src/Preferences/UserPreferences.h (git archive of HEAD)
+  <ref_UserPreferences.h>   the reference tree's src/Preferences/UserPreferences.h (git archive of HEAD), for a
+                            reference before 2a.3.3 (registry with all UserPref members); or the reference
+                            tree's src/Preferences/ directory (layer objects, 2a.3.3 and later)
   <cand_Preferences_dir>    the candidate's src/Preferences/ (layer layouts are parsed from the headers)
-The layouts are the 2a.3.3 ones (registry with all UserPref members in the reference, layer objects in
-the candidate); a later step that changes them (2a.4) must adapt ref_layout / cand_layout first.
+UserPref layout, per side, from its UserPreferences.h: up to 2a.3.3 UserPrefBase holds _key, _type, _index,
+_isModified, _prefs and UserPref<T> _value, _defaultValue; since 2a.4 UserPrefBase holds _meta (the PrefDef
+entry in flash) and _isModified, and UserPref<T> only _value. A later step that changes a layout must adapt
+the tables first.
 
 History: written for 2a.3.3 as flashcheck2.py (v2, dataflow); moved here without logic changes.
 Its base module flashcheck.py (layouts, ELF access, normalization; also v1 of the check, linear
@@ -39,7 +43,20 @@ Categories (first level at which ref == cand):
   alignment        + narrow / wide forms, NOPs (`or a1, a1, a1`), zero fill
   regalloc         + register renaming
   ref-indirection  + the load of userContent.textPrefs (NOT pre-approved)
+  meta-indirection + (2a.4) a load of X._meta, and loads through it named as the members they replace
+                     (X._key, X._type, X._index, X._prefs, X._defaultValue)
+  list-access      + (2a.4) the lists: reference vector begin / end loads (through userPreferences or the
+                     textPrefs reference) and candidate allPrefsArray literals, both named LIST@<byte offset>
   manual           anything else
+After the levels, for a function still manual: same-effects; list-access (2a.4: the same effects with the
+LIST@ literals left out); string-default (2a.4, UserPref<String> members only: the same effects once the
+String-default calls are mapped, see STRING_DEFAULT_CALLS); isra-clone (2a.4, owner's definition: the caller
+calls X$isra$N instead of X, the only argument removed is &userPreferences, X takes only `this`, every other
+effect identical; see isra_caller); planned (the definition sites: PLANNED, PLANNED_RE); comdat.
+isra-clone, the clone itself: every X$isra$N of the candidate that the reference lacks, where the reference has
+X, is compared with X by the same levels and listed as `X -> X$isra$N`; a plain X kept as well is compared too.
+Constants: a literal inside a function (not at its start) or a 64 KiB multiple in the code range is a constant,
+compared by value. Calls: aliases (one address, several names) count as one callee (CANON).
 """
 import sys, os, re, struct, bisect, subprocess
 from collections import OrderedDict
@@ -52,38 +69,58 @@ SIZE = {'uint8_t': (24, 4), 'int8_t': (24, 4), 'uint16_t': (24, 4), 'int16_t': (
 VALUE = {'uint8_t': (20, 21), 'int8_t': (20, 21), 'uint16_t': (20, 22), 'int16_t': (20, 22),
          'double_t': (24, 32), 'String': (20, 36)}
 BASE = {0: 'vptr', 4: '_key', 8: '_type', 12: '_index', 13: '_isModified', 16: '_prefs'}
+# 2a.4: UserPrefBase = vptr, _meta, _isModified; UserPref<T> = _value only (sizes from the DWARF of the 2a.4 build)
+SIZE_META = {'uint8_t': (12, 4), 'int8_t': (12, 4), 'uint16_t': (12, 4), 'int16_t': (12, 4),
+             'double_t': (24, 8), 'String': (28, 4)}
+VALUE_META = {'uint8_t': (9, None), 'int8_t': (9, None), 'uint16_t': (10, None), 'int16_t': (10, None),
+              'double_t': (16, None), 'String': (12, None)}
+BASE_META = {0: 'vptr', 4: '_meta', 8: '_isModified'}
+# fields of a PrefDef<T> entry (PrefMeta key / type / index / prefs, then def), named as the members they replace
+META_FIELDS = {0: '_key', 4: '_type', 8: '_index', 12: '_prefs', 16: '_defaultValue', 20: '_defaultValue+4'}
+TABLES_MEMBERS = (SIZE, VALUE, BASE)
+TABLES_META = (SIZE_META, VALUE_META, BASE_META)
 
 
-def userpref_member(t, inner):
-    v, d = VALUE[t]
-    if inner in BASE:
-        return BASE[inner]
+def tables_of(userpreferences_h):
+    """UserPref layout tables of a tree, from the text of its UserPreferences.h."""
+    return TABLES_META if re.search(r'const PrefMeta \*_meta;', userpreferences_h) else TABLES_MEMBERS
+
+
+def userpref_member(t, inner, tables=TABLES_MEMBERS):
+    _, value, base = tables
+    v, d = value[t]
+    if inner in base:
+        return base[inner]
     if t == 'String':
         if v <= inner < v + 16:
             return '_value+%d' % (inner - v)
-        if d <= inner < d + 16:
+        if d is not None and d <= inner < d + 16:
             return '_defaultValue+%d' % (inner - d)
     else:
         if inner == v:
             return '_value'
-        if inner == d:
+        if d is not None and inner == d:
             return '_defaultValue'
         if t == 'double_t' and v < inner < v + 8:
             return '_value+%d' % (inner - v)
+        if t == 'double_t' and d is not None and d < inner < d + 8:
+            return '_defaultValue+%d' % (inner - d)
     return '?%d' % inner
 
 
 class Layout:
     """fields: list of (offset, size, name, kind) where kind is a UserPref type or 'vector'/'prefs'/'ref'."""
 
-    def __init__(self):
+    def __init__(self, tables=TABLES_MEMBERS):
         self.objs = {}
+        self.tables = tables
+        self.num_text = None        # numTextPrefs of the registry (2a.4), for the list offsets
 
     def add(self, obj, members):
         off, fields, align = 0, [], 4
         for name, kind in members:
             if isinstance(kind, list):           # nested struct
-                sub = Layout._struct(kind)
+                sub = self._struct(kind)
                 a = sub[2]
                 off = (off + a - 1) // a * a
                 for o, s, n, k in sub[0]:
@@ -91,7 +128,7 @@ class Layout:
                 off += sub[1]
                 align = max(align, a)
                 continue
-            s, a = SIZE.get(kind, {'vector': (12, 4), 'prefs': (8, 4), 'ref': (4, 4)}.get(kind))
+            s, a = self.tables[0].get(kind, {'vector': (12, 4), 'prefs': (8, 4), 'ref': (4, 4)}.get(kind))
             off = (off + a - 1) // a * a
             fields.append((off, s, name, kind))
             off += s
@@ -100,9 +137,8 @@ class Layout:
         self.objs[obj] = (fields, size)
         return size
 
-    @staticmethod
-    def _struct(members):
-        l = Layout()
+    def _struct(self, members):
+        l = Layout(self.tables)
         size = l.add('x', members)
         fields = l.objs['x'][0]
         align = 8 if any(k == 'double_t' for _, _, _, k in fields) else 4
@@ -114,8 +150,8 @@ class Layout:
             if o <= off < o + s:
                 inner = off - o
                 leaf = n.split('.')[-1]
-                if k in VALUE:
-                    return '%s.%s' % (leaf, userpref_member(k, inner))
+                if k in self.tables[1]:
+                    return '%s.%s' % (leaf, userpref_member(k, inner, self.tables))
                 return '%s+%d' % (leaf, inner)
         return '%s?+%d' % (obj, off)
 
@@ -143,15 +179,19 @@ def parse_members(text, struct):
 
 
 def ref_layout(hdr):
+    if os.path.isdir(hdr):           # a Preferences/ directory: layer objects (2a.3.3 and later)
+        return cand_layout(hdr)
     t = open(hdr, encoding='utf-8').read().replace('\r\n', '\n')
-    L = Layout()
+    L = Layout(tables_of(t))
     L.add('userPreferences', parse_members(t, 'UserPreferences'))
     return L
 
 
 def cand_layout(pdir):
     rd = lambda f: open(os.path.join(pdir, f), encoding='utf-8').read().replace('\r\n', '\n')
-    L = Layout()
+    L = Layout(tables_of(rd('UserPreferences.h')))
+    m = re.search(r'numTextPrefs = (\d+);', rd('UserPreferences.h'))
+    L.num_text = int(m.group(1)) if m else None
     d = rd('DataPrefs.h')
     L.add('dataPrefs', [('place', parse_members(d, 'PlacePrefs')), ('zmanim', parse_members(d, 'ZmanimPrefs')),
                         ('minhagim', parse_members(d, 'MinhagimPrefs'))])
@@ -230,12 +270,18 @@ class ElfBase:
         return va <= v < va + size
 
     def literal(self, v):
-        """('pref', obj, off) | ('sym', 'name+off') | ('str', content) | ('const', v)"""
+        """('pref', obj, off) | ('list', off) | ('sym', 'name+off') | ('str', content) | ('const', v)"""
         for n, a in self.pref.items():
             size = self.syms[n][0][1]
             if a <= v < a + size:
                 return ('pref', n, v - a)
         n, o = self.sym_at(v)
+        if n == 'UserPreferences::allPrefsArray':          # 2a.4: the registry lists in flash
+            return ('list', o)
+        if n is not None and self.syms[n][0][2] in 'tTwW' and (o != 0 or v & 0xffff == 0):
+            # inside a function (not at its start), or a 64 KiB multiple: a constant that falls in the code range
+            # (e.g. 0x40100000, the high word of double 4.0), compared by value
+            return ('const', v)
         if n is not None and not self.in_rodata(v):
             return ('sym', '%s+%d' % (n, o))
         if self.in_rodata(v):
@@ -449,7 +495,14 @@ def resolve(E, b):
     o, off = b
     if o == '@textPrefs':
         return 'textPrefs+%d' % off
+    if o.startswith('@meta:'):                  # 2a.4: inside the PrefDef entry of preference <name>
+        return '%s.%s' % (o[6:], META_FIELDS.get(off, '?meta%d' % off))
     return E.layout.resolve(o, off)
+
+
+# 2a.4 list names: byte offset in allPrefsArray of each vector begin / end of the reference (set in main when
+# the candidate has allPrefsArray; empty otherwise, so the list renaming never applies)
+LISTMAP = {}
 
 
 def transfer(E, p, ins, state, opts, emit=None):
@@ -467,7 +520,9 @@ def transfer(E, p, ins, state, opts, emit=None):
             st[r] = (lit[1], lit[2])
         else:
             st.pop(r, None)
-            if lit[0] == 'str':
+            if lit[0] == 'list':
+                tok = 'l32r %s, LIST@%d' % (r, lit[1])
+            elif lit[0] == 'str':
                 tok = 'l32r %s, STR:%r' % (r, lit[1])
             elif lit[0] == 'sym':
                 tok = 'l32r %s, %s' % (r, lit[1])
@@ -504,6 +559,11 @@ def transfer(E, p, ins, state, opts, emit=None):
             if o == 'userContent' and field == 'textPrefs+0' and op.startswith('l32i') and opts.get('indirection'):
                 st[ops[0]] = ('@textPrefs', 0)
                 tok = None
+            elif field.endswith('._meta') and op.startswith('l32i') and opts.get('meta'):
+                st[ops[0]] = ('@meta:' + field[:-len('._meta')], 0)
+                tok = None
+            elif field in LISTMAP and op.startswith('l32i') and opts.get('lists'):
+                tok = 'l32r %s, LIST@%d' % (ops[0], LISTMAP[field])
     else:
         writes = bool(dst and re.match(r'^a\d+$', dst) and not NOWRITE.match(op))
         srcs = ops[1:] if writes else ops
@@ -640,7 +700,32 @@ def pref_loads(E, fn):
 
 # The registry constructor: its body is the planned change of 2a.3.3 (the 124 member constructions moved
 # to the layer constructors; the push_back targets are layer fields).
-PLANNED = {'UserPreferences::UserPreferences()'}
+# 2a.4 adds the other definition sites: the layer constructors (each member now built from its PrefDef entry),
+# UserContent::~UserContent (one String per text instead of two), and the static init / destruction functions
+# of the Preferences files.
+PLANNED = {'UserPreferences::UserPreferences()',
+           'PlacePrefs::PlacePrefs()', 'ZmanimPrefs::ZmanimPrefs()', 'MinhagimPrefs::MinhagimPrefs()',
+           'LogicPrefs::LogicPrefs()', 'LayoutPrefs::LayoutPrefs()', 'PresentationPrefs::PresentationPrefs()',
+           'DisplayPrefs::DisplayPrefs()', 'SystemPrefs::SystemPrefs()', 'UserContent::UserContent()',
+           'UserContent::~UserContent()'}
+PLANNED_RE = re.compile(r'^_GLOBAL__sub_[ID]__ZN\d+(PlacePrefs|LogicPrefs|LayoutPrefs|SystemPrefs|UserContent|'
+                        r'DisplayPrefs|UserPreferences)C2Ev$')
+
+# 2a.4, UserPref<String> members: the default is a const char * in the PrefDef entry instead of a String member,
+# so these String calls of the reference become the const char * forms (mangled names).
+STRING_DEFAULT_CALLS = {'_ZN6StringC1ERKS_': '_ZN6StringC1EPKc',            # String(const String&) -> (const char*)
+                        '_ZN6StringaSERKS_': '_ZN6StringaSEPKc',            # operator=(const String&) -> (const char*)
+                        '_ZNK6String6equalsERKS_': '_ZNK6String6equalsEPKc',  # equals(const String&) -> (const char*)
+                        '_ZN5Print5printERK6String': '_ZN5Print5printEPKc'}   # print(const String&) -> (const char*)
+
+
+def string_default(er, ec):
+    """Same effects once the reference's String-default calls are mapped to the const char * forms."""
+    from collections import Counter
+    calls = Counter()
+    for k, v in er[2].items():
+        calls[STRING_DEFAULT_CALLS.get(k, k)] += v
+    return er[0] == ec[0] and er[1] == ec[1] and calls == ec[2] and er[3] == ec[3]
 
 
 def COMDAT_CALLS(a, b):
@@ -654,7 +739,11 @@ STEPS = [('base', lambda t: t, {}),
          ('alignment', lambda t: align_norm(t), {}),
          ('regalloc', lambda t: reg_norm(align_norm(t)), {}),
          ('scheduling', lambda t: reg_norm(align_norm(t)), {'blocks': True}),
-         ('ref-indirection', lambda t: reg_norm(align_norm(t)), {'indirection': True, 'blocks': True})]
+         ('ref-indirection', lambda t: reg_norm(align_norm(t)), {'indirection': True, 'blocks': True}),
+         ('meta-indirection', lambda t: reg_norm(align_norm(t)), {'indirection': True, 'meta': True, 'blocks': True}),
+         ('list-access', lambda t: reg_norm(align_norm(t)),
+          {'indirection': True, 'meta': True, 'lists': True, 'blocks': True})]
+EFFECT_OPTS = {'indirection': True, 'meta': True, 'lists': True}
 
 
 def blocks(fin):
@@ -692,7 +781,8 @@ def effects(toks):
             continue
         m = re.match(r'^callx\d+ (a\d+)', t)
         if m and m.group(1) in fnlit:
-            calls[FUNCS[fnlit.pop(m.group(1))]] += 1
+            f = FUNCS[fnlit.pop(m.group(1))]
+            calls[CANON.get(f, f)] += 1
             continue
         m = re.match(r'^(\S+) (&\S+|a\d+), \[([^\]]+)\]', t)
         if m:
@@ -705,7 +795,7 @@ def effects(toks):
                 addr[x.split('=&', 1)[1]] += 1
         m = re.match(r'^(call\d+) <([^>]*)>', t)
         if m:
-            calls[m.group(2)] += 1
+            calls[CANON.get(m.group(2), m.group(2))] += 1
         elif t.startswith('callx'):
             calls['callx'] += 1
         if t.startswith('l32r '):
@@ -715,18 +805,47 @@ def effects(toks):
 
 
 FUNCS = {}    # demangled function name -> mangled (for call tokens), filled in main
+CANON = {}    # mangled function name -> one name per address (aliases, e.g. esp_timer_get_time), filled in main
 
 
-def classify(R, C, fn):
+def without_lists(e):
+    """Effects with the 2a.4 list literals (LIST@<offset>) left out (list-access fallback)."""
+    return e[0], e[1], e[2], frozenset(x for x in e[3] if not x.startswith('LIST@'))
+
+
+ISRA_CALL = re.compile(r'^(call(\d+)) <(_Z\w+)\$isra\$\d+>$')
+
+
+def isra_caller(R, ctoks, er):
+    """isra-clone, in the calling function: the candidate calls X$isra$N where the reference calls X, and the only
+    argument removed is the object pointer &userPreferences. Accepted only when X takes nothing but `this`
+    (arity 1). Each such call is put back as `call <X> ARGS{a<n+2>=&userPreferences}`; then every effect must be
+    identical."""
+    obj = resolve(R, ('userPreferences', 0))
+    out, n = [], 0
+    for t in ctoks:
+        m = ISRA_CALL.match(t)
+        if m:
+            if arity(m.group(3)) != 1:
+                return False
+            t = '%s <%s> ARGS{a%d=&%s}' % (m.group(1), m.group(3), int(m.group(2)) + 2, obj)
+            n += 1
+        out.append(t)
+    return n > 0 and effects(out) == er
+
+
+def classify(R, C, fn, cfn=None):
+    """cfn: the candidate's function when its name differs (an isra clone compared with the reference's X)."""
+    cfn = cfn or fn
     cache = {}
 
     def get(E, opts):
-        k = (id(E), bool(opts.get('indirection')))
+        k = (id(E), bool(opts.get('indirection')), bool(opts.get('meta')), bool(opts.get('lists')))
         if k not in cache:
-            cache[k] = analyze(E, fn, opts)
+            cache[k] = analyze(E, fn if E is R else cfn, opts)
         return cache[k]
     nr, sr = pref_loads(R, fn)
-    nc, sc = pref_loads(C, fn)
+    nc, sc = pref_loads(C, cfn)
     level, last = 'manual', None
     fr = fc = None
     for name, f, opts in STEPS:
@@ -742,12 +861,18 @@ def classify(R, C, fn):
             level = name
             break
     if level == 'manual':
-        tr, _, _ = get(R, {'indirection': True})
-        tc, _, _ = get(C, {'indirection': True})
+        tr, _, _ = get(R, EFFECT_OPTS)
+        tc, _, _ = get(C, EFFECT_OPTS)
         er, ec = effects([t for _, t in tr]), effects([t for _, t in tc])
         if er == ec:
             level = 'same-effects'
-        elif fn in PLANNED:
+        elif LISTMAP and without_lists(er) == without_lists(ec):
+            level = 'list-access'
+        elif fn.startswith('UserPref<String>::') and string_default(er, ec):
+            level = 'string-default'
+        elif isra_caller(R, [t for _, t in tc], er):
+            level = 'isra-clone'
+        elif fn in PLANNED or PLANNED_RE.match(FUNCS.get(fn, fn)):
             level = 'planned'
         elif R.syms[fn][0][2] == 'W' and fn.startswith('UserPref<') and er[0] == ec[0] and er[1] == ec[1] \
                 and er[3] == ec[3] and COMDAT_CALLS(er[2], ec[2]):
@@ -776,14 +901,23 @@ def main(argv):
     for E in (R, C):
         out = subprocess.run([TC + 'nm', E.path], capture_output=True, text=True).stdout
         dem = subprocess.run([TC + 'nm', '-C', E.path], capture_output=True, text=True).stdout
+        by_addr = {}
         for a, b in zip(out.splitlines(), dem.splitlines()):
             pa, pb = a.split(' ', 2), b.split(' ', 2)
             if len(pa) == 3 and len(pb) == 3 and pa[1] in 'tTwW':
                 FUNCS[pb[2]] = pa[2]
+                by_addr.setdefault(pa[0], set()).add(pa[2])
+        for names in by_addr.values():
+            for n in names:
+                CANON.setdefault(n, min(names))
     for o in PREF_OBJS:
         if o in R.layout.objs:
             assert R.layout.objs[o][1] == R.syms[o][0][1], (o, R.layout.objs[o][1], R.syms[o][0][1])
         assert C.layout.objs[o][1] == C.syms[o][0][1], (o, C.layout.objs[o][1], C.syms[o][0][1])
+    if 'UserPreferences::allPrefsArray' in C.syms:      # 2a.4: names of the reference vector begin / end
+        total, text = C.syms['UserPreferences::allPrefsArray'][0][1], 4 * C.layout.num_text
+        LISTMAP.update({'allPrefs+0': 0, 'allPrefs+4': total, 'textPrefs+0': 0, 'textPrefs+4': text,
+                        'simplePrefs+0': text, 'simplePrefs+4': total})
     if '--detail' in argv:
         import difflib
         fn = argv[argv.index('--detail') + 1]
@@ -797,11 +931,29 @@ def main(argv):
                      and C.syms[n][0][2] in 'tTwW' and la[0][1] != C.syms[n][0][1])
     cats = OrderedDict((k, []) for k in ['pref-addressing', 'two-bases', 'registry-offset', 'rodata-moved',
                                          'alignment', 'regalloc', 'scheduling', 'ref-indirection',
-                                         'same-effects', 'comdat', 'planned', 'manual'])
+                                         'meta-indirection', 'list-access',
+                                         'same-effects', 'string-default', 'isra-clone', 'comdat', 'planned',
+                                         'manual'])
     for n in changed:
         level, pats, _, fill = classify(R, C, n)
         cats[level].append((n, R.syms[n][0][1], C.syms[n][0][1], pats, len(fill[0]), len(fill[1])))
+    # isra-clone, the clone's body: every X$isra$N of the candidate that the reference does not have, where the
+    # reference has X, is compared with X by the same levels (a function that fails is manual). A plain X that the
+    # candidate keeps as well is compared too, also when its size did not change.
+    demangled = {v: k for k, v in FUNCS.items()}
+    clones = []
+    for cn in sorted(C.syms):
+        m = re.match(r'^(_Z\w+)\$isra\$\d+$', cn)
+        if m and cn not in R.syms and C.syms[cn][0][2] in 'tTwW' and demangled.get(m.group(1)) in R.syms:
+            x = demangled[m.group(1)]
+            clones.append((x, cn))
+            for rn, cname in ((x, cn), (x, x)) if x in C.syms and x not in changed else ((x, cn),):
+                level, pats, _, fill = classify(R, C, rn, cname)
+                cats[level].append(('%s -> %s' % (rn, cname) if cname != rn else rn, R.syms[rn][0][1],
+                                    C.syms[cname][0][1], pats, len(fill[0]), len(fill[1])))
     print('size-changed functions present in both:', len(changed))
+    if clones:
+        print('isra clones compared with the reference function:', len(clones))
     for k, v in cats.items():
         print('\n## %s: %d' % (k, len(v)))
         for n, a, b, pats, f1, f2 in v:
