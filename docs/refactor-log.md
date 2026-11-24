@@ -1855,6 +1855,8 @@ scope).
   gets the fix with Sync 7, after the 7.10 release; no separate hotfix port. No NVS migration: a wrong `HAZ = 1`
   already stored stays after the update and cannot be detected (1 is also the default and a valid choice). A user
   who chose "on time" for PSZ in the menu has to choose it again and check the HAZ choice (menu or app).
+  Clock test passed on production 7.10 (JC4020): on 7.09 choosing PSZ "on time" changed HAZ; on 7.10 PSZ
+  changes and HAZ does not.
 - **Models:** JC4020 only (JC6416 / JC6432 have other menu files).
 
 ### F25 — `PREF_OP_WRITE` has no range check for array-indexed preferences; `textPlace` can overflow
@@ -1871,8 +1873,14 @@ scope).
   (P4).
 - **Impact:** reads past arrays, a buffer overflow in RAM, possible crash or boot loop when the value is
   stored.
-- **Status:** open. **Candidate for production** (the `textPlace` overflow). The general check belongs to
-  2b (P1, `roadmap.md`); not changed in refactor steps.
+- **Status:** the `textPlace` overflow is fixed in production 7.10, all three models (`Place::Place` copies at
+  most 19 bytes, always terminated, and keeps the last bytes: the name is stored reversed, so they hold the
+  beginning of the name; applied by the owner). No BLE rejection and no NVS change: the stored value and
+  `PREF_OP_READ` keep the full string. This repo gets the fix with Sync 7, after the 7.10 release; no separate
+  hotfix port. Clock test passed on production 7.10: on 7.09 names of 22 / 40 / 70 characters showed garbage in
+  the "choose ofek" menu, while place and zmanim stayed correct; on 7.10 the name is cut to its first 19
+  characters, without garbage, also after power off and on. The range check for the other preferences is still
+  open; it belongs to 2b (P1, `roadmap.md`); not changed in refactor steps.
 - **Models:** same in all three (`screen` only matters in JC6432).
 
 ### F26 — Preference definition comments disagree with the code
