@@ -1851,8 +1851,9 @@ scope).
   `SetTohenBottomLineHAZ1::okAction`, also sets `HAZ = 1`). Choosing "on time" for plag hamincha –
   shkiaa – zeet hacochavim changes the HAZ setting and leaves PSZ as it was.
 - **Impact:** a menu choice is not applied; BLE writes of `PSZ` are not affected.
-- **Status:** fixed in production 7.10, JC4020 only (`userPreferences.PSZ = 1`, applied by the owner). This repo
-  gets the fix with Sync 7, after the 7.10 release; no separate hotfix port. No NVS migration: a wrong `HAZ = 1`
+- **Status:** fixed in production 7.10, JC4020 only (`userPreferences.PSZ = 1`, applied by the owner; JC4020
+  commit `0a7e50c`, tag `v7.10`). This repo gets the fix with Sync 7, after the 7.10 release; no separate
+  hotfix port. No NVS migration: a wrong `HAZ = 1`
   already stored stays after the update and cannot be detected (1 is also the default and a valid choice). A user
   who chose "on time" for PSZ in the menu has to choose it again and check the HAZ choice (menu or app).
   Clock test passed on production 7.10 (JC4020): on 7.09 choosing PSZ "on time" changed HAZ; on 7.10 PSZ
@@ -1889,11 +1890,13 @@ scope).
   - *7.10:* all lengths are covered, the copy is bounded in the constructor.
 - **Status:** the `textPlace` overflow is fixed in production 7.10, all three models (`Place::Place` copies at
   most 19 bytes, always terminated, and keeps the last bytes: the name is stored reversed, so they hold the
-  beginning of the name; applied by the owner). No BLE rejection and no NVS change: the stored value and
+  beginning of the name; applied by the owner, as `strcpy` from the last 19 bytes; commits JC6416 `ab8b65f`,
+  JC4020 `f864ded`, JC6432 `b61a53d`, tag `v7.10`). No BLE rejection and no NVS change: the stored value and
   `PREF_OP_READ` keep the full string. This repo gets the fix with Sync 7, after the 7.10 release; no separate
   hotfix port. Clock test passed on production 7.10: on 7.09 names of 22 / 40 / 70 characters showed garbage in
   the "choose ofek" menu, while place and zmanim stayed correct; on 7.10 the name is cut to its first 19
-  characters, without garbage, also after power off and on. The range check for the other preferences is still
+  characters, without garbage, also after power off and on (a 27-letter name shows its first 19 letters, the
+  app reads the full name, a short name shows complete). The range check for the other preferences is still
   open; it belongs to 2b (P1, `roadmap.md`); not changed in refactor steps.
 - **Models:** same in all three (`screen` only matters in JC6432).
 
