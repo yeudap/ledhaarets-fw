@@ -157,10 +157,10 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       vs repo (reference `UserPreferences.h` of production): `manual` 0 for 709A / before and for v7.10 /
       after; `initPlace` is `same-effects` in both pairs.
     - `prefs_contract.py check` OK for all three, also with the `.cpp` files in reverse order (scratch
-      wrapper). `count_prefs.py`: sums unchanged (869 / 911 / 932); JC4020 `SetTochenState` writes `HAZ`
-      4 → 3, `PSZ` 2 → 3 (F24). `count_deps.py --compare`: JC4020 `SetTochenState -> LogicPrefs` 120 → 120
-      (`logicPrefs.HAZ` −1, `logicPrefs.PSZ` +1), otherwise no change. `gen_deps_doc.py check` OK (420
-      edges, 7,444 references).
+      wrapper). `count_prefs.py`: identical except HAZ / PSZ in JC4020 (`SetTochenState` writes `HAZ`
+      4 → 3, `PSZ` 2 → 3, F24). `count_deps.py --compare`: JC4020 `SetTochenState -> LogicPrefs` 120 → 120
+      (`logicPrefs.HAZ` −1, `logicPrefs.PSZ` +1), otherwise no change; consumer sums (count_deps)
+      unchanged: 784 / 820 / 847. `gen_deps_doc.py check` OK (420 edges, 7,444 references).
     - UUIDs, NVS namespaces and keys, advertisement prefix unchanged. `git ls-files --eol`: edited files
       `w/crlf`.
   - **Read only, by the owner's decision:** the open part of F25 checked in all three models; the
@@ -1630,9 +1630,8 @@ decision**; refactor steps stay behavior-identical. Numbers are not reused.
 
 - **Now:** `PREF_OP_WRITE` (`handlePref`, `src/BLE/CoreService.cpp`) checks only `shita`, `ofek` and the four
   zeet keys (the zeet check is `> numOfZeetCochavin`, so 0 passes, P8). Every other preference accepts any
-  value of its type, with no range check: `switch` selectors such as `dateFormat`, and `screen` (JC6432: a
-  value other than 1 / 2 leaves the screen areas null; no consumer in the other models); numeric values
-  outside the menu domain, which make the step menus run past their limit (P4). The preferences that are
+  value of its type, with no range check: `switch` selectors such as `dateFormat` (`screen`: see F27);
+  numeric values outside the menu domain, which make the step menus run past their limit (P4). The preferences that are
   used as an array index without protection are a finding of their own (F27); the length of `textPlace`
   is P9. Same in all three models. (Until Sync 7 this was part of F25.)
 - **Why:** an out-of-range value reaches code that does not expect it; the check lives in the transport
