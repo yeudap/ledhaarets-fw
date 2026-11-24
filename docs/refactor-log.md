@@ -1851,7 +1851,10 @@ scope).
   `SetTohenBottomLineHAZ1::okAction`, also sets `HAZ = 1`). Choosing "on time" for plag hamincha –
   shkiaa – zeet hacochavim changes the HAZ setting and leaves PSZ as it was.
 - **Impact:** a menu choice is not applied; BLE writes of `PSZ` are not affected.
-- **Status:** open, recorded in 2a.4 (range survey); not changed.
+- **Status:** fixed in production 7.10, JC4020 only (`userPreferences.PSZ = 1`, applied by the owner). This repo
+  gets the fix with Sync 7, after the 7.10 release; no separate hotfix port. No NVS migration: a wrong `HAZ = 1`
+  already stored stays after the update and cannot be detected (1 is also the default and a valid choice). A user
+  who chose "on time" for PSZ in the menu has to choose it again and check the HAZ choice (menu or app).
 - **Models:** JC4020 only (JC6416 / JC6432 have other menu files).
 
 ### F25 — `PREF_OP_WRITE` has no range check for array-indexed preferences; `textPlace` can overflow
