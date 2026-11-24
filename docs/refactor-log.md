@@ -166,7 +166,11 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - **Read only, by the owner's decision:** the open part of F25 checked in all three models; the
     preferences used as an array index without protection are F27, the rest is P1. F24 and F25 removed
     from Findings. The rationale of the `textPlace` draft range (2a.4) updated, the value unchanged; P9.
-  - **Clock test:** pending (results go into a separate docs commit).
+  - **Clock test** (owner, 24.11.2026; builds of HEAD `e71895d`, copied to
+    `ledhaarets-fw-builds/sync7/<model>/`): passed.
+    - F25, JC6416 / JC4020 / JC6432: a 27-letter name shows as its first 19 letters, the app shows the
+      full name, a short name shows complete; the same after power off and on.
+    - F24, JC4020: after choosing PSZ "on time", PSZ = 1 and HAZ stays 0 (registers screen).
 
 ### Stage 2a — per-layer preference structs
 
@@ -1956,6 +1960,9 @@ scope).
     (at most 255 × row width) and prints it directly (`Area::addText` → `display->print`, no copy into a
     buffer): garbage text, no crash. The zman under it comes from a `switch` (`getZriha`,
     `Shita::…Methods`), so it falls to the `default` branch.
+  - `screen` (JC6432, `MainScreen::setScreen`, called from `Logic::configStates`): a value other than 1 / 2
+    calls neither `Big()` nor `Small()`, so the screen areas stay null (not an array index; recorded here
+    with the others, to be handled in 2b).
   - The zeet keys index `zeetMethod[numOfZeetCochavin+1]`; the BLE check keeps them at 0..28, inside the
     array (0 is P8). `shita` and `ofek` are checked in BLE.
 - **Status:** open. The fix belongs to the "last protection" row of the `roadmap.md` matrix (2b): a bound at
