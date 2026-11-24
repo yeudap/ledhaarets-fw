@@ -1516,6 +1516,20 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       all".
     - JC6432: `colorYom` / `colorParasha` default 1 on the registers screen; JC6416 / JC4020: 6.
     - OTA from the app to the same build succeeds; a few hours of normal use, BLE connect / disconnect.
+- **2a.4.x** (all models) — clock test of 2a.4, by the owner, on the commit builds (`db59120`, byte-identical
+  to the verified candidates): **passed** on JC6416, JC4020 and JC6432.
+  - JC6416: before flashing (on the heap reference build, HEAD before 2a.4) 12 preferences of all six types
+    (u8, i8, i16, u16, double, String) were changed from their defaults. After flashing, SYNC returned the
+    same 12 indexes, and all 12 READ answers were byte-identical before and after (checked in the app log).
+    The registers screen was identical, including the 12 red cells (the comparison with the defaults, now
+    read from flash). Texts, a change from the menu, the resets (SYNC count = 0 after "Reset settings") and
+    OTA: correct.
+  - JC4020, JC6432: the registers screen identical before and after flashing; texts, resets and OTA correct.
+    JC6432: the default of `colorYom` and `colorParasha` is 1.
+  - Skipped (owner's decision): the BLE WRITE of invalid values (the `shita` / `ofek` / zeet range checks,
+    type mismatch, unknown key). Reason: the `CoreService` source did not change, `handlePref` was classified
+    by flash_check with the same effects (list-access), and a valid write passed.
+  - 2a.4 is closed. The next step is set by the owner.
 
 ### Decisions
 

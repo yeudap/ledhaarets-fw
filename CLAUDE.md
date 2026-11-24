@@ -78,8 +78,8 @@ exceptions in `refactor-log.md`). Clock test of 2a.3 (2a.3.5) passed on all thre
 models (23.11.2026). 2a.4 done in all three models (preference definitions as `constexpr` entries in
 flash with a draft range and `static_assert`, the registry as one const array; heap measured on JC6416;
 flash-check categories of 2a.4 in `refactor-log.md`). Roadmap: `docs/architecture/roadmap.md`;
-improvement proposals: refactor-log, "Improvement proposals (P#)". **Next step:** the clock test of 2a.4
-(2a.4.x, list in `refactor-log.md`), then set by the owner.
+improvement proposals: refactor-log, "Improvement proposals (P#)". Clock test of 2a.4 (2a.4.x) passed on
+all three models; 2a.4 is closed. **Next step:** set by the owner.
 Existing NVS keys, namespaces and types never change. Any change to the preference contract
 (new keys, BLE indexes, defaults) happens only as a documented contract-change step approved by
 the owner and recorded in refactor-log. Otherwise behavior stays identical.
