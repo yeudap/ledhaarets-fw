@@ -7,11 +7,11 @@ extern UserPreferences userPreferences;
 
 // ---------------------------------------------------------------------------
 // UserContent: תוכן אישי - 50 הטקסטים (textInput1 ... textInput50)
-// הבעלים של 50 הטקסטים; ההגדרות ב-UserContent.cpp. textPrefs הוא הפניה לווקטור של הרישום.
+// הבעלים של 50 הטקסטים; ההגדרות ב-UserContent.cpp. textPrefs היא התצוגה של הרישום על 50 הטקסטים (2a.4).
 // ---------------------------------------------------------------------------
 struct UserContent
 {
-    std::vector<UserPrefBase *> &textPrefs;
+    static constexpr PrefList textPrefs{UserPreferences::textPrefs};
     UserPref<String> textInput1;
     UserPref<String> textInput2;
     UserPref<String> textInput3;
