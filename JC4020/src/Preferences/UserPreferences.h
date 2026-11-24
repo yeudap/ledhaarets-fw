@@ -8,27 +8,124 @@
 #include <type_traits>
 
 // ---------------------------------------------------------------------------
+// PrefMeta / PrefDef: ההגדרה של העדפה - רשומה constexpr ב-flash (2a.4).
+// מפתח, טיפוס, אינדקס, מופע Preferences, ברירת מחדל וטווח. ב-RAM נשארים רק הערך ומצביע לרשומה.
+// ---------------------------------------------------------------------------
+struct PrefMeta
+{
+    const char *key;
+    PreferenceType type;
+    uint8_t index;
+    Preferences *prefs;
+};
+
+// הטווח: התחום שיש לו משמעות ושהקוד מטפל בו נכון (לא מגבלת התפריט). בשלב זה תיעוד בלבד - אף קוד לא קורא אותו.
+// PR_MIN_MAX: min..max (ב-String: אורך בבתים); step - מידע לממשק בלבד.
+// PR_LIST: רשימת ערכים. PR_OPEN: הטווח לא ידוע בוודאות מהקוד.
+enum PrefRangeKind : uint8_t
+{
+    PR_OPEN,
+    PR_MIN_MAX,
+    PR_LIST
+};
+
+template <typename R>
+struct PrefRange
+{
+    PrefRangeKind kind;
+    R min;
+    R max;
+    R step;
+    const R *list;
+    uint8_t count;
+};
+
+// טיפוס ברירת המחדל בטבלה (ב-String: מחרוזת קבועה) וטיפוס הגבולות (ב-String: אורך)
+template <typename T>
+struct PrefStore
+{
+    using def_type = T;
+    using range_type = T;
+};
+template <>
+struct PrefStore<String>
+{
+    using def_type = const char *;
+    using range_type = uint16_t;
+};
+
+template <typename T>
+struct PrefDef : PrefMeta
+{
+    using D = typename PrefStore<T>::def_type;
+    using R = typename PrefStore<T>::range_type;
+    D def;
+    PrefRange<R> range;
+
+    // אותם ארגומנטים ובאותו סדר כמו הבנאי הקודם של UserPref, ובסוף הטווח
+    constexpr PrefDef(const char *key, D d, PreferenceType type, uint8_t idx, Preferences *prefs, PrefRangeKind open)
+        : PrefMeta{key, type, idx, prefs}, def(d), range{open, R(), R(), R(), nullptr, 0} {}
+    constexpr PrefDef(const char *key, D d, PreferenceType type, uint8_t idx, Preferences *prefs,
+                      PrefRangeKind kind, R min, R max, R step = 1)
+        : PrefMeta{key, type, idx, prefs}, def(d), range{kind, min, max, step, nullptr, 0} {}
+    template <size_t N>
+    constexpr PrefDef(const char *key, D d, PreferenceType type, uint8_t idx, Preferences *prefs, const R (&list)[N])
+        : PrefMeta{key, type, idx, prefs}, def(d), range{PR_LIST, R(), R(), R(), list, static_cast<uint8_t>(N)} {}
+};
+
+// בדיקת זמן קומפילציה (static_assert בקובץ השכבה): ברירת המחדל בתוך הטווח. לא לרשומות PR_OPEN.
+template <typename T>
+constexpr bool prefDefaultInRange(const PrefDef<T> &d)
+{
+    if constexpr (std::is_same<T, String>::value)
+    {
+        // String: הטווח הוא אורך בבתים
+        if (d.range.kind == PR_MIN_MAX)
+        {
+            size_t len = 0;
+            while (d.def[len])
+                len++;
+            return d.range.min <= len && len <= d.range.max;
+        }
+    }
+    else
+    {
+        if (d.range.kind == PR_LIST)
+        {
+            for (uint8_t i = 0; i < d.range.count; i++)
+            {
+                if (d.range.list[i] == d.def)
+                    return true;
+            }
+            return false;
+        }
+        if (d.range.kind == PR_MIN_MAX)
+        {
+            return d.range.min <= d.def && d.def <= d.range.max;
+        }
+    }
+    return false; // PR_OPEN: אין טווח לבדוק
+}
+
+// ---------------------------------------------------------------------------
 // UserPrefBase: מחלקת בסיס לגישה גנרית לכל העדפות
 // ---------------------------------------------------------------------------
 class UserPrefBase
 {
 protected:
-    const char *_key;
-    PreferenceType _type;
-    uint8_t _index;
+    const PrefMeta *_meta;
     bool _isModified;
-    Preferences *_prefs;
 
 public:
-    UserPrefBase(const char *key, PreferenceType type, uint8_t idx, Preferences *prefs)
-        : _key(key), _type(type), _index(idx), _isModified(false), _prefs(prefs) {}
+    UserPrefBase(const PrefMeta &meta)
+        : _meta(&meta), _isModified(false) {}
 
     virtual ~UserPrefBase() {}
 
     // Getters
-    const char *getKey() const { return _key; }
-    PreferenceType getType() const { return _type; }
-    uint8_t getIndex() const { return _index; }
+    const char *getKey() const { return _meta->key; }
+    PreferenceType getType() const { return _meta->type; }
+    uint8_t getIndex() const { return _meta->index; }
     bool isModified() const { return _isModified; }
     bool hasChangedFromDefault() const { return _hasChangedFromDefault(); }
 
@@ -50,23 +147,25 @@ class UserPref : public UserPrefBase
 {
 private:
     T _value;
-    T _defaultValue;
+
+    // ההגדרה בטבלה (flash). ב-String ברירת המחדל היא const char *
+    const PrefDef<T> &def() const { return static_cast<const PrefDef<T> &>(*_meta); }
 
 public:
-    UserPref(const char *key, T defaultValue, PreferenceType type, uint8_t idx, Preferences *prefs)
-        : UserPrefBase(key, type, idx, prefs), _value(defaultValue), _defaultValue(defaultValue) {}
+    UserPref(const PrefDef<T> &definition)
+        : UserPrefBase(definition), _value(definition.def) {}
 
     // Getters & Setters
     // גישה לערך
     T getValue() const { return _value; }
     // גישה לערך ברירת המחדל
-    T getDefault() const { return _defaultValue; }
+    T getDefault() const { return def().def; }
     void setValue(T newValue)
     {
         if (_value != newValue)
         {
             Serial.print("Updating ");
-            Serial.print(_key);
+            Serial.print(getKey());
             Serial.print(" from ");
             Serial.print(_value);
             Serial.print(" to ");
@@ -78,7 +177,7 @@ public:
         else
         {
             Serial.print("No change for ");
-            Serial.println(_key);
+            Serial.println(getKey());
         }
     }
 
@@ -105,19 +204,20 @@ public:
     void print() override
     {
         Serial.print("idx: ");
-        Serial.print(_index);
+        Serial.print(getIndex());
         Serial.print(" Key: ");
-        Serial.print(_key);
+        Serial.print(getKey());
         Serial.print(", Value: ");
         Serial.print(_value);
         Serial.print(", Default: ");
-        Serial.print(_defaultValue);
+        Serial.print(def().def);
         Serial.print(", Modified: ");
         Serial.println(_isModified ? "Yes" : "No");
     }
     virtual void load() override
     {
-        if (!_prefs)
+        Preferences *prefs = _meta->prefs;
+        if (!prefs)
         {
             Serial.println("Preferences pointer is NULL in load().");
             return;
@@ -128,27 +228,27 @@ public:
         // Serial.println(_defaultValue);
         if constexpr (std::is_same<T, uint8_t>::value)
         {
-            _value = _prefs->getUChar(_key, _defaultValue);
+            _value = prefs->getUChar(getKey(), def().def);
         }
         else if constexpr (std::is_same<T, int8_t>::value)
         {
-            _value = _prefs->getChar(_key, _defaultValue);
+            _value = prefs->getChar(getKey(), def().def);
         }
         else if constexpr (std::is_same<T, uint16_t>::value)
         {
-            _value = _prefs->getUShort(_key, _defaultValue);
+            _value = prefs->getUShort(getKey(), def().def);
         }
         else if constexpr (std::is_same<T, int16_t>::value)
         {
-            _value = _prefs->getShort(_key, _defaultValue);
+            _value = prefs->getShort(getKey(), def().def);
         }
         else if constexpr (std::is_same<T, String>::value)
         {
-            _value = _prefs->getString(_key, _defaultValue);
+            _value = prefs->getString(getKey(), def().def);
         }
         else if constexpr (std::is_same<T, double>::value)
         {
-            _value = _prefs->getDouble(_key, _defaultValue);
+            _value = prefs->getDouble(getKey(), def().def);
         }
         else
         {
@@ -162,7 +262,8 @@ public:
 
     virtual void save() override
     {
-        if (!_prefs)
+        Preferences *prefs = _meta->prefs;
+        if (!prefs)
         {
             Serial.println("Preferences pointer is NULL in save().");
             return;
@@ -173,27 +274,27 @@ public:
         // Serial.println(_value);
         if constexpr (std::is_same<T, uint8_t>::value)
         {
-            _prefs->putUChar(_key, _value);
+            prefs->putUChar(getKey(), _value);
         }
         else if constexpr (std::is_same<T, int8_t>::value)
         {
-            _prefs->putChar(_key, _value);
+            prefs->putChar(getKey(), _value);
         }
         else if constexpr (std::is_same<T, uint16_t>::value)
         {
-            _prefs->putUShort(_key, _value);
+            prefs->putUShort(getKey(), _value);
         }
         else if constexpr (std::is_same<T, int16_t>::value)
         {
-            _prefs->putShort(_key, _value);
+            prefs->putShort(getKey(), _value);
         }
         else if constexpr (std::is_same<T, String>::value)
         {
-            _prefs->putString(_key, _value);
+            prefs->putString(getKey(), _value);
         }
         else if constexpr (std::is_same<T, double>::value)
         {
-            _prefs->putDouble(_key, _value);
+            prefs->putDouble(getKey(), _value);
         }
         else
         {
@@ -205,7 +306,7 @@ public:
     {
         // Serial.print("Resetting preference: ");
         // Serial.println(_key);
-        _value = _defaultValue;
+        _value = def().def;
         _isModified = false;
         save();
     }
@@ -213,7 +314,7 @@ public:
 protected:
     bool _hasChangedFromDefault() const override
     {
-        return _value != _defaultValue;
+        return _value != def().def;
     }
 
     std::vector<uint8_t> toBytes() override
@@ -346,6 +447,20 @@ protected:
 };
 
 // ---------------------------------------------------------------------------
+// PrefList: רשימה קבועה של העדפות - מצביע להתחלה ומספר רשומות (2a.4, במקום std::vector)
+// ---------------------------------------------------------------------------
+struct PrefList
+{
+    UserPrefBase *const *first;
+    size_t count;
+
+    constexpr UserPrefBase *const *begin() const { return first; }
+    constexpr UserPrefBase *const *end() const { return first + count; }
+    constexpr size_t size() const { return count; }
+    UserPrefBase *operator[](size_t i) const { return first[i]; }
+};
+
+// ---------------------------------------------------------------------------
 // UserPreferences: מחלקה המאחדת את כל העדפות המשתמש
 // ---------------------------------------------------------------------------
 class UserPreferences
@@ -354,10 +469,14 @@ public:
     // הגדרת העדפות כמשתנים ציבוריים לגישה ישירה
     UserPref<uint8_t> forceWrite;
 
-    // וקטור שמאגד את כל ההעדפות (UserPrefBase) לגישה גנרית
-    std::vector<UserPrefBase *> allPrefs;
-    std::vector<UserPrefBase *> textPrefs;
-    std::vector<UserPrefBase *> simplePrefs;
+    // כל ההעדפות (UserPrefBase) לגישה גנרית: מערך קבוע אחד ב-flash (ההגדרה ב-UserPreferences.cpp).
+    // הסדר: 50 הטקסטים ואחריהם ההעדפות הפשוטות (סדר הטעינה). שלוש הרשימות הן תצוגות עליו.
+    static constexpr size_t numTextPrefs = 50;
+    static constexpr size_t numSimplePrefs = 75;
+    static UserPrefBase *const allPrefsArray[numTextPrefs + numSimplePrefs];
+    static constexpr PrefList allPrefs{allPrefsArray, numTextPrefs + numSimplePrefs};
+    static constexpr PrefList textPrefs{allPrefsArray, numTextPrefs};
+    static constexpr PrefList simplePrefs{allPrefsArray + numTextPrefs, numSimplePrefs};
 
     // מופע Preferences שמשמש את כל העדפות המשתמש
     Preferences prefs;
