@@ -1438,6 +1438,9 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       11 → 32, Display 15 → 50, System 4 → 7, UserContent 55 → 155 (+313). No edge added or removed;
       consumers unchanged (784 / 820 / 847). Totals: JC6416 420 / 7,444, JC4020 391 / 7,404, JC6432
       438 / 8,160. `gen_deps_doc.py check` failed as expected; `write` in this commit, then OK.
+      Confirmed after the docs commit (`count_deps --json`, tree of `1c65a19` vs HEAD): in every model the
+      whole difference of +313 references is in the 6 edges with both ends in `Preferences/`, no edge outside
+      `Preferences/` changed, and the consumer sums are 784 / 820 / 847 before and after.
     - `count_prefs`: two differences per model, both declared: `forceWrite: UserPreferences r1/w0` (the
       array names `&userPreferences.forceWrite`) and `prefs: UserPreferences r1/w0` (the `constexpr` line in
       `UserPreferences.cpp`; owner's decision: second declared difference; P7).
