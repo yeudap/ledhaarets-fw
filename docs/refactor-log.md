@@ -1324,6 +1324,195 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     before the tool changes (entry above). `git ls-files --eol`: line endings unchanged. No path
     under `JC*/` changed.
   - **Clock test:** not needed; no firmware change.
+- **2a.4** (all models, one step) — preference metadata table in flash. Goal: RAM, with no contract change
+  (keys, types, indexes, per-model defaults, NVS, list and load order unchanged). Plan approved by the owner,
+  with additions (ranges, `static_assert`, roadmap, P# list).
+  - **Commits:** docs `aeb682e` (`docs/architecture/roadmap.md`), `b8c6cc9` (`CLAUDE.md`: plans are checked
+    against the roadmap; P# proposals); tools `bec0b75` (`prefs_contract` reads the 2a.4 registry), `1c65a19`
+    (`flash_check`); firmware `2847dca` (JC6416), `9a198f9` (JC4020), `4e406d7` (JC6432), each with its path;
+    then this docs commit.
+  - **What changed** (`src/Preferences/` only, same in all three models):
+    - `UserPreferences.h`: `PrefMeta` (key, type, index, `Preferences *`), `PrefRange<R>` (kind `PR_OPEN` /
+      `PR_MIN_MAX` / `PR_LIST`, min, max, step, list), `PrefStore<T>` (default type; `String`: `const char *`,
+      range in bytes as `uint16_t`), `PrefDef<T> : PrefMeta` (default and range; `constexpr` constructors with
+      the old `UserPref` arguments in the same order, then the range), `prefDefaultInRange` (compile-time
+      check), `PrefList` (pointer and count; `begin` / `end` / `size` / `operator[]`). `UserPrefBase` holds
+      `_meta` and `_isModified`; `UserPref<T>` holds `_value` only, and reads key / type / index / prefs /
+      default through `_meta` (mechanical replacements; getters and API unchanged). `UserPreferences`: the
+      three `std::vector` replaced by `static UserPrefBase *const allPrefsArray[125]` and the views
+      `static constexpr PrefList allPrefs / textPrefs / simplePrefs`.
+    - `UserPreferences.cpp`: `forceWriteDef`; the constructor only builds `forceWrite`; the 125 `push_back`
+      and the two `insert` lines became the initializer of `allPrefsArray`, texts first then simple (the
+      order of `allPrefs` and of the load), the same order inside each list.
+    - Layer `.cpp` files: per preference `static constexpr PrefDef<T> <name>Def(<old arguments>, <range>);`,
+      a `static_assert(prefDefaultInRange(<name>Def), "<key>")` for every entry that is not `PR_OPEN`, the
+      comment lines moved as they are; the constructor builds `<name>(<name>Def)` in field order. The local
+      reference became `static constexpr Preferences &prefs = userPreferences.prefs;` (MSVC does not accept a
+      non-`constexpr` reference in a constant expression; owner's decision).
+    - `UserContent.h`: `static constexpr PrefList textPrefs{UserPreferences::textPrefs};` instead of the
+      reference member; the header comment says so. Layer headers otherwise unchanged. No file outside
+      `Preferences/` changed (CoreService, TextCommandHandler, ConfigState, RegsScreen, Place as they were).
+    - Per-model: `DisplayPrefs.cpp` of JC6432 is still the only file with different content (`colorYom`,
+      `colorParasha` default 1; `clockFont` range 0..2). `UserPreferences.h` keeps its two existing
+      whitespace-only differences.
+  - **Ranges** (owner's decisions): the range is the domain that has meaning and that the code handles
+    correctly, not the menu limit; `step` is information for the UI only. **The ranges of this step are a
+    draft**; their classification by enforcement layer is decided when 2b is planned (`roadmap.md`). Only
+    documented: no code reads them, and the `CoreService` checks are unchanged. Sources (code, not comments):
+    - `shita` 0..9 (`numOfShitot` 10, `shitot[10]`, BLE check); `eda` 1..6 (`EdotState`, `enum Minhag`);
+      `ofek` 0..94 (`numOfOfeks` 95 = `places[]`, BLE check); the 12 colors 0..6 (`%7` in `ColorState`,
+      `color_list[7]`); `clockFont` 0..4 JC6416 / JC4020, 0..2 JC6432 (`numOfFonts` 5 / 3, `font_list`);
+      `dateFormat` 1..8 (`numOfFormats`, `LoaziDate::toString`); `clockFormat` {12, 24} (`SetClkFormat`);
+      `shaonKaiz`, `zriha`, `shkiaa`, `minhaG`, `plagMinha` 1..3 (`numOfKaiz`, `numOfZS`, `numOfMinhaG`,
+      `numOfPlag` and their `switch`); `middleLine` 1..2, `upLine` 1..3 (JC4020 menus); `rabenuTam`,
+      `zeetCochavim`, `zeetShabat`, `zeetZom` 1..28 (`numOfZeetCochavin`, `zeetMethod[29]`); `zmanTalit` 1..10,
+      `alotHashahar` 1..7, `sozksMga` / `soztMga` 1..4 (`numOfTalit`, `numOfAlot`, `numOfSozMga`); `netzClk`
+      0..60 and the four intervals 5..600 step 5 (the menu domain, which agrees with the comment; the code
+      accepts any value); the 0/1 preferences (`nz_hul`, `homa`, `hul`, `leil`, `shanim`, `timeFormat`, `bt`,
+      the ten display booleans); `TAZ` … `ZSZ` 0..2; `ZYS`, `ZPS`, `IPO`, `IORT` 0..3 (two-bit mask);
+      `textPlace` length 0..19 bytes (`strcpy` into `Place::name[20]` in `initPlace`).
+    - `PR_OPEN`, with the reason: `forceWrite` and `safa` (no code reads them); `timezone` (comment −12..14,
+      menu −12..12); `brightness` (comment "1-12 ×20, valid 0-255", menu 20..220 step 20, driver 0..255);
+      `nerot` (comment 0..40, menu 0..60); `nz_lat` / `nz_long` (comment ±90 / ±180, menu ±89.99 / ±179.99;
+      the calculation breaks at exactly ±90, the exact bound is not set in code); `nz_height` (no range in
+      the comment, menu −200..990 step 10, the calculation takes any value, the app's values are unknown);
+      `screen` (comment 1..4, JC6432 code 1..2, no consumer in the other models); `textInput1..50` (the limit
+      is the pixel width of `validateTextLen`, not bytes; texts unused in JC4020).
+    - zeet keys: `zeetMethod[0]` is `" "`. The menus never produce 0 (they wrap 1..28) and the shita
+      `setDefault` functions write 1 and up; a 0 comes only from BLE (`PREF_OP_WRITE` checks
+      `> numOfZeetCochavin`), is shown as `" "` and falls to the `default` branch of
+      `Shita::zeetCochavimMethods` (4.725°). The draft range stays 1..28. Whether the app sends 0: P8.
+  - **Reported, not changed — what the resets do:** `resetSimplePrefs` and `resetTextPrefs` **write the
+    defaults into NVS** and do not delete keys: `reset()` sets the value to the default, clears
+    `_isModified` and calls `save()` (`put*`); there is no `remove` / `clear`. After "Reset settings" all 75
+    simple keys exist in `clk` with their default; after "Reset texts" the 50 text keys exist with `""`. A
+    later change of a firmware default does not reach a clock that was reset (P5, roadmap open question).
+  - **Baseline, Sync 6:** not changed. `UserPreferences.h` / `.cpp` are identical (without CR) between 709A
+    and the Sync 6 commits in all three models, so the original wording is correct (owner's decision).
+  - **Reference:** clean builds of HEAD before the firmware commits (firmware identical to `744a820`),
+    `SOURCE_DATE_EPOCH=1763337600` in reference and candidate, same build path; `git archive` of HEAD for
+    `count_deps` / `count_prefs`.
+  - **Verification** (all passed in every model before the first firmware commit):
+
+    | Model | `firmware.bin` | RAM | Flash | Compiler warnings |
+    |---|---|---|---|---|
+    | JC6416 | 2,061,744 → 2,059,392 (−2,352) | 61,172 → 59,012 (−2,160) | 2,055,161 → 2,052,821 (−2,340) | 0 |
+    | JC4020 | 2,056,336 → 2,053,936 (−2,400) | 61,204 → 59,052 (−2,152) | 2,049,753 → 2,047,365 (−2,388) | 0 |
+    | JC6432 | 2,073,120 → 2,070,752 (−2,368) | 61,924 → 59,772 (−2,152) | 2,066,549 → 2,064,173 (−2,376) | 0 |
+
+    - RAM, static: the seven preference objects 4,512 → 2,356 (−2,156) in all three models, exactly as
+      computed: `dataPrefs` 688 → 360, `logicPrefs` 648 → 324, `presentationPrefs` 192 → 96, `displayPrefs`
+      288 → 144, `systemPrefs` 24 → 12, `userContent` 2,604 → 1,400, `userPreferences` 68 → 20; the rest of
+      the pio delta is alignment (±4). `sizeof` from DWARF, before → after: `UserPref<uint8_t / int8_t /
+      uint16_t / int16_t>` 24 → 12, `<double>` 40 → 24, `<String>` 52 → 28; `UserPrefBase` 20 → 12.
+    - RAM, heap (**measured on a clock, JC6416 only**; local patch, not committed, identical in reference
+      and candidate: `ESP.getFreeHeap()`, `getMinFreeHeap()`, `getMaxAllocHeap()` printed at the first line
+      of `setup()` and at its end; two runs per build, identical): reference setup-start free 213,648 /
+      min 213,616 / maxAlloc 110,580, setup-end 140,732 / 140,620 / 110,580; candidate setup-start
+      217,132 / 217,100 / 110,580, setup-end 144,224 / 144,120 / 110,580. Difference **+3,484** at
+      setup-start (2,160 static per pio plus **1,324 heap**: the three vectors, 128 / 64 / 125 pointers =
+      1,268 bytes plus block headers, and the `_defaultValue` buffer of `textPlace`; computed about 1.3KB) and
+      +3,492 at setup-end; maxAlloc unchanged. In JC4020 and JC6432 only the static part is measured (build).
+    - Contract tool: `check` OK for all three without `write` (75 / 50 / 125 / 126, `[serial] 0`), also with
+      the `.cpp` files in reverse order (scratch wrapper). Before the change, on a scratch copy: MSVC accepts
+      the `constexpr` form, the output is byte-identical to the baseline, and a default outside the range
+      fails `static_assert` (C2338) for a min/max (`ofek`), a length (`textPlace`) and a list
+      (`clockFormat`); the copy was deleted.
+    - Moved lines (scratch script, HEAD vs working tree): 375 entries (125 × 3); the arguments
+      `("key", default, PT_X, index, &prefs` identical to the old lines, the comment lines moved with them,
+      constructor order = old order, `allPrefsArray` order = the old `push_back` order of each list, a
+      `static_assert` after every entry that is not `PR_OPEN` and none after `PR_OPEN`; the only other
+      change is the declared `constexpr` line of `prefs`. 0 problems.
+    - Table placement: 127 objects (125 `…Def`, `allPrefsArray` 500 bytes, `clockFormatValues`) inside
+      `.flash.rodata` (DROM) in all three; no symbol for `prefs` and none for `prefDefaultInRange` (compile
+      time only).
+    - Symbols: data objects of changed size — only the seven preference objects (local symbols listed in
+      another order are not changes). Removed: the `std::vector<UserPrefBase*>` code (`_M_range_insert`,
+      `emplace_back`, `_M_check_len`, `~_Vector_base`, `__copy_m`, `__throw_bad_alloc`), the old
+      `UserPref<String>` constructor, `SystemPrefs::SystemPrefs()` (inlined), the weak
+      `resetSimplePrefs` / `resetTextPrefs`. Added: the new `UserPref<String>` constructor, the `isra` clones
+      `resetSimplePrefs$isra$1` / `resetTextPrefs$isra$2`; JC4020 also `String::equals(const char *)`.
+      Renumbered: `Shita::calcTimeZmaniot$constprop$3` → `$4` (same size).
+    - `count_deps --compare`: the same 6 edges in all three models, all layer → `UserPreferences`
+      (`PrefDef`, `PR_*`, `prefDefaultInRange`, `PrefList`): Data 29 → 102, Logic 30 → 111, Presentation
+      11 → 32, Display 15 → 50, System 4 → 7, UserContent 55 → 155 (+313). No edge added or removed;
+      consumers unchanged (784 / 820 / 847). Totals: JC6416 420 / 7,444, JC4020 391 / 7,404, JC6432
+      438 / 8,160. `gen_deps_doc.py check` failed as expected; `write` in this commit, then OK.
+    - `count_prefs`: two differences per model, both declared: `forceWrite: UserPreferences r1/w0` (the
+      array names `&userPreferences.forceWrite`) and `prefs: UserPreferences r1/w0` (the `constexpr` line in
+      `UserPreferences.cpp`; owner's decision: second declared difference; P7).
+    - flash_check (HEAD vs candidate, the categories of 2a.3.3 plus those of this step, below):
+
+      | Category | JC6416 | JC4020 | JC6432 |
+      |---|---|---|---|
+      | pref-addressing | 32 | 30 | 37 |
+      | rodata-moved | 7 | 6 | 6 |
+      | alignment | 39 | 37 | 50 |
+      | regalloc | 0 | 1 | 2 |
+      | scheduling | 5 | 5 | 4 |
+      | meta-indirection | 9 | 7 | 9 |
+      | list-access | 5 | 4 | 5 |
+      | same-effects | 41 | 42 | 55 |
+      | string-default | 3 | 3 | 3 |
+      | isra-clone | 3 | 3 | 3 |
+      | planned | 12 | 12 | 12 |
+      | manual | 0 | 0 | 0 |
+
+      154 / 148 / 184 size-changed functions, plus the 2 isra clones compared with the reference functions
+      (both list-access). `meta-indirection`: the menu `okAction`s that change a preference (the inlined
+      `setValue` prints `getKey()` through `_meta`: `SetBTState`, `SetBrightnessState`, `SetFontState`,
+      `SetTimeZoneCustomState`, `ShitaState`, the interval states) and `initPlace` (`ofek.getDefault()`);
+      `RegsScreen::printValues` (the `getDefault` reads) is same-effects; `list-access`:
+      `CoreCallbacks::onWrite` (`handlePref`), `setupPreferences`, `handleWriteText` (JC6416, JC6432), the two
+      clones; `string-default`: `UserPref<String>::load` / `reset` / `_hasChangedFromDefault`; `isra-clone`: the three reset `okAction`s; `planned`: the eight layer
+      constructors in both images, `UserContent::~UserContent`, `UserPreferences::UserPreferences()`
+      (2,145 → 28 bytes), two `_GLOBAL__sub_I/D_`.
+    - Contract strings: no UUID, `LEDHAARETS`, namespace or `prefs.begin` line in any diff. The image fits
+      the OTA slot (31.3%). `git ls-files --eol`: `UserPreferences.*` `w/crlf`, the other layer files `w/lf`
+      (F20), no mixed line endings. Scope: only `<model>/src/Preferences/`.
+  - **flash_check adapted first** (`1c65a19`, separate commit before the firmware): layouts per side from
+    `UserPreferences.h` (members up to 2a.3.3, `_meta` since 2a.4), the reference may be a `Preferences/`
+    directory. Categories added (owner's decisions): `meta-indirection` (a load of `X._meta` and loads
+    through it, named as the members they replace), `list-access` (reference vector begin / end and candidate
+    `allPrefsArray` literals as `LIST@<offset>`; fallback: same effects without the `LIST@` literals),
+    `string-default` (`UserPref<String>` members only: the String-default calls mapped to their
+    `const char *` forms), `isra-clone` (below), `planned` extended to the definition sites. Fixes of
+    existing rules, found on this pair: the high word of a `double` default is named on both sides; a
+    literal inside a function (not at its start) or a 64 KiB multiple in the code range is a constant
+    compared by value (`0x40100000`, the high word of `double` 4.0, was named after whatever function lay
+    there); aliases (`esp_timer_get_time` / `esp_timer_impl_get_time`, one address) are one callee.
+    **Check:** on the 2a.3.3 pair (builds of `f084e48` and HEAD) the output is identical to the previous tool
+    except the four new category lines at 0: 101 / 103 / 114, manual 0.
+  - **isra-clone** (owner's definition): the static lists made `resetSimplePrefs` / `resetTextPrefs`
+    independent of `this`, and the compiler emits `X$isra$N` clones without the object argument. In the
+    caller: a call to `X$isra$N` instead of `X`, where the only argument removed is the object pointer
+    `&userPreferences` (accepted only when `X` takes nothing but `this`); every other effect identical. The
+    body of `X$isra$N` is compared with `X` of the reference by the same levels (including list-access and
+    same-effects) and is a deviation if it fails; a plain `X` kept in the candidate is compared too (none
+    here).
+  - **Docs:** `roadmap.md` (new), `dependencies.md` (`gen_deps_doc.py write`; by hand §1 and §4 totals,
+    §5.6 notes, §10 per-model totals after 2a.4), `preferences.md` §2, §7, `notes.md` status; P1–P8;
+    F24–F26; `CLAUDE.md` stage line. `ble.md` not changed (it describes production).
+  - **Clock test (2a.4.x, all three models):**
+    - Before flashing, on the current test build: change from its default at least one preference of
+      every type and every layer — u8 (a color, `dafHayomi`, `dateFormat`, layout), i8 `timezone`, i16
+      `nz_height`, double `nz_lat` / `nz_long` (custom place, `ofek` 0), u16 an interval, String
+      `textPlace` (BLE WRITE) — and one text; not `bt`. Photograph the registers screen (value / default)
+      and note the SYNC list.
+    - After flashing: all values kept; the registers screen identical to the photo (defaults now read from
+      flash); SYNC returns the same list.
+    - BLE READ of one preference per type (u8, i8, i16, u16, double, String): same value and type code.
+    - BLE WRITE: `shita` 10 → INVALID_VALUE, a valid value is applied at once; `ofek` 95 → INVALID_VALUE, a
+      valid value is applied; `zeetCochavim` 29 → INVALID_VALUE; wrong type → TYPE_MISMATCH; unknown key →
+      INVALID_KEY; a PIN change works.
+    - Texts (JC6416, JC6432): write, read, swap, delete with shift, count. JC4020: by key with
+      `PREF_OP_WRITE` (F3).
+    - Change a preference from the menu, reboot: kept.
+    - "Reset settings", reboot: **SYNC returns 0 indexes** (all 75 defaults checked through the table), the
+      registers screen shows value = default, texts kept. "Reset texts": texts empty, settings kept. "Reset
+      all".
+    - JC6432: `colorYom` / `colorParasha` default 1 on the registers screen; JC6416 / JC4020: 6.
+    - OTA from the app to the same build succeeds; a few hours of normal use, BLE connect / disconnect.
 
 ### Decisions
 
@@ -1331,6 +1520,13 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   later): a filter for surprises, not a proof of equivalence. Accepted categories and the
   "same-effects" rule as recorded in 2a.3.3. The proofs are the contract tool in both file orders,
   the moved source lines, `count_deps`, RAM and the clock test. Tool: `tools/flash_check.py`.
+  Since 2a.4 also `meta-indirection`, `list-access`, `string-default`, `isra-clone` and `planned` for the
+  definition sites, as defined in the 2a.4 entry. A new category still stops a step.
+- **Preference ranges** (owner's decision, 2a.4): the range in the table is the domain that has meaning and
+  that the code handles correctly, not the menu limit; `step` is information for the UI only. A range that
+  is not known for certain from the code is `PR_OPEN`, with the reason recorded. The ranges of 2a.4 are a
+  draft; their classification by enforcement layer is decided when 2b is planned. Every entry that is not
+  `PR_OPEN` has a `static_assert` in its layer file that the default is in range, per model.
 - **New generation after the refactor (major 8)** (owner's decision, after Sync 6; also in
   `CLAUDE.md`, with the contract rule):
   - App and firmware versions depend on each other, and the app forces updates. No BLE
@@ -1352,6 +1548,89 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
 
 Decided by the owner. To be done outside this repo, then ported here with the next sync.
 Nothing planned.
+
+## Improvement proposals (P#)
+
+Collected while working (`CLAUDE.md`, working rules). Each one: current behavior, why it matters, suggested
+change, impact on field clocks / app / contract. **None is implemented without the owner's explicit
+decision**; refactor steps stay behavior-identical. Numbers are not reused.
+
+### P1 — Range checks scattered in BLE (2a.4)
+
+- **Now:** `PREF_OP_WRITE` (`handlePref`, `src/BLE/CoreService.cpp`) checks only `shita`, `ofek` and the four
+  zeet keys; every other preference accepts any value of its type (F25).
+- **Why:** an out-of-range value can index past an array or overflow a buffer; the check lives in the
+  transport layer and covers only six keys.
+- **Suggested:** one check in Preferences from the table's `range` (2b), plus the enforcement matrix of
+  `roadmap.md` (structure and size in BLE, context checks registered by the owning layer).
+- **Impact:** field clocks: values written today stay as they are until a load-time check replaces them;
+  app: new `INVALID_VALUE` answers for keys that were accepted before; contract: BLE error behavior changes
+  (contract step).
+
+### P2 — `getIndex() == 4 / 6` in BLE (2a.4)
+
+- **Now:** `handlePref` recognizes `shita` and `ofek` by their BLE index, both for the range check and for
+  the immediate apply.
+- **Why:** a special case by number in the transport layer; it blocks a uniform BLE layer and ties BLE to
+  index values.
+- **Suggested:** the actions mechanism of 2b (apply functions registered by the owning layer, shared with
+  the menu).
+- **Impact:** none on the field or the app if the behavior is kept; internal only.
+
+### P3 — Contradicting bounds between the menu, the app and the comments (2a.4)
+
+- **Now:** `timezone` (comment −12..14, menu −12..12); `nz_height` (menu −200..990, lower than the Dead Sea
+  is not reachable, the app's limits unknown); `nerot` (comment 0..40, menu 0..60); `brightness` (comment
+  "1-12 ×20", menu 20..220, driver 0..255); the colors (code 0..6, comments 1-7); also `shita` (comment 0..7,
+  code 0..9), `clockFont` in JC6432 (comment 0-4, code 0..2), the intervals ("use in 6416 only", also used in
+  JC6432) (F26).
+- **Why:** the range in the table and a future schema need one answer per preference.
+- **Suggested:** the owner sets each range with the app; then the menu, the app, the comments and the table
+  agree.
+- **Impact:** a narrower range may reject values stored on field clocks (load-time replacement); the app
+  must use the same ranges (schema).
+
+### P4 — Step menus go wrong with an off-step value (2a.4)
+
+- **Now:** the step menus (brightness, intervals, `nz_height`, `timezone`, `nerot`) wrap only when the value
+  hits the exact limit; a value written by BLE that is not on the step runs past it.
+- **Why:** BLE and the menu disagree on what is valid; the menu can reach out-of-range values.
+- **Suggested:** the menus clamp or round to the step; or the range check (P1) rejects off-step values.
+- **Impact:** none on stored values; menu behavior only.
+
+### P5 — Reset that writes defaults vs reset that deletes keys (2a.4)
+
+- **Now:** `resetSimplePrefs` / `resetTextPrefs` write every default into NVS (`put*`); load only reads.
+- **Why:** after a reset, a later change of a firmware default does not reach the clock; on a clock that
+  was never reset it does. Also more NVS writes.
+- **Suggested:** decide in the roadmap open question: write defaults, or only values the user chose (reset
+  = `remove` of the keys).
+- **Impact:** field clocks: behavior after a default change differs by history; app: SYNC compares to the
+  firmware default, unchanged; contract: NVS content (not keys) changes.
+
+### P6 — Texts handled differently in JC4020 (2a.4)
+
+- **Now:** JC4020 has `numOfNameSets` = 0 and the BLE text write is commented out; texts can be written only
+  by key with `PREF_OP_WRITE` (F3).
+- **Why:** blocks a BLE layer identical in all models.
+- **Suggested:** the decision on texts moves to Logic (F3, roadmap); BLE identical.
+- **Impact:** app: JC4020 answers to `TEXT_OP_*` change; field: none on stored texts.
+
+### P7 — `count_prefs` counts every `userPreferences.<name>` (2a.4)
+
+- **Now:** `tools/count_prefs.py` counts any `userPreferences.<name>`; in 2a.4 it counted `prefs` (the
+  `Preferences` instance) as a preference.
+- **Why:** the tool should count preferences only.
+- **Suggested:** count only members of type `UserPref` (from the layer headers and the registry).
+- **Impact:** tools only.
+
+### P8 — Does the app send 0 for a zeet key? (2a.4, for the 2b session)
+
+- **Now:** a zeet value 0 can come only from BLE (the menus wrap 1..28); it is shown as `" "` and computed by
+  the `default` branch (4.725°). The draft range is 1..28; `PREF_OP_WRITE` accepts 0.
+- **Why:** decides whether 0 is a value with meaning or an error.
+- **Suggested:** check in the app; then either 0 is rejected (range 1..28) or documented.
+- **Impact:** app / contract, decided in 2b.
 
 ## Findings
 
@@ -1547,3 +1826,44 @@ scope).
 - **Source:** the file is copied from `ledhaarets-build`, so a fix belongs there and comes in with
   a sync. Not changed here.
 - **Models:** same in all three.
+
+### F24 — JC4020: the PSZ "on time" menu item writes `HAZ`
+
+- **Where:** `SetTohenBottomLinePSZ1::okAction` (`JC4020/src/States/SetTochenState.cpp`).
+- **What:** the item sets `logicPrefs.HAZ = 1` instead of `logicPrefs.PSZ = 1` (the next state,
+  `SetTohenBottomLineHAZ1::okAction`, also sets `HAZ = 1`). Choosing "on time" for plag hamincha –
+  shkiaa – zeet hacochavim changes the HAZ setting and leaves PSZ as it was.
+- **Impact:** a menu choice is not applied; BLE writes of `PSZ` are not affected.
+- **Status:** open, recorded in 2a.4 (range survey); not changed.
+- **Models:** JC4020 only (JC6416 / JC6432 have other menu files).
+
+### F25 — `PREF_OP_WRITE` has no range check for array-indexed preferences; `textPlace` can overflow
+
+- **Where:** `handlePref`, `case PREF_OP_WRITE` (`src/BLE/CoreService.cpp`); `initPlace` and `Place::Place`
+  (`strcpy` into `Place::name[20]`, `src/DB/Place.h`).
+- **What:** only `shita`, `ofek` and the four zeet keys are checked (the zeet check is `> numOfZeetCochavin`,
+  so 0 passes, P8). Values used as an array index or a `switch` selector are accepted as any byte: the
+  colors (`color_list[7]`), `clockFont` (`font_list`), `zriha`, `shkiaa`, `zmanTalit`, `alotHashahar`,
+  `minhaG`, `sozksMga`, `soztMga`, `plagMinha` (the `…Method[]` display arrays), `dateFormat`, `screen`
+  (JC6432: a value other than 1 / 2 leaves the screen areas null). `textPlace` has no length check: per the
+  owner, the app sends up to 70 characters (`maxLength` in `TextProcessor`), so the `strcpy` into
+  `Place::name[20]` **can overflow in normal use**. Off-step values make the step menus run past their limit
+  (P4).
+- **Impact:** reads past arrays, a buffer overflow in RAM, possible crash or boot loop when the value is
+  stored.
+- **Status:** open. **Candidate for production** (the `textPlace` overflow). The general check belongs to
+  2b (P1, `roadmap.md`); not changed in refactor steps.
+- **Models:** same in all three (`screen` only matters in JC6432).
+
+### F26 — Preference definition comments disagree with the code
+
+- **Where:** the comments next to the definitions in the layer `.cpp` files.
+- **What:** colors "1-7" (code 0..6); `shita` 0..7 (code 0..9); `clockFont` "0-4" in JC6432 (code 0..2);
+  `intervalIluy` / `intervalTime` / `intervalInfo` "use in 6416 only" (also used in JC6432); `nerot` "0 - 40"
+  (menu 0..60); `timezone` "-12 to 14" (menu −12..12); `nz_lat` / `nz_long` "-90 to 90" / "-180 to 180"
+  (menu ±89.99 / ±179.99); `screen` four layouts (JC6432 code two); `brightness` "1-12 multiple by 20 (valid
+  0-255)" (menu 20..220).
+- **Impact:** none on the image. Misleading for the ranges and the future schema.
+- **Status:** documentation only; the comments moved unchanged in 2a.4 (moved-lines rule). To be fixed when
+  the ranges are decided (P3).
+- **Models:** as listed.

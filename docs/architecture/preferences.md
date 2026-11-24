@@ -45,6 +45,7 @@
 - `textPrefs` לא נמצאים ב-`simplePrefs`, ולכן הם לא מופיעים ב-`PREF_OP_READ` וב-`PREF_OP_SYNC`.
 - `PREF_OP_WRITE` מחפש ב-`allPrefs`, ולכן הוא מקבל גם מפתחות `textInputN`.
 - `forceWrite` מחזיק את אינדקס 1, ונמצא ב-`simplePrefs`.
+- מ-2a.4 ההגדרות (מפתח, טיפוס, אינדקס, ברירת מחדל) הן רשומות ב-flash, ובזמן ריצה רק הערכים ב-RAM (§7). המפתחות, הטיפוסים, האינדקסים, ברירות המחדל וה-namespace לא השתנו.
 
 ## 3. סיכום לפי שכבת יעד
 
@@ -325,6 +326,7 @@
 - **`BLE/TextCommandHandler`:** `textPrefs[i]` (7 מקומות).
 - **`Preferences/UserPreferences`:** פונקציות הרישום הן `init` ו-`loadAll` (נקראות מתוך `setupPreferences`), `resetSimplePrefs` ו-`resetTextPrefs` (מ-`ConfigState`), ו-`printAll` (debug, לא נקראת בשום מקום).
   - **מ-2a.3.3:** הרישום מחזיק רק את `forceWrite`, את שלוש הרשימות ואת מופע ה-`Preferences` של `clk`. 124 ההעדפות האחרות הן חברים של אובייקטי השכבות (`dataPrefs`, `logicPrefs`, `presentationPrefs`, `displayPrefs`, `systemPrefs`, `userContent`), והבנאי של הרישום ב-`UserPreferences.cpp` מכניס את הכתובות שלהן לרשימות באותו סדר. `userContent.textPrefs` הוא הפניה ל-`userPreferences.textPrefs`.
+  - **מ-2a.4:** ההגדרה של כל העדפה (מפתח, ברירת מחדל, טיפוס, אינדקס, מופע `Preferences`, טווח) היא רשומה `constexpr PrefDef<T>` ב-flash, בקובץ השכבה ליד האובייקט, עם `static_assert` שברירת המחדל בטווח (לא לרשומות `PR_OPEN`). ב-RAM כל `UserPref<T>` מחזיק רק vptr, `_meta`, `_isModified` ו-`_value`. שלוש הרשימות הן תצוגות `static constexpr PrefList` (מצביע ומספר) על מערך קבוע אחד ב-flash, `UserPreferences::allPrefsArray` (50 הטקסטים ואחריהם 75 הפשוטות, סדר הטעינה); `userContent.textPrefs` היא תצוגה סטטית על אותו מערך. הטווח הוא טיוטה לתיעוד בלבד, ואף קוד לא קורא אותו (refactor-log, 2a.4).
 
 ## 8. הבדלים בין דגמים
 
