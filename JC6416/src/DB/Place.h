@@ -131,7 +131,9 @@ public:
     Place(){}
     Place(const char* _name, double lat, double lon, double tz, double h, int ner, bool _homa, bool _hul, const uint8_t* _or, const uint8_t* kise, const uint8_t* chai)
     {
-        strcpy(name, _name);
+        // name is stored reversed, so keep its last bytes (= the beginning of the name)
+        size_t len = strlen(_name);
+        strcpy(name, len > sizeof(name) - 1 ? _name + len - (sizeof(name) - 1) : _name);
         latitude = lat;
         longitude = lon;
         timezone = tz;
