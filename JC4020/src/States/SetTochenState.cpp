@@ -505,7 +505,7 @@ void SetTohenBottomLineSOZKS1::okAction() { logicPrefs.SOZKS = 1; }
 void SetTohenBottomLineHMM1::showStateScreen() { zmaneiHayomMenu(strings.hazotMinhaGMinhaK, logicPrefs.HMM, 1); }
 void SetTohenBottomLineHMM1::okAction() { logicPrefs.HMM = 1; }
 void SetTohenBottomLinePSZ1::showStateScreen() { zmaneiHayomMenu(strings.plagShkiaaCochavim, logicPrefs.PSZ, 1); }
-void SetTohenBottomLinePSZ1::okAction() { logicPrefs.HAZ = 1; }
+void SetTohenBottomLinePSZ1::okAction() { logicPrefs.PSZ = 1; }
 void SetTohenBottomLineHAZ1::showStateScreen() { zmaneiHayomMenu(strings.hazotAlotZriha, logicPrefs.HAZ, 1); }
 void SetTohenBottomLineHAZ1::okAction() { logicPrefs.HAZ = 1; }
 void SetTohenBottomLineZSZh1::showStateScreen() { zmaneiHayomMenu(strings.zrihaSkiaaZeetHacochavim, logicPrefs.ZSZ, 1); }
