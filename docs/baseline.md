@@ -125,6 +125,9 @@ Not in 7.09: F13 (`stamp_app_desc.py` docstring, to be fixed in `ledhaarets-buil
 
 ### Procedure: comparing the repo with a production release (from Sync 5)
 
+Applies only while the compiled repo is identical to production (Sync 5 and Sync 6). Since 2a.3.3
+it is not; from Sync 7 the differential procedure below applies.
+
 1. Reference: `git -C <production> archive <commit> | tar -x -C <scratch>/b/<model>` (the full
    commit hash of the release or tag; recorded in the sync table), then `pio run`
    there with `SOURCE_DATE_EPOCH=1763337600`. Keep `firmware.bin` / `.elf`, then move the folder
@@ -163,3 +166,55 @@ Result: in all three models the compiled content is identical to production 709A
 reference built from the commit hash). At that sync the repo tree differed from production only in
 the 2a views and their consumers. Since 2a.3.3 it also differs in `Preferences/`: the layer objects
 own their preferences, and the registry keeps only the lists and load / save.
+
+## Sync 7: production v7.10
+
+| Model  | Tag     | Commit                                     | Repo commit |
+|--------|---------|--------------------------------------------|-------------|
+| JC6416 | `v7.10` | `ab8b65f1617570b3c0ba181d31f5228084344a7b` | `ddfa24b`   |
+| JC4020 | `v7.10` | `0a7e50c0be07c9ecbcceadeb215048f190cfc169` | `81c79b9`   |
+| JC6432 | `v7.10` | `b61a53d5c2db66aee6ca89531efb8c544d98b637` | `33379aa`   |
+
+`v7.10^{commit}` = `main` = `origin/main` in all three production repos, and the tag is in `origin`
+(`git ls-remote`). `709A` (Sync 6) stays as a historical mark. Method: patch (`git diff 709A..v7.10`)
+in all three models, applied with the editor tool on top of 2a.1–2a.4. Against 709A only these files
+changed; checked again at the start of the sync.
+
+Changes in v7.10 (after 709A):
+- F25: `Place::Place` copies at most the last 19 bytes of the name into `name[20]` (the beginning of
+  the reversed name); `src/DB/Place.h`, all three (JC6416 `ab8b65f`, JC4020 `f864ded`, JC6432 `b61a53d`).
+- F24: `SetTohenBottomLinePSZ1::okAction` writes `PSZ` instead of `HAZ`; `src/States/SetTochenState.cpp`,
+  JC4020 only (`0a7e50c`). In the repo: `logicPrefs.HAZ` → `logicPrefs.PSZ`.
+- `PROJECT_VER` unchanged (7.10 since 709A).
+
+Result: the change in the repo image matches the change in production 709A → v7.10 (procedure below).
+`Place.h` equals v7.10 after EOL normalization. The repo tree differs from production in the 2a
+layer objects and their consumers, as before.
+
+### Procedure: differential verification (from Sync 7)
+
+Since 2a.3.3 the repo image is not identical to production, so the change is compared instead of the
+image.
+
+1. Files: a file that the repo has not changed since the previous sync (identical to the previous
+   production commit after EOL normalization) takes the new production version; afterwards it must equal
+   the production file after EOL normalization (production index LF, repo working copy CRLF). A file
+   that differs (2a changes) gets the same fix in the repo's form; the two diffs are compared side by side.
+   If a file that should be identical is not, stop.
+2. Four builds per model, all with `SOURCE_DATE_EPOCH=1763337600` at the same path `<scratch>/b/<model>`:
+   production previous and new (`git archive <full hash>`), the repo before and after. Nothing is built
+   in the production project. Keep `firmware.bin`, `firmware.elf` and the `src/**/*.o`.
+3. Objects: compare every `.o` of before / after, debug info ignored, every section with its
+   relocations (relocations are symbolic, so code moved elsewhere does not show). Expected: the same
+   objects and the same sections change in production and in the repo; sections that do not depend on
+   preference addressing are byte- and relocation-identical to the new production version; in the
+   others the only difference is the preference address (layer object vs `userPreferences`). Any other
+   changed object or section is explained or stops the sync.
+4. ELF: `nm -S -C` before / after; the changed symbols match production, other functions only by
+   linker layout. RAM unchanged unless production's RAM changes.
+5. `tools/flash_check.py` as a filter: before → after, `manual` only in the functions of step 3; and
+   production vs repo (reference: production's `src/Preferences/UserPreferences.h`) for the previous
+   pair and for the new pair, both with `manual` 0. A new category stops.
+6. The fixed criterion: `prefs_contract.py check` (also with the `.cpp` files in reverse order),
+   `count_prefs.py` sums unchanged (shifts between keys only as the fix explains), `count_deps.py
+   --compare`, `gen_deps_doc.py check`, contract strings, `git ls-files --eol`.

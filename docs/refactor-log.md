@@ -119,6 +119,54 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     7,176 → 7,175, the §3 and §5.1 graphs 29 → 28, §5 "28 references from `Area`", §8 `display`
     defined in `Display.cpp:3`); `check` OK (421 edges, 7,175 references). `notes.md` (`display` in
     `Display.cpp`), `environment.md:95` (`HARDWARE_VERSION` removed, F13).
+- **Production port v7.10** (Sync 7; commits `ddfa24b` JC6416, `81c79b9` JC4020, `33379aa` JC6432) —
+  patch `709A..v7.10` in all three models, on top of 2a.1–2a.4. Production commits (`v7.10^{commit}` =
+  `main` = `origin/main`, tag present in `origin`): JC6416 `ab8b65f1617570b3c0ba181d31f5228084344a7b`,
+  JC4020 `0a7e50c0be07c9ecbcceadeb215048f190cfc169`, JC6432 `b61a53d5c2db66aee6ca89531efb8c544d98b637`.
+  Against 709A only `src/DB/Place.h` (all three) and `src/States/SetTochenState.cpp` (JC4020) changed.
+  `709A` stays as a historical mark (Sync 6). Details in `docs/baseline.md`, Sync 7.
+  - **Synced:** F25 (`Place::Place` keeps the last 19 bytes of the reversed name), F24 (JC4020,
+    `SetTohenBottomLinePSZ1::okAction` writes `PSZ`; applied in the repo's form, `logicPrefs.HAZ` →
+    `logicPrefs.PSZ`). `PROJECT_VER` stays 7.10.
+  - **Method:** first sync after 2a.3.3 / 2a.4, so the repo image is no longer identical to production
+    and the identity procedure of Sync 5 does not apply. Differential verification instead (procedure in
+    `docs/baseline.md`, "from Sync 7"): `Place.h` was identical to 709A in the repo; after the edit (editor
+    tool, CRLF kept) it equals v7.10 after EOL normalization.
+  - **Verification** (`SOURCE_DATE_EPOCH=1763337600` in every build; four builds per model at the same
+    path: production 709A and v7.10 from `git archive <hash>`, the repo before and after):
+
+    | Model | `firmware.bin` repo | production 709A → v7.10 | RAM | Flash (pio) | Warnings |
+    |---|---|---|---|---|---|
+    | JC6416 | 2,059,392 → 2,056,912 (−2,480) | −2,352 | 59,012 (0) | 2,052,821 → 2,050,329 | 0 |
+    | JC4020 | 2,053,936 → 2,051,664 (−2,272) | −2,368 | 59,052 (0) | 2,047,365 → 2,045,081 | 0 |
+    | JC6432 | 2,070,752 → 2,068,384 (−2,368) | −2,304 | 59,772 (0) | 2,064,173 → 2,061,809 | 0 |
+
+    - Objects (`.o`, debug info ignored, every section with its relocations): in production and in the
+      repo the same objects differ: `Place.cpp.o` (all three) and `SetTochenState.cpp.o` (JC4020). In
+      `Place.cpp.o` the constructor is no longer inlined: `Place::Place` (C1 / C2, 0x66 bytes) is new,
+      `_GLOBAL__sub_I_place` (the `places[]` table) 0x1c45 → 0x12d6, `initPlace` smaller. `Place::Place`
+      and `_GLOBAL__sub_I_place` are byte- and relocation-identical to production v7.10. In
+      `SetTochenState.cpp.o` the code of `PSZ1::okAction` is unchanged and its literal moves to `PSZ`
+      (production `userPreferences+0x1050` → `+0x1038`, repo `logicPrefs+0xf0` → `+0xe4`);
+      `HAZ1::okAction`, folded into `PSZ1::okAction` before (same address), is its own function again.
+    - `nm -S`: the same changed symbols as in production, plus functions outside the changed objects that
+      shrink by 4–24 bytes (linker layout), in production too.
+    - `flash_check.py` before → after: `manual` only `initPlace` and `_GLOBAL__sub_I_place`; the rest
+      `same-effects` (JC6416 7: `TwoWire::*`, `Metadata::combineManufacturerData`; JC4020 3: `TwoWire::*`;
+      JC6432 2: `SetTohenBottomLineHaftara` / `Tfila::showStateScreen`). No new category. Production
+      vs repo (reference `UserPreferences.h` of production): `manual` 0 for 709A / before and for v7.10 /
+      after; `initPlace` is `same-effects` in both pairs.
+    - `prefs_contract.py check` OK for all three, also with the `.cpp` files in reverse order (scratch
+      wrapper). `count_prefs.py`: sums unchanged (869 / 911 / 932); JC4020 `SetTochenState` writes `HAZ`
+      4 → 3, `PSZ` 2 → 3 (F24). `count_deps.py --compare`: JC4020 `SetTochenState -> LogicPrefs` 120 → 120
+      (`logicPrefs.HAZ` −1, `logicPrefs.PSZ` +1), otherwise no change. `gen_deps_doc.py check` OK (420
+      edges, 7,444 references).
+    - UUIDs, NVS namespaces and keys, advertisement prefix unchanged. `git ls-files --eol`: edited files
+      `w/crlf`.
+  - **Read only, by the owner's decision:** the open part of F25 checked in all three models; the
+    preferences used as an array index without protection are F27, the rest is P1. F24 and F25 removed
+    from Findings. The rationale of the `textPlace` draft range (2a.4) updated, the value unchanged; P9.
+  - **Clock test:** pending (results go into a separate docs commit).
 
 ### Stage 2a — per-layer preference structs
 
@@ -1370,7 +1418,9 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
       0..60 and the four intervals 5..600 step 5 (the menu domain, which agrees with the comment; the code
       accepts any value); the 0/1 preferences (`nz_hul`, `homa`, `hul`, `leil`, `shanim`, `timeFormat`, `bt`,
       the ten display booleans); `TAZ` … `ZSZ` 0..2; `ZYS`, `ZPS`, `IPO`, `IORT` 0..3 (two-bit mask);
-      `textPlace` length 0..19 bytes (`strcpy` into `Place::name[20]` in `initPlace`).
+      `textPlace` length 0..19 bytes (rationale updated in Sync 7: since F25 `Place::Place` copies at most
+      19 bytes, so 19 is only the display limit; the stored value and `PREF_OP_READ` keep the full string. The
+      range value is unchanged; to be decided in 2b, P9).
     - `PR_OPEN`, with the reason: `forceWrite` and `safa` (no code reads them); `timezone` (comment −12..14,
       menu −12..12); `brightness` (comment "1-12 ×20, valid 0-255", menu 20..220 step 20, driver 0..255);
       `nerot` (comment 0..40, menu 0..60); `nz_lat` / `nz_long` (comment ±90 / ±180, menu ±89.99 / ±179.99;
@@ -1575,9 +1625,14 @@ decision**; refactor steps stay behavior-identical. Numbers are not reused.
 ### P1 — Range checks scattered in BLE (2a.4)
 
 - **Now:** `PREF_OP_WRITE` (`handlePref`, `src/BLE/CoreService.cpp`) checks only `shita`, `ofek` and the four
-  zeet keys; every other preference accepts any value of its type (F25).
-- **Why:** an out-of-range value can index past an array or overflow a buffer; the check lives in the
-  transport layer and covers only six keys.
+  zeet keys (the zeet check is `> numOfZeetCochavin`, so 0 passes, P8). Every other preference accepts any
+  value of its type, with no range check: `switch` selectors such as `dateFormat`, and `screen` (JC6432: a
+  value other than 1 / 2 leaves the screen areas null; no consumer in the other models); numeric values
+  outside the menu domain, which make the step menus run past their limit (P4). The preferences that are
+  used as an array index without protection are a finding of their own (F27); the length of `textPlace`
+  is P9. Same in all three models. (Until Sync 7 this was part of F25.)
+- **Why:** an out-of-range value reaches code that does not expect it; the check lives in the transport
+  layer and covers only six keys.
 - **Suggested:** one check in Preferences from the table's `range` (2b), plus the enforcement matrix of
   `roadmap.md` (structure and size in BLE, context checks registered by the owning layer).
 - **Impact:** field clocks: values written today stay as they are until a load-time check replaces them;
@@ -1649,13 +1704,28 @@ decision**; refactor steps stay behavior-identical. Numbers are not reused.
 - **Suggested:** check in the app; then either 0 is rejected (range 1..28) or documented.
 - **Impact:** app / contract, decided in 2b.
 
+### P9 — The draft range of `textPlace` (Sync 7, for the 2b session)
+
+- **Now:** the 2a.4 table gives `textPlace` a length range of 0..19 bytes (`textPlaceDef`, `DataPrefs.cpp`,
+  all three models). Since F25 (production `v7.10`, Sync 7) the code handles any length: `Place::Place`
+  keeps the last 19 bytes of the reversed name (the beginning of the name) for the display, while NVS and
+  `PREF_OP_READ` keep the full string. The app sends up to 70 characters (`maxLength` in `TextProcessor`).
+- **Why:** if 2b enforces the range as it is, normal names longer than 19 characters are rejected; 19 is
+  the display limit, not a limit of the stored value. 70 is the app's limit, so it is not a reason on its
+  own.
+- **Suggested:** decide in 2b: `PR_OPEN`, or a maximum length derived from the shared constant for texts
+  (structure and size of the message, checked in BLE, the first row of the `roadmap.md` matrix).
+- **Impact:** none until 2b; then the range value in the table (all three models) and possibly the BLE
+  error behavior for long names (contract step).
+
 ## Findings
 
 References are by file and symbol (`src/` = `JC6416/src/` unless a model is named). Line numbers
 remain only in references to the app source (as reported by the user).
 Only findings that describe the current state are kept (open, accepted, intentional, won't fix,
-documentation only). Fixed findings were removed; their text is in git at `707d5d2`. Numbers are
-not reused.
+documentation only). Fixed findings were removed; their text is in git at `707d5d2`. F24 and F25,
+fixed in production `v7.10` and synced in Sync 7, were removed then; their text is in git at `33379aa`
+(the open part of F25 is now P1, F27 and P9). Numbers are not reused.
 
 ### F3 — JC4020: TEXT write and display over BLE are disabled
 
@@ -1844,44 +1914,6 @@ scope).
   a sync. Not changed here.
 - **Models:** same in all three.
 
-### F24 — JC4020: the PSZ "on time" menu item writes `HAZ`
-
-- **Where:** `SetTohenBottomLinePSZ1::okAction` (`JC4020/src/States/SetTochenState.cpp`).
-- **What:** the item sets `logicPrefs.HAZ = 1` instead of `logicPrefs.PSZ = 1` (the next state,
-  `SetTohenBottomLineHAZ1::okAction`, also sets `HAZ = 1`). Choosing "on time" for plag hamincha –
-  shkiaa – zeet hacochavim changes the HAZ setting and leaves PSZ as it was.
-- **Impact:** a menu choice is not applied; BLE writes of `PSZ` are not affected.
-- **Status:** fixed in production `v7.10`, JC4020 only (commit `0a7e50c`); clock test passed (PSZ changes, HAZ
-  does not). No NVS migration: a wrong `HAZ = 1` already stored stays and cannot be detected (1 is also the
-  default); a user who chose PSZ "on time" in the menu chooses it again and checks HAZ (menu or app). Into this
-  repo with Sync 7.
-- **Models:** JC4020 only (JC6416 / JC6432 have other menu files).
-
-### F25 — `PREF_OP_WRITE` has no range check for array-indexed preferences; `textPlace` can overflow
-
-- **Where:** `handlePref`, `case PREF_OP_WRITE` (`src/BLE/CoreService.cpp`); `initPlace` and `Place::Place`
-  (`strcpy` into `Place::name[20]`, `src/DB/Place.h`).
-- **What:** only `shita`, `ofek` and the four zeet keys are checked (the zeet check is `> numOfZeetCochavin`,
-  so 0 passes, P8). Values used as an array index or a `switch` selector are accepted as any byte: the
-  colors (`color_list[7]`), `clockFont` (`font_list`), `zriha`, `shkiaa`, `zmanTalit`, `alotHashahar`,
-  `minhaG`, `sozksMga`, `soztMga`, `plagMinha` (the `…Method[]` display arrays), `dateFormat`, `screen`
-  (JC6432: a value other than 1 / 2 leaves the screen areas null). `textPlace` has no length check: per the
-  owner, the app sends up to 70 characters (`maxLength` in `TextProcessor`), so the `strcpy` into
-  `Place::name[20]` **can overflow in normal use**. Off-step values make the step menus run past their limit
-  (P4).
-- **Impact:** reads past arrays. For `textPlace`:
-  - *Observed (7.09):* a 27-letter name showed garbage after the name in the "choose ofek" menu, matching the
-    bytes of `nz_lat` / `nz_long`.
-  - *Analyzed (repo build only, not verified for production):* the fields overwritten by `strcpy` are written
-    again up to 79 bytes; from 84 bytes `__stack_chk_fail` in `setup`, a boot loop. The app sends at most 70
-    characters.
-- **Status:** `textPlace` fixed in production `v7.10`, all three models (`Place::Place` copies the last 19
-  bytes, terminated: the beginning of the reversed name; commits JC6416 `ab8b65f`, JC4020 `f864ded`, JC6432
-  `b61a53d`). The stored value and `PREF_OP_READ` keep the full string. Clock test passed: first 19 letters
-  without garbage, the app reads the full name, a short name shows complete, also after power off and on. Into
-  this repo with Sync 7. The range check for the other preferences stays open (2b, P1, `roadmap.md`).
-- **Models:** same in all three (`screen` only matters in JC6432).
-
 ### F26 — Preference definition comments disagree with the code
 
 - **Where:** the comments next to the definitions in the layer `.cpp` files.
@@ -1894,3 +1926,38 @@ scope).
 - **Status:** documentation only; the comments moved unchanged in 2a.4 (moved-lines rule). To be fixed when
   the ranges are decided (P3).
 - **Models:** as listed.
+
+### F27 — Preferences used as an array index without protection (Sync 7, from F25)
+
+- **Where:**
+  - `Logic::configStates` (`src/Logic.cpp`): `font_list[displayPrefs.clockFont]` (`font_list[numOfFonts]`,
+    `Text.cpp`, 5 entries, JC6432 3), and `color_list[displayPrefs.<color>]` (`color_list[7]`, `Colors.h`)
+    for `colorUp`, `colorMiddle`, `colorBottomT`, `colorBottomV` (all three), `colorYom`, `colorParasha`,
+    `colorIluy` (JC6416, JC6432), `colorIvri`, `colorLoazi`, `colorParashaV` (JC6432).
+  - The `showStateScreen` of `SetZrihaState`, `SetShkiaaState` (`zsMethod`), `SetTalitState` (`talitMethod`),
+    `SetAlotState` (`alotMethod`), `SetSozksMgaState`, `SetSoztMgaState` (`sozMgaMethod`), `SetMinhaGState`
+    (`minhaGMethod`), `SetPlagState` (`plagMethod`) in `src/States/MinhagState.cpp`: the middle line is
+    `…Method[<temp>]`, and `menuAction` loads `<temp>` from the preference (`zriha`, `shkiaa`, `zmanTalit`,
+    `alotHashahar`, `sozksMga`, `soztMga`, `minhaG`, `plagMinha`) without a bound. The neighbours (`minus`,
+    `plus`) and the up / down actions wrap, so only the first screen is affected.
+- **What:** none of these keys is checked by `PREF_OP_WRITE` (P1), so a BLE write stores any byte, and the
+  value is used as an index as is. `Logic::configStates` runs in `Logic::init` at every boot (`setup`) and
+  again when a menu is left.
+- **Impact** (analyzed, not observed on a clock; reached only by a BLE write outside the menu domain):
+  - `clockFont` ≥ `numOfFonts`: the pointer is read from the `.data` that follows `font_list` (index 5 in
+    JC6416 / JC4020, 3 in JC6432 = the bytes of `Metadata::HWversion`, then `defaultCallback`, …) and used as a
+    `GFXfont*` when the clock is drawn. Expected: an exception and a reboot, and because the value stays in
+    NVS and is applied at every boot, a boot loop. Recovery only by a BLE write of a valid value in the
+    short window after boot, if BLE is up before the first draw (not checked), or by an NVS erase.
+  - A color ≥ 7: an `int` is read from the flash `.rodata` after `color_list` (at most 1 KB past it, mapped
+    and readable): a wrong color, no crash. The color menu wraps (`% 7`); its first screen draws the marker
+    off the circles (`ColorScreen::setColor`, a position, not an index).
+  - A method value past its array: the menu's middle line reads `.rodata` past the 2D `const char` array
+    (at most 255 × row width) and prints it directly (`Area::addText` → `display->print`, no copy into a
+    buffer): garbage text, no crash. The zman under it comes from a `switch` (`getZriha`,
+    `Shita::…Methods`), so it falls to the `default` branch.
+  - The zeet keys index `zeetMethod[numOfZeetCochavin+1]`; the BLE check keeps them at 0..28, inside the
+    array (0 is P8). `shita` and `ofek` are checked in BLE.
+- **Status:** open. The fix belongs to the "last protection" row of the `roadmap.md` matrix (2b): a bound at
+  the index for `font_list` at least, independent of the range check in Preferences.
+- **Models:** all three, with the color lists above; `MinhagState.cpp` is the same in all three.

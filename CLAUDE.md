@@ -4,7 +4,7 @@
 
 Refactor workspace for the ESP32 firmware of the LED Haarets clocks (JC6416, JC4020, JC6432).
 **This is not production.** Production firmware lives in separate projects at
-`C:\Users\yeuda\Dev\<model>_latest` (last field release: tag `v7.09`) and is built and published only by `ledhaarets-build/build_tool.py` (`C:\Users\yeuda\myProjects\JewishClock\ledhaarets-build`). Nothing from
+`C:\Users\yeuda\Dev\<model>_latest` (last field release: tag `v7.10`) and is built and published only by `ledhaarets-build/build_tool.py` (`C:\Users\yeuda\myProjects\JewishClock\ledhaarets-build`). Nothing from
 this repo reaches the field until the user explicitly declares it the new production.
 
 Always reply to the user in Hebrew, even when the code, tool output or recent messages are
@@ -66,7 +66,8 @@ but the content differs in many places.
 
 **Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
 in all three models (verification rules in `refactor-log.md`); `count_deps.py` counts access
-through the layer objects, and `dependencies.md` is generated with `tools/gen_deps_doc.py`. Production 709A (temporary tag; commit hashes in `docs/baseline.md`, Sync 6) is
+through the layer objects, and `dependencies.md` is generated with `tools/gen_deps_doc.py`. Production v7.10 (commit hashes in `docs/baseline.md`, Sync 7; synced with the
+differential verification described there, since the repo image is no longer identical to production) is
 synced into this repo. 2a.3 is planned with the owner (decisions in `refactor-log.md`, "2a.3 —
 plan"); done: 2a.3.0 (contract tool `tools/prefs_contract.py`, baselines in
 `docs/contracts/prefs/`), 2a.3.1 (unused registry functions removed, all models), 2a.3.2 (one
