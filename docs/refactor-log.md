@@ -1871,8 +1871,19 @@ scope).
   owner, the app sends up to 70 characters (`maxLength` in `TextProcessor`), so the `strcpy` into
   `Place::name[20]` **can overflow in normal use**. Off-step values make the step menus run past their limit
   (P4).
-- **Impact:** reads past arrays, a buffer overflow in RAM, possible crash or boot loop when the value is
-  stored.
+- **Impact:** reads past arrays. For `textPlace`:
+  - *Observed on production 7.09 (clock test):* names of 22 / 40 / 70 characters sent from the app showed
+    garbage after the name in the "choose ofek" menu; place and zmanim stayed correct.
+  - *Analyzed on the repo build (JC6416 ELF, not production):* `Place::Place` runs `strcpy` before it assigns
+    the fields, so up to 79 bytes the overwritten fields of the temporary are written again; `name` is left
+    without a terminator, and the menu reads on into the bytes after it (`nz_lat` / `nz_long` by the `Place`
+    layout), which is the garbage. From 84 bytes the copy reaches the stack canary of `initPlace`:
+    `__stack_chk_fail` in `setup` (before BLE and the reset-button check), a boot loop. In this build a name of
+    20–23 bytes would show complete (the terminator lands in the padding, which the copy carries); on the
+    clock 22 showed garbage, so the code generated for `initPlace` differs between the builds, and these
+    limits are not verified for production. The app sends at most 70 characters; longer values need another
+    BLE client.
+  - *7.10:* all lengths are covered, the copy is bounded in the constructor.
 - **Status:** the `textPlace` overflow is fixed in production 7.10, all three models (`Place::Place` copies at
   most 19 bytes, always terminated, and keeps the last bytes: the name is stored reversed, so they hold the
   beginning of the name; applied by the owner). No BLE rejection and no NVS change: the stored value and
