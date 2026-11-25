@@ -1585,6 +1585,109 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     by flash_check with the same effects (list-access), and a valid write passed.
   - 2a.4 is closed. The next step is set by the owner.
 
+### Stage 2b — preference write and apply
+
+- **2b — plan** (approved by the owner on 25.11.2026, with the changes below; read-only mapping and
+  questions before it, in the same session). Goal of part 1 (2b.1–2b.2): infrastructure only. One write
+  entry in the registry, checks registered by the owning layer, derivations, and the success screen moved
+  out of the BLE callback. No user-visible change except the documented exceptions. From BLE, only `ofek`
+  and `shita` apply, as today.
+  - **Owner's decisions:**
+    1. **"Always" flag for `ofek` and `shita`:** when set, the derivation and the apply run even if the value
+       did not change; the NVS save still happens only on a change. Reason: today both apply unconditionally,
+       from the menu and from BLE. The same `shita` resets the 12 methods (`setDefault`). The same city
+       rewrites `nerot`, `homa`, `nz_hul` and `hul`. `ofek` = 0 when it is already 0 applies the custom place,
+       and the app's place group ends with it.
+    2. **BLE saves only on a change, from 2b.1 on.** Effect: a write of a value equal to the one in RAM does
+       not create or rewrite the NVS key. SYNC is not affected (it compares RAM with the default,
+       `hasChangedFromDefault`), and nothing reads key existence in `clk`. Recorded with P5.
+    3. **F28 is fixed in 2b.2** as a documented exception, by the fixed apply order (writes and derivation
+       first, `initPlace` after them).
+    4. **No mutex in part 1** (2b.2 below: the computation stays in the writer's context).
+    5. **`nz_hul` → `hul` is deferred** (P15).
+  - **Names:** the entry point is `UserPreferences::write` / `writeBytes` (the registry). `Preferences` is the
+    ESP32 NVS class (`UserPreferences::prefs`). New code in `Preferences/` includes no DB, Logic or FreeRTOS
+    header: `tools/prefs_contract.py` compiles it against host stubs. Links outward are function pointers
+    registered at init.
+  - **2b.0** (docs): this plan, P10–P15, F28, the role of `updateState` (`preferences.md` §6.7), the
+    `roadmap.md` 2b section.
+  - **2b.1** — one write entry, `decode`, registered checks; BLE goes through them:
+    - `UserPref<T>::decode` (replaces `fromBytes`; does not write `_value`). `UserPreferences::write<T>` and
+      `writeBytes` with a result: decode, then the registered check, then `setValue` (save only on a change).
+      A table of checks that the owning layer registers: Place (`ofek` < `numOfOfeks`) and Shita (`shita` <
+      `numOfShitot`; the four zeet keys ≤ `numOfZeetCochavin`, 0 accepted as today, P8). The six existing
+      checks move as they are, not broadened.
+    - `handlePref`, `PREF_OP_WRITE`: steps up to the type check unchanged, so the order of error codes is
+      kept (`INVALID_PAYLOAD`, `INVALID_KEY`, `TYPE_MISMATCH`, then `INVALID_VALUE`). The range checks,
+      `fromBytes` and `save` are replaced by `writeBytes`. The apply of `ofek` / `shita` (`getIndex() == 6 /
+      4`) stays in the callback for now, unconditional as today.
+    - Files per model: `Preferences/UserPreferences.h/.cpp`, `BLE/CoreService.cpp`, `DB/Place.cpp`,
+      `DB/Shita.cpp/.h` (registration), `main.cpp` (one registration call, before `initBluetooth`).
+    - Behavior: identical, except decision 2 (NVS content for an unchanged value) and the serial lines of
+      `setValue` on BLE writes.
+    - Verification: `pio run` for every env, no new warnings; `prefs_contract.py check` unchanged; a new tool
+      `tools/prefs_write_test.py` (same stub harness; boundaries of the six keys, short lengths per type,
+      String with and without `\0`, negative `I8` / `I16`, `double`, unchanged value not saved);
+      `count_deps --compare` (expected: BLE → DB edges removed, DB → Preferences added) and `gen_deps_doc`;
+      contract strings; `git ls-files --eol`; bin size and RAM. `flash_check` does not apply (intended logic
+      change); its categories are reported for information.
+    - Clock test (app): `shita` 9 OK, 10 rejected; the last `ofek` OK, the next rejected; zeet 0 and 28 OK, 29
+      rejected; unknown key; wrong type; `pin`; negative `nz_lat`, `nz_height` and `timezone`; long
+      `textPlace`; the intervals; SYNC after writing a default value; city and shita selection behave as
+      today.
+    - Commits: the tool first (`2b.1a: prefs_write_test (tools)`), then `2b.1: single write entry for BLE
+      (<model>)` per model with a path, then docs.
+    - **Stop after 2b.1** for the owner's clock test. With the stop, the detailed 2b.2 plan (files, behavior
+      changes, verification, clock tests) is sent for approval before execution.
+  - **2b.2** — derivations, apply and feedback (owner's change: **no mutex; the computation stays in the
+    writer's context, only the feedback moves to `loop`**). Reason: a mutex is needed only if the computation
+    (`initPlace`, `configStates`, `setDefault`) runs in `loop` while the callback keeps writing preferences,
+    `String` among them, in another task. In part 1 only `ofek` and `shita` apply, and each is a single write
+    or the last one in a group, so merging the apply into one round gains nothing now.
+    - **BLE (`handlePref`):** `writeBytes` → check → write (only on a change) → the registered derivation
+      (on a change, or always for the flagged keys) → the apply through a function that Logic registers. It
+      runs the marked apply classes in a fixed order, place (`initPlace`) → config (`configStates`) → day
+      (`updateDayValues`), and then `sendOk`. All of this in the callback, with the swap to `updateState`
+      only during the computation, and no message. (Today `sendOk` comes before the apply and the message;
+      the EVT will come after the computation.)
+    - **Menu (`okAction`):** `write` → the apply at once, by the same code → the feedback at once →
+      `showStateScreen`. The order stays as today: write, apply, message, next screen.
+    - **Feedback from BLE:** the apply marks a feedback kind and a time; `loop` shows one screen after a quiet
+      period (`PREF_APPLY_QUIET_MS` = 600), for the longest duration among the events collected, then
+      `currentState->showStateScreen()`. The mark is a small datum (kind + time) protected by `portMUX`, the
+      only protection needed. The kind carries a message id (city and shita: "...ohbnz ifsgn"; custom place:
+      "...ohbuwb ifsgn"), and the `ofek` = 0 apply keeps `globalchangedOfek = false`.
+    - **Derivations registered by the owning layer:** `ofek` ≠ 0 → `nerot`, `homa`, `nz_hul`, `hul` from the
+      city (`hul` written directly, as today); `shita` → `Shita::setDefault` (its writes stay on `operator=`).
+      `ofek` = 0 has no derivation; the coordinate editors keep writing `ofek = 0` themselves.
+    - **Out of `handlePref`:** `getIndex() == 4 / 6` and the `bl.*` calls of the preference path (P2). BLE
+      knows only `UserPreferences` and the registered function.
+    - **Editors moved to the entry point:** `ShitaState::okAction`, `SetOfekState::okAction`,
+      `SetLon/LatCustomState::menuAction`, `SetGova/TimeZoneCustomState::okAction` (they mark place, config
+      and day directly, without `applyClass`, temporary, P10), `SetHoma/HulCustomState::okAction` (write
+      only). `ShitaState::setShita` and both `printUpdateSucc` are dismantled.
+    - **Not changed in part 1:** `EdotChabad` (P14), the `initPlace` fallback (raw `operator=`; to the
+      load-time check in 2b.3), the other editors, the TEXT, AUTH, TIME, SYS and `pin` paths, load and resets.
+    - **Expected exceptions:** the write response of `ofek` / `shita` comes without waiting for the message;
+      the BLE success screen comes about 0.6 s later, from `loop`; for a city the message comes after the
+      apply (today before it); F28 fixed.
+    - **Clock tests requested by the owner in addition:** overlapping events (an app write while a menu
+      feedback is shown, and the reverse: no event lost, no two screens overlapping); the app's place group
+      (no partial data drawn during the computation, the clock shows as usual during the quiet period until
+      the feedback screen); a large clock (JC6416 or JC6432): the area outside the message screen is not
+      updated during the feedback screen.
+  - **2b.3** — the enforcement matrix (`roadmap.md` (א), (ב)). A separate stage, planned after the clock test
+    of 2b.2. Outline: the final range table for the owner (P1, P3, P4, P8, P9; array-derived bounds linked
+    to the owning layer), a contract step for the new `INVALID_VALUE` answers; `validate` from the table's
+    `range` for every preference; load-time correction (writes NVS on field clocks with garbage); last
+    protection (F27); `textInputN` through `PREF_OP_WRITE` (the width check registered by Logic, or rejected
+    by key; contract decision).
+  - **Roadmap:** prepares the enforcement matrix (the check entry point), a uniform BLE layer (`handlePref`
+    without `bl.*`, `getIndex` or DB constants), the actions mechanism and SYNC by schema. Blocks nothing; the
+    NVS split is not affected (`write` uses the preference's own `prefs` instance).
+- **2b.0** (docs) — this plan; P5 note, P10–P15; F28; `preferences.md` §6.7 (`updateState`) and the §6.4
+  and §9.9 pointers; `roadmap.md` 2b section; `CLAUDE.md` stage line. No code changed.
+
 ### Decisions
 
 - **Flash check when the image is not identical** (owner's decision, 2a.3.3; applies to 2a.4 and
@@ -1614,6 +1717,9 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
   - The legacy checks in the app and `docs/contracts/ble.md` §9 are removed when the new
     generation is released.
   - Until then, the current contract rule applies.
+- **Writing a preference** (owner's decision, 2b plan): every write from BLE and from the editors moved
+  in 2b goes through the registry entry point and saves only on a change; `ofek` and `shita` derive and
+  apply always, even when the value is unchanged. Details: "2b — plan" above.
 
 ## Planned for next production release
 
@@ -1651,6 +1757,7 @@ decision**; refactor steps stay behavior-identical. Numbers are not reused.
 - **Suggested:** the actions mechanism of 2b (apply functions registered by the owning layer, shared with
   the menu).
 - **Impact:** none on the field or the app if the behavior is kept; internal only.
+- **Decided (2b plan):** the range check moves to the registered checks in 2b.1; the apply in 2b.2.
 
 ### P3 — Contradicting bounds between the menu, the app and the comments (2a.4)
 
@@ -1682,6 +1789,9 @@ decision**; refactor steps stay behavior-identical. Numbers are not reused.
   = `remove` of the keys).
 - **Impact:** field clocks: behavior after a default change differs by history; app: SYNC compares to the
   firmware default, unchanged; contract: NVS content (not keys) changes.
+- **Related (2b, owner's decision 2):** from 2b.1 a BLE write saves only on a change, as the menu does. A
+  write of a value equal to the default therefore no longer creates the key in NVS when it is missing. This
+  touches the default-value policy, which is still open.
 
 ### P6 — Texts handled differently in JC4020 (2a.4)
 
@@ -1720,6 +1830,73 @@ decision**; refactor steps stay behavior-identical. Numbers are not reused.
   (structure and size of the message, checked in BLE, the first row of the `roadmap.md` matrix).
 - **Impact:** none until 2b; then the range value in the table (all three models) and possibly the BLE
   error behavior for long names (contract step).
+
+### P10 — Immediate BLE apply for the other preferences (2b plan)
+
+- **Now (after 2b.2):** only `ofek` and `shita` have an apply class; every other preference written from BLE
+  takes effect when its mechanism reads it again (`preferences.md` §6.2, §6.6).
+- **Why:** the requirement of `preferences.md` 9.9 (every change applies at once with a success screen).
+- **Suggested:**
+  - An `applyClass` (and feedback kind) for every row of the table.
+  - When more preferences apply: merge the apply into one round in `loop`, after the quiet period. That
+    needs a mutex between the writes in the BLE task and the computation in `loop` (`String` writes against
+    `initPlace`). It is linked to the move from `String` to C strings; after it, a race at worst shows a
+    garbled text for a moment and does not damage the heap.
+  - The direct marking from the height and time zone editors (without `applyClass`) is temporary in part 1;
+    it is removed when `applyClass` covers all preferences.
+  - When the dependents get an apply class, `Shita::setDefault` must write through `write`.
+- **Impact:** app: a success screen after more writes (one per group); field: none on stored values.
+
+### P11 — `eda`, `homa` and the custom-place toggles have no apply (2b plan)
+
+- **Now:** `Edot<X>::okAction` (`eda`), `SetHomaCustomState::okAction` (`homa`) and
+  `SetHulCustomState::okAction` (`nz_hul` + `hul`) only write, even from the menu; the change takes effect at
+  the next day computation or `initPlace` (`preferences.md` §6.3).
+- **Why:** not the same as the menu's other editors; blocks "one apply function per preference".
+- **Suggested:** give them an apply class (day; place for `homa` and `nz_hul`) with P10.
+- **Impact:** menu and app: the change shows at once; none on stored values.
+
+### P12 — `SetShaonKaiz` moves the RTC by the chosen value, not the actual state (2b plan)
+
+- **Now:** `SetShaonKaiz::okAction` (`States/SetClockState.cpp`) moves the RTC by the value chosen, not by
+  what is applied: choosing 2 while DST is already applied adds another hour; choosing 1 does not correct.
+  `shaonKaiz` written from BLE does not move the RTC. See also `preferences.md` 9.5 ("לבדיקה") and
+  `MainState::setShaonKaitzHoref` (02:00).
+- **Why:** the RTC can end up one hour off after repeated choices; menu and BLE differ.
+- **Suggested:** keep the applied state (`appliedDst`), also updated by the 02:00 mechanism, and move the
+  RTC only by the difference; the same apply from BLE.
+- **Impact:** possibly a new NVS key (contract step); app: none.
+
+### P13 — Feedback and execution context of TIME, AUTH, SYS and PIN (2b plan)
+
+- **Now:** `handleAuth` (HELLO / PIN), `handleTime` (`TIME_OP_SET`), `handleSys` (RESTART) and the disconnect
+  message (`onDisconnect`, `BLE/Bluetooth.cpp`) draw from the NimBLE task with the `updateState` swap;
+  `TIME_OP_SET` swaps to `bl.clockSetTime`, whose `stateLoop` reads the RTC in `loop` at the same time. `now`
+  is a global `DateTime` written by both tasks; `Wire` locks each transaction only. `pin` and
+  `SYS_OP_SET_NAME` show nothing.
+- **Why:** after 2b.2 the preference feedback is drawn by `loop`; a message drawn from the callback at the
+  same moment overlaps it. The concurrent RTC access exists today.
+- **Suggested:** the same two-phase model: TIME writes the RTC in the callback and defers only the screen;
+  the messages go through the feedback of 2b.2; a small mutex around `updateClockTime` / `setClockTime`.
+- **Impact:** app: none (EVT unchanged); clock: messages shown from `loop`.
+
+### P14 — `EdotChabad` writes `shita` = 4 without `setDefault` (2b plan)
+
+- **Now:** `EdotChabad::okAction` (`States/EdotState.cpp`) writes `shita` = 4 and `eda` = 6 with
+  `operator=`; the 12 methods are not reset and nothing is applied. Kept in 2b (raw write).
+- **Why:** choosing the Chabad custom leaves the methods of the previous shita; differs from the shita menu.
+- **Suggested:** write `shita` through `write` (derivation and apply), as the shita menu.
+- **Impact:** user-visible change in the menu; owner's decision.
+
+### P15 — Derivation `nz_hul` → `hul` (2b plan)
+
+- **Now:** `nz_hul` and `hul` are written together by `SetHulCustomState::okAction` and by the city
+  apply; the app writes both in the place group.
+- **Why:** one derivation instead of two writers.
+- **Suggested:** register `nz_hul` → `hul` together with the app change: the app stops writing `hul` in
+  the place group, and reads back the derived preferences (`nerot`, `homa`, `nz_hul`, `hul`) after an `ofek`
+  write. Not done in part 1: a BLE write of `nz_hul` alone would also change `hul`.
+- **Impact:** app change; BLE behavior of `nz_hul`.
 
 ## Findings
 
@@ -1967,3 +2144,19 @@ scope).
 - **Status:** open. The fix belongs to the "last protection" row of the `roadmap.md` matrix (2b): a bound at
   the index for `font_list` at least, independent of the range check in Preferences.
 - **Models:** all three, with the color lists above; `MinhagState.cpp` is the same in all three.
+
+### F28 — Custom place from the menu while a city is selected: `place` stays on the city (2b plan)
+
+- **Where:** `SetCustomState::printUpdateSucc` (`src/States/OfekState.cpp`), called by
+  `SetLonCustomState::menuAction` and `SetLatCustomState::menuAction` after a coordinate is edited, and by
+  BLE for `ofek` = 0.
+- **What:** it calls `initPlace()` **before** `dataPrefs.place.ofek = 0`. `initPlace` (`src/DB/Place.cpp`)
+  rebuilds `places[0]` from the preferences and sets `place = &places[ofek]`. When the clock is on a city
+  from the list and the user edits a coordinate in the menu, `initPlace` runs while `ofek` is still the city,
+  so `place` points to the city; then `ofek` = 0 is saved. Until the next `initPlace` (a reboot, the height or
+  time zone editor, an `ofek` write) the clock computes and shows the city while `ofek` is 0.
+- **Not affected:** BLE. `handlePref` stores `ofek` = 0 before it calls `printUpdateSucc`, so `initPlace`
+  already sees 0, also when the clock was on a city before the app's place group.
+- **Status:** open; fixed in 2b.2 as a documented exception (owner's decision 3, "2b — plan"): the fixed
+  apply order writes first and runs `initPlace` after the writes.
+- **Models:** all three (`OfekState.cpp` and `Place.cpp` are the same in all three).

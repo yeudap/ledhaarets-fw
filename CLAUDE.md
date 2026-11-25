@@ -80,7 +80,9 @@ models (23.11.2026). 2a.4 done in all three models (preference definitions as `c
 flash with a draft range and `static_assert`, the registry as one const array; heap measured on JC6416;
 flash-check categories of 2a.4 in `refactor-log.md`). Roadmap: `docs/architecture/roadmap.md`;
 improvement proposals: refactor-log, "Improvement proposals (P#)". Clock test of 2a.4 (2a.4.x) passed on
-all three models; 2a.4 is closed. **Next step:** set by the owner.
+all three models; 2a.4 is closed. **Next step (owner's decision):** 2b, preference write and apply (plan
+and decisions in refactor-log, "2b — plan"). 2b.0 (docs) done; next 2b.1, then a stop for the owner's clock
+test and the detailed 2b.2 plan.
 Existing NVS keys, namespaces and types never change. Any change to the preference contract
 (new keys, BLE indexes, defaults) happens only as a documented contract-change step approved by
 the owner and recorded in refactor-log. Otherwise behavior stays identical.
