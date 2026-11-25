@@ -64,7 +64,10 @@ but the content differs in many places.
 
 ## Stages
 
-**Current stage: 2a** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
+**Current stage: 2b** — preference write and apply (plan and decisions in refactor-log, "2b — plan").
+2b.0 (docs) done; next 2b.1, then a stop for the owner's clock test and the detailed 2b.2 plan.
+
+**Stage 2a (closed)** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
 in all three models (verification rules in `refactor-log.md`); `count_deps.py` counts access
 through the layer objects, and `dependencies.md` is generated with `tools/gen_deps_doc.py`. Production v7.10 (commit hashes in `docs/baseline.md`, Sync 7; synced with the
 differential verification described there, since the repo image is no longer identical to production) is
@@ -80,9 +83,7 @@ models (23.11.2026). 2a.4 done in all three models (preference definitions as `c
 flash with a draft range and `static_assert`, the registry as one const array; heap measured on JC6416;
 flash-check categories of 2a.4 in `refactor-log.md`). Roadmap: `docs/architecture/roadmap.md`;
 improvement proposals: refactor-log, "Improvement proposals (P#)". Clock test of 2a.4 (2a.4.x) passed on
-all three models; 2a.4 is closed. **Next step (owner's decision):** 2b, preference write and apply (plan
-and decisions in refactor-log, "2b — plan"). 2b.0 (docs) done; next 2b.1, then a stop for the owner's clock
-test and the detailed 2b.2 plan.
+all three models; 2a.4 is closed.
 Existing NVS keys, namespaces and types never change. Any change to the preference contract
 (new keys, BLE indexes, defaults) happens only as a documented contract-change step approved by
 the owner and recorded in refactor-log. Otherwise behavior stays identical.
@@ -119,6 +120,16 @@ the owner and recorded in refactor-log. Otherwise behavior stays identical.
   2. Move consumers to their layer's struct, one layer per step. (Done.)
   3. Move field ownership into the structs; `UserPreferences` becomes the registry. (Done:
      2a.3.0–2a.3.3; clock test 2a.3.5 passed.)
+- **2b** — Preference write and apply (`docs/architecture/roadmap.md`, 2b). Plan and owner's decisions:
+  refactor-log, "2b — plan". Sub-steps:
+  0. Docs: plan, decisions, P10–P15, F28. (Done.)
+  1. One write entry in the registry (`UserPreferences::write` / `writeBytes`) and checks registered by
+     the owning layer; BLE goes through them and saves only on a change. Then a stop for the owner's
+     clock test.
+  2. Registered derivations, apply in a fixed order in the writer's context, success screen from
+     `loop`; `ofek` and `shita` only. Detailed plan approved after 2b.1.
+  3. The enforcement matrix (roadmap (א), (ב)). A separate stage, planned after the clock test of 2b.2.
+  Immediate BLE apply for the other preferences stays under "Later" (P10).
 - **2** — Isolate the remaining layers behind interfaces and break couplings.
 - **Later, each approved separately** — applying preference changes from BLE immediately
   (shared apply functions with the menu); NVS namespace per layer with migration; one
