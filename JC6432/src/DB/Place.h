@@ -150,5 +150,7 @@ public:
 };
 
 void initPlace();
+// registers the ofek check in the preference registry (2b.1); called from setup, before initBluetooth
+void registerPlaceChecks();
 
 #endif

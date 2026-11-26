@@ -11,13 +11,11 @@
 #include "TextCommandHandler.h"
 #include "Logic.h"
 #include "Preferences/UserPreferences.h"
-#include "Preferences/DataPrefs.h"
 
 extern bool            deviceConnected;
 extern UserPreferences userPreferences;
 extern Logic           bl;
 extern State*          currentState;
-extern int numOfOfeks;
 
 // globals — כאן הגדרתם הרשמית (extern ב-Commands.h)
 ButtonCommand currentButtonCommand = ButtonCommand::NONE;
@@ -651,26 +649,15 @@ static void handlePref(const uint8_t* payload, size_t len)
                         return;
                     }
 
-                    // בדיקת טווח לפני שהערך נכנס להעדפה: ערך מחוץ לטווח היה גורם לקריאה מחוץ למערך
-                    bool isZeetPref = (pref == &dataPrefs.zmanim.zeetCochavim ||
-                                       pref == &dataPrefs.zmanim.rabenuTam ||
-                                       pref == &dataPrefs.zmanim.zeetShabat ||
-                                       pref == &dataPrefs.zmanim.zeetZom);
-                    if ((pref->getIndex() == 4 && (valueLen < 1 || valueStart[0] >= numOfShitot)) ||
-                        (pref->getIndex() == 6 && (valueLen < 1 || valueStart[0] >= numOfOfeks)) ||
-                        (isZeetPref && (valueLen < 1 || valueStart[0] > numOfZeetCochavin)))
+                    // פענוח, הבדיקות שהשכבה הבעלים רשמה (טווח: ערך מחוץ לטווח היה גורם לקריאה מחוץ למערך)
+                    // וכתיבה - דרך נקודת הכתיבה של הרישום. נשמר ל-NVS רק בשינוי (2b.1)
+                    PrefWriteResult result = userPreferences.writeBytes(*pref, valueStart, valueLen);
+                    if (result == PW_BAD_BYTES || result == PW_REJECTED)
                     {
                         sendErr(DOMAIN_PREF, PREF_OP_WRITE, CORE_ERR_INVALID_VALUE);
                         return;
                     }
 
-                    if (!pref->fromBytes(valueStart, valueLen))
-                    {
-                        sendErr(DOMAIN_PREF, PREF_OP_WRITE, CORE_ERR_INVALID_VALUE);
-                        return;
-                    }
-
-                    pref->save();
                     sendOk(DOMAIN_PREF, PREF_OP_WRITE);
                     // טיפול מיוחד: עדכון ofek (index 6) מצריך פעולה נוספת
                     if (pref->getIndex() == 6)
