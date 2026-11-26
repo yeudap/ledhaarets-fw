@@ -63,7 +63,7 @@
 
 ### אימות
 
-הספירה נעשתה בסקריפט קריאה-בלבד. הסקריפט המקורי לא נשמר. הוא נכתב מחדש לפי הכללים שלמעלה, ונשמר ב-[tools/count_deps.py](../../tools/count_deps.py). הוראות שימוש בראש הקובץ. על `9c75812` הוא שחזר את כל 374 הקשתות של המפה הקודמת עם אותו מספר הפניות בדיוק (6,747). מספר המזהים היה זהה ב-372 קשתות, ובשתיים (`MainStateInfoSets→DayInfo`, `MainState→DayInfo`) הוא היה שונה בגלל תוויות של שרשראות עמוקות. על הבסיס הנוכחי: 420 קשתות, 7,444 הפניות.
+הספירה נעשתה בסקריפט קריאה-בלבד. הסקריפט המקורי לא נשמר. הוא נכתב מחדש לפי הכללים שלמעלה, ונשמר ב-[tools/count_deps.py](../../tools/count_deps.py). הוראות שימוש בראש הקובץ. על `9c75812` הוא שחזר את כל 374 הקשתות של המפה הקודמת עם אותו מספר הפניות בדיוק (6,747). מספר המזהים היה זהה ב-372 קשתות, ובשתיים (`MainStateInfoSets→DayInfo`, `MainState→DayInfo`) הוא היה שונה בגלל תוויות של שרשראות עמוקות. על הבסיס הנוכחי: 418 קשתות, 7,454 הפניות.
 
 חמשת התאים שנבדקו ידנית מול grep בספירה המקורית נבדקו שוב על הבסיס הנוכחי, והכלי נותן בהם את אותן תוצאות כמו grep:
 
@@ -151,7 +151,7 @@ flowchart TD
   SCREENS -->|723| RENDER
   STATES -->|359| PREFS
   STATES -->|248| RENDER
-  DB -->|221| PREFS
+  DB -->|233| PREFS
   LOGIC -->|173| STATES
   STATES -->|173| CLK
   STATES -->|143| LOGIC
@@ -184,12 +184,11 @@ flowchart TD
 | `main → Logic` | 9 | |
 | `main → HW` | 8 | |
 | `BLE → CLK` | 7 | |
+| `main → DB` | 6 | כולל רישום הבדיקות (`registerPlaceChecks`, `registerShitaChecks`, 2b.1) |
 | `main → Screens` | 5 | |
-| `BLE → DB` | 4 | בדיקות הטווח ב-`PREF_OP_WRITE` (`numOfOfeks`, `numOfShitot`, `numOfZeetCochavin`) |
 | `HW → BTN` | 4 | |
 | `HW → CLK` | 4 | |
 | `HW → Metadata` | 4 | `Hardware.h` → `Metadata::setHardwareVersion` |
-| `main → DB` | 4 | |
 | `main → Metadata` | 4 | |
 | `main → Prefs` | 4 | |
 | `Screens → Metadata` | 4 | |
@@ -221,7 +220,7 @@ flowchart TD
 | 5 | `States/States.h` | `States/State` | 159 | 1 | `State`×159 |  |
 | 6 | `Preferences/UserContent` | `Preferences/UserPreferences` | 155 | 7 | `PR_OPEN`×50, `PrefDef`×50, `UserPref`×50 |  |
 | 7 | `BLE/OtaProtocol` | `BLE/FirmwareService` | 151 | 41 | `OTA_TAG`×70, `getStateName`×8, `OTA_IN_PROGRESS`×6 |  |
-| 8 | `DB/Shita` | `Preferences/DataPrefs` | 144 | 14 | `dataPrefs.zmanim.nerot`×12, `dataPrefs.zmanim.zmanTalit`×12, `dataPrefs.zmanim.alotHashahar`×11 |  |
+| 8 | `DB/Shita` | `Preferences/DataPrefs` | 149 | 15 | `dataPrefs.zmanim.nerot`×12, `dataPrefs.zmanim.rabenuTam`×12, `dataPrefs.zmanim.zeetCochavim`×12 |  |
 | 9 | `States/MinhagState` | `DB/Shita` | 130 | 19 | `numOfZeetCochavin`×24, `numOfSozMga`×12, `numOfZS`×12 |  |
 | 10 | `States/MainStateInfoSets` | `DB/DayInfo` | 121 | 71 | `dayInfo.isShabat`×6, `dayInfo.getGeshemTal`×5, `dayInfo.getBircatHashanim`×4 |  |
 | 11 | `Preferences/LogicPrefs` | `Preferences/UserPreferences` | 111 | 7 | `PR_MIN_MAX`×27, `PrefDef`×27, `UserPref`×27 |  |
@@ -331,16 +330,16 @@ flowchart TD
 | 115 | `Screens/MainScreen` | `Screens/Screens.h` | 15 | 1 | `MainScreen`×15 |  |
 | 116 | `States/EdotState` | `States/States.h` | 15 | 8 | `EdotAshkenaz`×2, `EdotBneiHul`×2, `EdotChabad`×2 |  |
 | 117 | `States/MainStateInfoSets` | `DB/Zman` | 15 | 1 | `Zman`×15 |  |
-| 118 | `Screens/MenuScreen` | `Area` | 14 | 1 | `Area`×14 |  |
-| 119 | `Screens/messageScreen` | `Text` | 14 | 4 | `Text`×9, `CENTER`×2, `LEFT`×2 |  |
-| 120 | `States/ColorState` | `Preferences/DisplayPrefs` | 14 | 7 | `displayPrefs.colorBottomT`×2, `displayPrefs.colorBottomV`×2, `displayPrefs.colorIluy`×2 |  |
-| 121 | `States/ColorState` | `States/MainState` | 14 | 2 | `bl.mainState.showStateScreen`×7, `bl.mainState.stateLoop`×7 |  |
-| 122 | `States/MinhagState` | `DB/Zman` | 14 | 1 | `Zman`×14 |  |
-| 123 | `States/OfekState` | `Screens/SetClockScreen` | 14 | 4 | `setClockScreen.updateHour`×4, `setClockScreen.updateMinute`×4, `setClockScreen.updateSecond`×4 |  |
-| 124 | `States/SetTochenInfoState` | `Area` | 14 | 13 | `mainScreen.infoAll.addRoundRectBorder`×2, `menuScreen.kezev.addArrows`, `menuScreen.kezev.addRoundRect` |  |
-| 125 | `States/SetTochenInfoState` | `Screens/MenuScreen` | 14 | 1 | `menuScreen.printMenu`×14 |  |
-| 126 | `BLE/CoreService` | `Logic` | 13 | 8 | `bl.updateState`×5, `bl.setClockState`×2, `Logic` |  |
-| 127 | `DB/Place` | `Preferences/DataPrefs` | 13 | 9 | `dataPrefs.place.ofek`×3, `dataPrefs.place.nz_lat`×2, `dataPrefs.place.nz_long`×2 |  |
+| 118 | `DB/Place` | `Preferences/DataPrefs` | 14 | 9 | `dataPrefs.place.ofek`×4, `dataPrefs.place.nz_lat`×2, `dataPrefs.place.nz_long`×2 |  |
+| 119 | `Screens/MenuScreen` | `Area` | 14 | 1 | `Area`×14 |  |
+| 120 | `Screens/messageScreen` | `Text` | 14 | 4 | `Text`×9, `CENTER`×2, `LEFT`×2 |  |
+| 121 | `States/ColorState` | `Preferences/DisplayPrefs` | 14 | 7 | `displayPrefs.colorBottomT`×2, `displayPrefs.colorBottomV`×2, `displayPrefs.colorIluy`×2 |  |
+| 122 | `States/ColorState` | `States/MainState` | 14 | 2 | `bl.mainState.showStateScreen`×7, `bl.mainState.stateLoop`×7 |  |
+| 123 | `States/MinhagState` | `DB/Zman` | 14 | 1 | `Zman`×14 |  |
+| 124 | `States/OfekState` | `Screens/SetClockScreen` | 14 | 4 | `setClockScreen.updateHour`×4, `setClockScreen.updateMinute`×4, `setClockScreen.updateSecond`×4 |  |
+| 125 | `States/SetTochenInfoState` | `Area` | 14 | 13 | `mainScreen.infoAll.addRoundRectBorder`×2, `menuScreen.kezev.addArrows`, `menuScreen.kezev.addRoundRect` |  |
+| 126 | `States/SetTochenInfoState` | `Screens/MenuScreen` | 14 | 1 | `menuScreen.printMenu`×14 |  |
+| 127 | `BLE/CoreService` | `Logic` | 13 | 8 | `bl.updateState`×5, `bl.setClockState`×2, `Logic` |  |
 | 128 | `States/SetTochenTimeState` | `Screens/MenuScreen` | 13 | 1 | `menuScreen.printMenu`×13 |  |
 | 129 | `States/ShitaState` | `DB/Shita` | 13 | 3 | `numOfShitot`×7, `shitot`×5, `Shita` |  |
 | 130 | `Logic` | `DB/Place` | 12 | 6 | `latFrac`×2, `latInt`×2, `latPre`×2 |  |
@@ -370,80 +369,80 @@ flowchart TD
 | 154 | `States/States` | `Screens/MenuScreen` | 10 | 1 | `menuScreen.printMenu`×10 |  |
 | 155 | `States/States` | `Screens/Screens.h` | 10 | 1 | `menuScreen`×10 |  |
 | 156 | `States/States` | `States/States.h` | 10 | 10 | `BrightnessState`, `ColorState`, `FontState` |  |
-| 157 | `BLE/TextCommandHandler` | `Logic` | 9 | 4 | `bl.mainState`×6, `Logic`, `bl` |  |
-| 158 | `BLE/TextCommandHandler` | `States/States.h` | 9 | 4 | `numOfNameSets`×3, `bl.mainState.flagNameSetChanged`×2, `bl.mainState.numOfValidTexts`×2 |  |
-| 159 | `BTN/ButtonLH0826` | `BLE/Commands` | 9 | 1 | `ButtonCommand`×9 | נגד הכיוון |
-| 160 | `Screens/AboutScreen` | `Colors` | 9 | 4 | `BLACK`×5, `GREEN`×2, `BLUE` |  |
-| 161 | `Screens/MenuScreen` | `Text` | 9 | 4 | `Text`×6, `CENTER`, `LEFT` |  |
-| 162 | `Screens/SetClockScreen` | `Area` | 9 | 1 | `Area`×9 |  |
-| 163 | `Screens/VersionScreen` | `Text` | 9 | 4 | `Text`×5, `LEFT`×2, `CENTER` |  |
-| 164 | `States/ConfigState` | `Screens/MenuScreen` | 9 | 1 | `menuScreen.printMenu`×9 |  |
-| 165 | `States/MainStateInfoSets` | `CLK/Clock` | 9 | 2 | `isTimeInRange`×8, `zmanPlusDakot` |  |
-| 166 | `States/SetInputText` | `Text` | 9 | 2 | `Text`×6, `CENTER`×3 |  |
-| 167 | `main` | `Logic` | 9 | 8 | `bl.mainState`×2, `Logic`, `bl` |  |
-| 168 | `BLE/CoreService` | `BLE/Authmanager` | 8 | 6 | `authManager.grantSession`×2, `authManager.isSessionAuthenticated`×2, `authManager.checkPin` |  |
-| 169 | `BLE/OtaProtocol` | `States/UpdateState` | 8 | 5 | `bl.updateState.showUpdateSuccessScreen`×3, `bl.updateState.showUpdateFailedScreen`×2, `bl.updateState.showUpdateCancelledScreen` | מכוון: מסך התקדמות OTA |
-| 170 | `BTN/ButtonLH1022` | `BLE/Commands` | 8 | 1 | `ButtonCommand`×8 | נגד הכיוון |
-| 171 | `DB/HebrewDate` | `DB/Dict` | 8 | 6 | `hodesh_list_l`×2, `yom_list`×2, `hodesh_list_s` |  |
-| 172 | `Logic` | `Preferences/LogicPrefs` | 8 | 4 | `logicPrefs.intervalIluy`×2, `logicPrefs.intervalInfo`×2, `logicPrefs.intervalTime`×2 |  |
-| 173 | `Preferences/UserPreferences` | `Preferences/PresentationPrefs` | 8 | 8 | `presentationPrefs.clockFormat`, `presentationPrefs.dateFormat`, `presentationPrefs.layout.middleLine` |  |
-| 174 | `Screens/MainScreen` | `Fonts` | 8 | 3 | `font6`×4, `ariel10`×2, `font7`×2 |  |
-| 175 | `Screens/SetClockScreen` | `Fonts` | 8 | 2 | `font7`×4, `number19`×4 |  |
-| 176 | `Screens/TextScreen` | `Area` | 8 | 1 | `Area`×8 |  |
-| 177 | `Screens/messageScreen` | `Screens/Screens.h` | 8 | 2 | `MessageScreen`×6, `MessageType`×2 |  |
-| 178 | `States/ConfigState` | `Screens/ResetScreen` | 8 | 2 | `resetScreen.SetScreen`×4, `resetScreen.focusArea`×4 |  |
-| 179 | `States/FontState` | `Logic` | 8 | 3 | `bl.mainState`×6, `Logic`, `bl` |  |
-| 180 | `States/FontState` | `Text` | 8 | 2 | `font_list`×4, `numOfFonts`×4 |  |
-| 181 | `States/MainState` | `States/Digit` | 8 | 2 | `Digit`×6, `MorphMulty`×2 |  |
-| 182 | `States/SetClockState` | `Area` | 8 | 8 | `menuScreen.clkFormat.addArrows`, `menuScreen.clkFormat.addRoundRectBorder`, `menuScreen.format.addArrows` |  |
-| 183 | `States/UpdateState` | `Logic` | 8 | 4 | `bl.updateState`×4, `bl.mainState`×2, `Logic` | נגד הכיוון |
-| 184 | `BLE/Bluetooth` | `States/State` | 7 | 3 | `currentState`×4, `State`×2, `currentState.showStateScreen` |  |
-| 185 | `BLE/CoreService` | `CLK/Clock` | 7 | 1 | `now`×7 |  |
-| 186 | `BLE/TextCommandHandler` | `Preferences/UserContent` | 7 | 1 | `userContent`×7 |  |
-| 187 | `DB/Sun` | `DB/LoaziDate` | 7 | 1 | `LoaziDate`×7 |  |
-| 188 | `Logic` | `Colors` | 7 | 1 | `color_list`×7 |  |
-| 189 | `Preferences/SystemPrefs` | `Preferences/UserPreferences` | 7 | 7 | `PR_MIN_MAX`, `PrefDef`, `UserPref` |  |
-| 190 | `Screens/ColorScreen` | `Colors` | 7 | 3 | `BLACK`×4, `BLUE`×2, `color_list` |  |
-| 191 | `States/ColorState` | `Screens/ColorScreen` | 7 | 1 | `colorScreen.setColor`×7 |  |
-| 192 | `States/ColorState` | `Screens/messageScreen` | 7 | 1 | `messageScreen.printMessages`×7 |  |
-| 193 | `States/EdotState` | `Screens/MenuScreen` | 7 | 1 | `menuScreen.printMenu`×7 |  |
-| 194 | `States/EdotState` | `Screens/Screens.h` | 7 | 1 | `menuScreen`×7 |  |
-| 195 | `States/FontState` | `Screens/Screens.h` | 7 | 4 | `mainScreen.clockFont`×3, `messageScreen`×2, `mainScreen` |  |
-| 196 | `States/MainState` | `DB/Place` | 7 | 2 | `place`×6, `Place` |  |
-| 197 | `States/MainStateInfoSets` | `Preferences/DataPrefs` | 7 | 3 | `dataPrefs.minhagim.eda`×4, `dataPrefs.place.homa`×2, `dataPrefs.minhagim.hul` |  |
-| 198 | `States/MainStateTimeSets` | `DB/Zman` | 7 | 1 | `Zman`×7 |  |
-| 199 | `States/ShitaState` | `States/States.h` | 7 | 2 | `ShitaState`×6, `bl.mainState.updateDayValues` |  |
-| 200 | `States/UpdateState` | `States/State` | 7 | 3 | `currentState`×4, `currentState.showStateScreen`×2, `State` | נגד הכיוון |
-| 201 | `States/UpdateState` | `States/States.h` | 7 | 1 | `UpdateState`×7 | נגד הכיוון |
-| 202 | `BLE/Bluetooth` | `BLE/CoreService` | 6 | 4 | `applyDeviceName`×2, `loadDeviceName`×2, `CORE_SERVICE_UUID` |  |
-| 203 | `BLE/Bluetooth` | `BLE/FirmwareService` | 6 | 5 | `onOtaMtuChanged`×2, `OTA_SERVICE_UUID`, `initFirmwareService` |  |
-| 204 | `BLE/CoreService` | `Screens/Screens.h` | 6 | 1 | `messageScreen`×6 |  |
-| 205 | `DB/DayInfo` | `DB/Place` | 6 | 1 | `Place`×6 |  |
-| 206 | `Screens/BrightnessScreen` | `Colors` | 6 | 3 | `BLACK`×2, `BLUE`×2, `WHITE`×2 |  |
-| 207 | `Screens/TextScreen` | `Text` | 6 | 2 | `Text`×4, `CENTER`×2 |  |
-| 208 | `Screens/VersionScreen` | `DB/Strings` | 6 | 6 | `strings.hwVersion`, `strings.lastUpdate`, `strings.model` |  |
-| 209 | `Screens/messageScreen` | `Colors` | 6 | 2 | `BLACK`×4, `WHITE`×2 |  |
-| 210 | `States/SetInputText` | `BLE/TextCommandHandler` | 6 | 2 | `getTextByIndex`×5, `handleDeleteText` | נגד הכיוון |
-| 211 | `States/SetTochenInfoState` | `Logic` | 6 | 4 | `bl.configStates`×2, `bl.mainState`×2, `Logic` |  |
-| 212 | `States/UpdateState` | `Screens/messageScreen` | 6 | 3 | `messageScreen.printMessages`×4, `messageScreen.printProgressBar`, `messageScreen.printScreen` |  |
-| 213 | `Area` | `Colors` | 5 | 2 | `YELLOW`×3, `BLUE`×2 |  |
-| 214 | `BLE/CoreService` | `Preferences/UserPreferences` | 5 | 2 | `userPreferences`×4, `UserPreferences` |  |
-| 215 | `Screens/AboutScreen` | `Area` | 5 | 1 | `Area`×5 |  |
-| 216 | `Screens/AboutScreen` | `Text` | 5 | 1 | `Text`×5 |  |
-| 217 | `Screens/MenuScreen` | `Screens/Screens.h` | 5 | 1 | `MenuScreen`×5 |  |
-| 218 | `Screens/ResetScreen` | `Text` | 5 | 2 | `Text`×4, `CENTER` |  |
-| 219 | `Screens/messageScreen` | `Fonts` | 5 | 3 | `font7`×2, `logo`×2, `font6` |  |
-| 220 | `States/BrightnessState` | `States/States.h` | 5 | 1 | `SetBrightnessState`×5 |  |
-| 221 | `States/ConfigState` | `Preferences/SystemPrefs` | 5 | 1 | `systemPrefs.bt`×5 |  |
-| 222 | `States/ConfigState` | `Screens/messageScreen` | 5 | 1 | `messageScreen.printMessages`×5 |  |
-| 223 | `States/MainState` | `Fonts` | 5 | 3 | `font5`×2, `font6`×2, `font8` |  |
-| 224 | `States/MainStateInfoSets` | `Area` | 5 | 3 | `mainScreen.infoAll.textFits`×3, `mainScreen.infoDown.textFits`, `mainScreen.infoUp.textFits` |  |
-| 225 | `States/SetClockState` | `Preferences/DataPrefs` | 5 | 1 | `dataPrefs.place.shaonKaiz`×5 |  |
-| 226 | `States/SetClockState` | `Screens/messageScreen` | 5 | 1 | `messageScreen.printMessages`×5 |  |
-| 227 | `States/SetTochenTimeState` | `Logic` | 5 | 4 | `bl.mainState`×2, `Logic`, `bl` |  |
-| 228 | `States/States.h` | `Text` | 5 | 1 | `Text`×5 |  |
-| 229 | `Text` | `Fonts` | 5 | 4 | `number25d`×2, `number22`, `number23` |  |
-| 230 | `BLE/CoreService` | `Preferences/DataPrefs` | 4 | 4 | `dataPrefs.zmanim.rabenuTam`, `dataPrefs.zmanim.zeetCochavim`, `dataPrefs.zmanim.zeetShabat` |  |
+| 157 | `BLE/CoreService` | `Preferences/UserPreferences` | 9 | 6 | `userPreferences`×4, `PW_BAD_BYTES`, `PW_REJECTED` |  |
+| 158 | `BLE/TextCommandHandler` | `Logic` | 9 | 4 | `bl.mainState`×6, `Logic`, `bl` |  |
+| 159 | `BLE/TextCommandHandler` | `States/States.h` | 9 | 4 | `numOfNameSets`×3, `bl.mainState.flagNameSetChanged`×2, `bl.mainState.numOfValidTexts`×2 |  |
+| 160 | `BTN/ButtonLH0826` | `BLE/Commands` | 9 | 1 | `ButtonCommand`×9 | נגד הכיוון |
+| 161 | `Screens/AboutScreen` | `Colors` | 9 | 4 | `BLACK`×5, `GREEN`×2, `BLUE` |  |
+| 162 | `Screens/MenuScreen` | `Text` | 9 | 4 | `Text`×6, `CENTER`, `LEFT` |  |
+| 163 | `Screens/SetClockScreen` | `Area` | 9 | 1 | `Area`×9 |  |
+| 164 | `Screens/VersionScreen` | `Text` | 9 | 4 | `Text`×5, `LEFT`×2, `CENTER` |  |
+| 165 | `States/ConfigState` | `Screens/MenuScreen` | 9 | 1 | `menuScreen.printMenu`×9 |  |
+| 166 | `States/MainStateInfoSets` | `CLK/Clock` | 9 | 2 | `isTimeInRange`×8, `zmanPlusDakot` |  |
+| 167 | `States/SetInputText` | `Text` | 9 | 2 | `Text`×6, `CENTER`×3 |  |
+| 168 | `main` | `Logic` | 9 | 8 | `bl.mainState`×2, `Logic`, `bl` |  |
+| 169 | `BLE/CoreService` | `BLE/Authmanager` | 8 | 6 | `authManager.grantSession`×2, `authManager.isSessionAuthenticated`×2, `authManager.checkPin` |  |
+| 170 | `BLE/OtaProtocol` | `States/UpdateState` | 8 | 5 | `bl.updateState.showUpdateSuccessScreen`×3, `bl.updateState.showUpdateFailedScreen`×2, `bl.updateState.showUpdateCancelledScreen` | מכוון: מסך התקדמות OTA |
+| 171 | `BTN/ButtonLH1022` | `BLE/Commands` | 8 | 1 | `ButtonCommand`×8 | נגד הכיוון |
+| 172 | `DB/HebrewDate` | `DB/Dict` | 8 | 6 | `hodesh_list_l`×2, `yom_list`×2, `hodesh_list_s` |  |
+| 173 | `Logic` | `Preferences/LogicPrefs` | 8 | 4 | `logicPrefs.intervalIluy`×2, `logicPrefs.intervalInfo`×2, `logicPrefs.intervalTime`×2 |  |
+| 174 | `Preferences/UserPreferences` | `Preferences/PresentationPrefs` | 8 | 8 | `presentationPrefs.clockFormat`, `presentationPrefs.dateFormat`, `presentationPrefs.layout.middleLine` |  |
+| 175 | `Screens/MainScreen` | `Fonts` | 8 | 3 | `font6`×4, `ariel10`×2, `font7`×2 |  |
+| 176 | `Screens/SetClockScreen` | `Fonts` | 8 | 2 | `font7`×4, `number19`×4 |  |
+| 177 | `Screens/TextScreen` | `Area` | 8 | 1 | `Area`×8 |  |
+| 178 | `Screens/messageScreen` | `Screens/Screens.h` | 8 | 2 | `MessageScreen`×6, `MessageType`×2 |  |
+| 179 | `States/ConfigState` | `Screens/ResetScreen` | 8 | 2 | `resetScreen.SetScreen`×4, `resetScreen.focusArea`×4 |  |
+| 180 | `States/FontState` | `Logic` | 8 | 3 | `bl.mainState`×6, `Logic`, `bl` |  |
+| 181 | `States/FontState` | `Text` | 8 | 2 | `font_list`×4, `numOfFonts`×4 |  |
+| 182 | `States/MainState` | `States/Digit` | 8 | 2 | `Digit`×6, `MorphMulty`×2 |  |
+| 183 | `States/SetClockState` | `Area` | 8 | 8 | `menuScreen.clkFormat.addArrows`, `menuScreen.clkFormat.addRoundRectBorder`, `menuScreen.format.addArrows` |  |
+| 184 | `States/UpdateState` | `Logic` | 8 | 4 | `bl.updateState`×4, `bl.mainState`×2, `Logic` | נגד הכיוון |
+| 185 | `BLE/Bluetooth` | `States/State` | 7 | 3 | `currentState`×4, `State`×2, `currentState.showStateScreen` |  |
+| 186 | `BLE/CoreService` | `CLK/Clock` | 7 | 1 | `now`×7 |  |
+| 187 | `BLE/TextCommandHandler` | `Preferences/UserContent` | 7 | 1 | `userContent`×7 |  |
+| 188 | `DB/Shita` | `Preferences/UserPreferences` | 7 | 2 | `UserPreferences`×6, `userPreferences` |  |
+| 189 | `DB/Sun` | `DB/LoaziDate` | 7 | 1 | `LoaziDate`×7 |  |
+| 190 | `Logic` | `Colors` | 7 | 1 | `color_list`×7 |  |
+| 191 | `Preferences/SystemPrefs` | `Preferences/UserPreferences` | 7 | 7 | `PR_MIN_MAX`, `PrefDef`, `UserPref` |  |
+| 192 | `Screens/ColorScreen` | `Colors` | 7 | 3 | `BLACK`×4, `BLUE`×2, `color_list` |  |
+| 193 | `States/ColorState` | `Screens/ColorScreen` | 7 | 1 | `colorScreen.setColor`×7 |  |
+| 194 | `States/ColorState` | `Screens/messageScreen` | 7 | 1 | `messageScreen.printMessages`×7 |  |
+| 195 | `States/EdotState` | `Screens/MenuScreen` | 7 | 1 | `menuScreen.printMenu`×7 |  |
+| 196 | `States/EdotState` | `Screens/Screens.h` | 7 | 1 | `menuScreen`×7 |  |
+| 197 | `States/FontState` | `Screens/Screens.h` | 7 | 4 | `mainScreen.clockFont`×3, `messageScreen`×2, `mainScreen` |  |
+| 198 | `States/MainState` | `DB/Place` | 7 | 2 | `place`×6, `Place` |  |
+| 199 | `States/MainStateInfoSets` | `Preferences/DataPrefs` | 7 | 3 | `dataPrefs.minhagim.eda`×4, `dataPrefs.place.homa`×2, `dataPrefs.minhagim.hul` |  |
+| 200 | `States/MainStateTimeSets` | `DB/Zman` | 7 | 1 | `Zman`×7 |  |
+| 201 | `States/ShitaState` | `States/States.h` | 7 | 2 | `ShitaState`×6, `bl.mainState.updateDayValues` |  |
+| 202 | `States/UpdateState` | `States/State` | 7 | 3 | `currentState`×4, `currentState.showStateScreen`×2, `State` | נגד הכיוון |
+| 203 | `States/UpdateState` | `States/States.h` | 7 | 1 | `UpdateState`×7 | נגד הכיוון |
+| 204 | `BLE/Bluetooth` | `BLE/CoreService` | 6 | 4 | `applyDeviceName`×2, `loadDeviceName`×2, `CORE_SERVICE_UUID` |  |
+| 205 | `BLE/Bluetooth` | `BLE/FirmwareService` | 6 | 5 | `onOtaMtuChanged`×2, `OTA_SERVICE_UUID`, `initFirmwareService` |  |
+| 206 | `BLE/CoreService` | `Screens/Screens.h` | 6 | 1 | `messageScreen`×6 |  |
+| 207 | `DB/DayInfo` | `DB/Place` | 6 | 1 | `Place`×6 |  |
+| 208 | `Screens/BrightnessScreen` | `Colors` | 6 | 3 | `BLACK`×2, `BLUE`×2, `WHITE`×2 |  |
+| 209 | `Screens/TextScreen` | `Text` | 6 | 2 | `Text`×4, `CENTER`×2 |  |
+| 210 | `Screens/VersionScreen` | `DB/Strings` | 6 | 6 | `strings.hwVersion`, `strings.lastUpdate`, `strings.model` |  |
+| 211 | `Screens/messageScreen` | `Colors` | 6 | 2 | `BLACK`×4, `WHITE`×2 |  |
+| 212 | `States/SetInputText` | `BLE/TextCommandHandler` | 6 | 2 | `getTextByIndex`×5, `handleDeleteText` | נגד הכיוון |
+| 213 | `States/SetTochenInfoState` | `Logic` | 6 | 4 | `bl.configStates`×2, `bl.mainState`×2, `Logic` |  |
+| 214 | `States/UpdateState` | `Screens/messageScreen` | 6 | 3 | `messageScreen.printMessages`×4, `messageScreen.printProgressBar`, `messageScreen.printScreen` |  |
+| 215 | `Area` | `Colors` | 5 | 2 | `YELLOW`×3, `BLUE`×2 |  |
+| 216 | `Screens/AboutScreen` | `Area` | 5 | 1 | `Area`×5 |  |
+| 217 | `Screens/AboutScreen` | `Text` | 5 | 1 | `Text`×5 |  |
+| 218 | `Screens/MenuScreen` | `Screens/Screens.h` | 5 | 1 | `MenuScreen`×5 |  |
+| 219 | `Screens/ResetScreen` | `Text` | 5 | 2 | `Text`×4, `CENTER` |  |
+| 220 | `Screens/messageScreen` | `Fonts` | 5 | 3 | `font7`×2, `logo`×2, `font6` |  |
+| 221 | `States/BrightnessState` | `States/States.h` | 5 | 1 | `SetBrightnessState`×5 |  |
+| 222 | `States/ConfigState` | `Preferences/SystemPrefs` | 5 | 1 | `systemPrefs.bt`×5 |  |
+| 223 | `States/ConfigState` | `Screens/messageScreen` | 5 | 1 | `messageScreen.printMessages`×5 |  |
+| 224 | `States/MainState` | `Fonts` | 5 | 3 | `font5`×2, `font6`×2, `font8` |  |
+| 225 | `States/MainStateInfoSets` | `Area` | 5 | 3 | `mainScreen.infoAll.textFits`×3, `mainScreen.infoDown.textFits`, `mainScreen.infoUp.textFits` |  |
+| 226 | `States/SetClockState` | `Preferences/DataPrefs` | 5 | 1 | `dataPrefs.place.shaonKaiz`×5 |  |
+| 227 | `States/SetClockState` | `Screens/messageScreen` | 5 | 1 | `messageScreen.printMessages`×5 |  |
+| 228 | `States/SetTochenTimeState` | `Logic` | 5 | 4 | `bl.mainState`×2, `Logic`, `bl` |  |
+| 229 | `States/States.h` | `Text` | 5 | 1 | `Text`×5 |  |
+| 230 | `Text` | `Fonts` | 5 | 4 | `number25d`×2, `number22`, `number23` |  |
 | 231 | `DB/DafYomi` | `DB/Dict` | 4 | 2 | `masechet_list`×2, `ot_list`×2 |  |
 | 232 | `DB/Shita` | `DB/Place` | 4 | 4 | `Place`, `place`, `place.kiseRahamim` |  |
 | 233 | `Hardware` | `BTN/Button` | 4 | 2 | `ButtonDriverType`×2, `selectButtonDriver`×2 | נגד הכיוון |
@@ -474,172 +473,170 @@ flowchart TD
 | 258 | `BLE/CoreService` | `Screens/messageScreen` | 3 | 1 | `messageScreen.printMessages`×3 |  |
 | 259 | `BLE/FirmwareService` | `BLE/OtaProtocol` | 3 | 1 | `OtaProtocol`×3 |  |
 | 260 | `DB/DB` | `Preferences/DataPrefs` | 3 | 1 | `dataPrefs.zmanim.shita`×3 |  |
-| 261 | `DB/Sun` | `DB/Place` | 3 | 1 | `Place`×3 |  |
-| 262 | `DB/Zman` | `Preferences/PresentationPrefs` | 3 | 2 | `presentationPrefs.timeFormat`×2, `presentationPrefs.clockFormat` |  |
-| 263 | `Screens/AboutScreen` | `Fonts` | 3 | 2 | `font6`×2, `logo` |  |
-| 264 | `Screens/BrightnessScreen` | `Screens/Screens.h` | 3 | 1 | `BrightnessScreen`×3 |  |
-| 265 | `Screens/BrightnessScreen` | `Text` | 3 | 2 | `Text`×2, `CENTER` |  |
-| 266 | `Screens/ColorScreen` | `Screens/Screens.h` | 3 | 1 | `ColorScreen`×3 |  |
-| 267 | `Screens/ColorScreen` | `Text` | 3 | 2 | `Text`×2, `CENTER` |  |
-| 268 | `Screens/MenuScreen` | `Fonts` | 3 | 1 | `font7`×3 |  |
-| 269 | `Screens/RegsScreen` | `Screens/Screens.h` | 3 | 1 | `RegsScreen`×3 |  |
-| 270 | `Screens/RegsScreen` | `Text` | 3 | 2 | `Text`×2, `CENTER` |  |
-| 271 | `Screens/ResetScreen` | `DB/Strings` | 3 | 3 | `strings.no`, `strings.resetTitle`, `strings.yes` |  |
-| 272 | `Screens/ResetScreen` | `Fonts` | 3 | 1 | `font7`×3 |  |
-| 273 | `Screens/Screens.h` | `Colors` | 3 | 3 | `GREEN`, `RED`, `YELLOW` |  |
-| 274 | `Screens/VersionScreen` | `Fonts` | 3 | 2 | `font7`×2, `font6` |  |
-| 275 | `Screens/VersionScreen` | `Metadata` | 3 | 1 | `Metadata`×3 |  |
-| 276 | `Screens/VersionScreen` | `Screens/Screens.h` | 3 | 1 | `VersionScreen`×3 |  |
-| 277 | `States/BrightnessState` | `Screens/Screens.h` | 3 | 2 | `messageScreen`×2, `brightnessScreen` |  |
-| 278 | `States/EdotState` | `Logic` | 3 | 3 | `Logic`, `bl`, `bl.mainState` |  |
-| 279 | `States/FontState` | `Preferences/DisplayPrefs` | 3 | 1 | `displayPrefs.clockFont`×3 |  |
-| 280 | `States/MainState` | `DB/Strings` | 3 | 3 | `strings.hazmanShenotar`, `strings.henetzHahama`, `strings.parashatShavua` |  |
-| 281 | `States/MainStateInfoSets` | `DB/Shita` | 3 | 3 | `ASHKENAZ`, `CHABAD`, `SFARAD` |  |
-| 282 | `States/MainStateTimeSets` | `Text` | 3 | 2 | `Text`×2, `CENTER` |  |
-| 283 | `States/SetInputText` | `Fonts` | 3 | 2 | `font6`×2, `font7` |  |
-| 284 | `States/SetInputText` | `Screens/MenuScreen` | 3 | 1 | `menuScreen.printMenu`×3 |  |
-| 285 | `States/ShitaState` | `Preferences/DataPrefs` | 3 | 1 | `dataPrefs.zmanim.shita`×3 |  |
-| 286 | `States/ShitaState` | `Screens/Screens.h` | 3 | 2 | `messageScreen`×2, `menuScreen` |  |
-| 287 | `main` | `DB/Strings` | 3 | 3 | `Strings`, `strings`, `strings.setStringsHeb` |  |
-| 288 | `main` | `Screens/Screens.h` | 3 | 2 | `messageScreen`×2, `logoScreen` |  |
-| 289 | `BLE/Bluetooth` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 290 | `BLE/Bluetooth` | `Screens/Screens.h` | 2 | 1 | `messageScreen`×2 |  |
-| 291 | `BLE/CoreService` | `BLE/Bluetooth` | 2 | 1 | `deviceConnected`×2 |  |
-| 292 | `BLE/CoreService` | `DB/Place` | 2 | 1 | `numOfOfeks`×2 |  |
-| 293 | `BLE/CoreService` | `DB/Shita` | 2 | 2 | `numOfShitot`, `numOfZeetCochavin` |  |
-| 294 | `BLE/CoreService` | `States/OfekState` | 2 | 2 | `bl.setCustomState.printUpdateSucc`, `bl.setOfekState.printUpdateSucc` |  |
-| 295 | `BLE/CoreService` | `States/SetClockState` | 2 | 2 | `bl.setClockState.commonMenuAction`, `bl.setClockState.validateAndSetTime` |  |
-| 296 | `DB/DB` | `DB/Place` | 2 | 1 | `Place`×2 |  |
-| 297 | `DB/DB` | `DataBase` | 2 | 2 | `Tucazinsky_db`, `common_db` |  |
-| 298 | `DB/DayInfo` | `DB/DafYomi` | 2 | 1 | `DafYomi`×2 |  |
-| 299 | `DB/DayInfo` | `DB/HebrewDate` | 2 | 1 | `HebrewDate`×2 |  |
-| 300 | `DB/DayInfo` | `Preferences/LogicPrefs` | 2 | 1 | `logicPrefs.showIsraeli`×2 |  |
-| 301 | `DB/DayInfo` | `Preferences/PresentationPrefs` | 2 | 1 | `presentationPrefs.leil`×2 |  |
-| 302 | `DB/DayInfo` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 303 | `DB/Place` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 304 | `DB/Shita` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 305 | `DB/Zman` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 306 | `Logic` | `Preferences/PresentationPrefs` | 2 | 2 | `presentationPrefs.clockFormat`, `presentationPrefs.dateFormat` |  |
-| 307 | `Logic` | `States/State` | 2 | 1 | `State`×2 |  |
-| 308 | `Logic` | `Text` | 2 | 1 | `font_list`×2 |  |
-| 309 | `Screens/AboutScreen` | `Screens/Screens.h` | 2 | 1 | `AboutScreen`×2 |  |
-| 310 | `Screens/BrightnessScreen` | `Area` | 2 | 1 | `Area`×2 |  |
-| 311 | `Screens/ColorScreen` | `Area` | 2 | 1 | `Area`×2 |  |
-| 312 | `Screens/LogoScreen` | `Colors` | 2 | 2 | `BLACK`, `BLUE` |  |
-| 313 | `Screens/LogoScreen` | `Screens/Screens.h` | 2 | 1 | `LogoScreen`×2 |  |
-| 314 | `Screens/LogoScreen` | `Text` | 2 | 1 | `Text`×2 |  |
-| 315 | `Screens/RegsScreen` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 316 | `Screens/Screens.h` | `DB/Strings` | 2 | 2 | `Strings`, `strings` |  |
-| 317 | `Screens/Screens.h` | `DB/Zman` | 2 | 1 | `Zman`×2 | צדדית |
-| 318 | `Screens/Screens.h` | `Text` | 2 | 1 | `Text`×2 |  |
-| 319 | `Screens/TextScreen` | `DB/Strings` | 2 | 2 | `strings.TextsTitle`, `strings.mchak` |  |
-| 320 | `Screens/TextScreen` | `Fonts` | 2 | 2 | `font6`, `font7` |  |
-| 321 | `States/BrightnessState` | `Preferences/DisplayPrefs` | 2 | 1 | `displayPrefs.brightness`×2 |  |
-| 322 | `States/ConfigState` | `Area` | 2 | 2 | `menuScreen.bt.addArrows`, `menuScreen.bt.addRoundRectBorder` |  |
-| 323 | `States/ConfigState` | `BLE/Authmanager` | 2 | 1 | `authManager.factoryReset`×2 | נגד הכיוון |
-| 324 | `States/ConfigState` | `BLE/Bluetooth` | 2 | 1 | `bleApplyState`×2 | נגד הכיוון |
-| 325 | `States/ConfigState` | `Logic` | 2 | 2 | `Logic`, `bl` |  |
-| 326 | `States/FontState` | `States/MainState` | 2 | 2 | `bl.mainState.checkTimeChanged`, `bl.mainState.updateClockOnScreen` |  |
-| 327 | `States/MainState` | `Area` | 2 | 2 | `mainScreen.infoAll.clearArea`, `mainScreen.zmanAll.clearArea` |  |
-| 328 | `States/MainState` | `DB/HebrewDate` | 2 | 1 | `dayInfo.hebrewDate.toString`×2 |  |
-| 329 | `States/MainState` | `DB/Zman` | 2 | 1 | `Zman`×2 |  |
-| 330 | `States/MainStateInfoSets` | `DB/DafYomi` | 2 | 2 | `dayInfo.dafYomiBavli.toString`, `dayInfo.dafYomiYerushalmi.toString` |  |
-| 331 | `States/MainStateInfoSets` | `DB/HebrewDate` | 2 | 1 | `dayInfo.hebrewDate.toString`×2 |  |
-| 332 | `States/MainStateTimeSets` | `DB/Shita` | 2 | 1 | `CHABAD`×2 |  |
-| 333 | `States/MainStateTimeSets` | `Preferences/DataPrefs` | 2 | 1 | `dataPrefs.minhagim.eda`×2 |  |
-| 334 | `States/MinhagState` | `Colors` | 2 | 1 | `YELLOW`×2 |  |
-| 335 | `States/OfekState` | `Display` | 2 | 1 | `display`×2 |  |
-| 336 | `States/OfekState` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 337 | `States/OfekState` | `Screens/messageScreen` | 2 | 1 | `messageScreen.printMessages`×2 |  |
-| 338 | `States/SetClockState` | `DB/Zman` | 2 | 1 | `Zman`×2 |  |
-| 339 | `States/SetInputText` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 340 | `States/SetInputText` | `Screens/TextScreen` | 2 | 2 | `textScreen.printDelete`, `textScreen.printScreen` |  |
-| 341 | `States/SetInputText` | `States/MainState` | 2 | 2 | `bl.mainState.showStateScreen`, `bl.mainState.stateLoop` |  |
-| 342 | `States/SetTochenInfoState` | `Colors` | 2 | 1 | `YELLOW`×2 |  |
-| 343 | `States/SetTochenInfoState` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 344 | `States/SetTochenInfoState` | `States/MainState` | 2 | 2 | `bl.mainState.showStateScreen`, `bl.mainState.stateLoop` |  |
-| 345 | `States/SetTochenTimeState` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 346 | `States/SetTochenTimeState` | `States/MainState` | 2 | 2 | `bl.mainState.showStateScreen`, `bl.mainState.stateLoop` |  |
-| 347 | `States/ShitaState` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 348 | `States/States` | `Logic` | 2 | 2 | `Logic`, `bl` |  |
-| 349 | `States/States.h` | `DB/Zman` | 2 | 1 | `Zman`×2 |  |
-| 350 | `States/States.h` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
-| 351 | `main` | `CLK/Clock` | 2 | 2 | `validate_rtc`, `validate_time` |  |
-| 352 | `main` | `Preferences/DisplayPrefs` | 2 | 1 | `displayPrefs.brightness`×2 |  |
-| 353 | `BLE/Bluetooth` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 354 | `BLE/CoreService` | `States/ShitaState` | 1 | 1 | `bl.shitaState.setShita` |  |
-| 355 | `BLE/TextCommandHandler` | `States/SetInputText` | 1 | 1 | `bl.setTohenIluyStateTextList.validateTextLen` |  |
-| 356 | `BTN/Button` | `BTN/ButtonDriver` | 1 | 1 | `IButtonDriver` |  |
-| 357 | `BTN/Button` | `BTN/ButtonLH0826` | 1 | 1 | `ButtonLH0826` |  |
-| 358 | `BTN/Button` | `BTN/ButtonLH1022` | 1 | 1 | `ButtonLH1022` |  |
-| 359 | `BTN/ButtonDriver` | `BLE/Commands` | 1 | 1 | `ButtonCommand` | נגד הכיוון |
-| 360 | `BTN/ButtonLH0826` | `BTN/ButtonDriver` | 1 | 1 | `IButtonDriver` |  |
-| 361 | `BTN/ButtonLH1022` | `BTN/ButtonDriver` | 1 | 1 | `IButtonDriver` |  |
-| 362 | `CLK/Clock` | `CLK/ClockDS3231` | 1 | 1 | `ClockDS3231` |  |
-| 363 | `CLK/Clock` | `CLK/ClockDriver` | 1 | 1 | `ClockDriver` |  |
-| 364 | `CLK/Clock` | `CLK/ClockRV3028` | 1 | 1 | `ClockRV3028` |  |
-| 365 | `CLK/ClockDS3231` | `CLK/ClockDriver` | 1 | 1 | `ClockDriver` |  |
-| 366 | `CLK/ClockRV3028` | `CLK/ClockDriver` | 1 | 1 | `ClockDriver` |  |
-| 367 | `DB/DayInfo` | `DB/Sun` | 1 | 1 | `Sun` |  |
-| 368 | `Logic` | `BLE/TextCommandHandler` | 1 | 1 | `handleGetTextCount` | נגד הכיוון |
-| 369 | `Preferences/UserPreferences` | `Preferences/SystemPrefs` | 1 | 1 | `systemPrefs.bt` |  |
-| 370 | `Screens/AboutScreen` | `Display` | 1 | 1 | `display` |  |
-| 371 | `Screens/AboutScreen` | `Metadata` | 1 | 1 | `Metadata` |  |
-| 372 | `Screens/BrightnessScreen` | `DB/Strings` | 1 | 1 | `strings.brightnessTitle` |  |
-| 373 | `Screens/BrightnessScreen` | `Display` | 1 | 1 | `display` |  |
-| 374 | `Screens/BrightnessScreen` | `Fonts` | 1 | 1 | `font7` |  |
-| 375 | `Screens/ColorScreen` | `DB/Strings` | 1 | 1 | `strings.colorsTitle` |  |
-| 376 | `Screens/ColorScreen` | `Display` | 1 | 1 | `display` |  |
-| 377 | `Screens/ColorScreen` | `Fonts` | 1 | 1 | `font7` |  |
-| 378 | `Screens/LogoScreen` | `Area` | 1 | 1 | `Area` |  |
-| 379 | `Screens/LogoScreen` | `Display` | 1 | 1 | `display` |  |
-| 380 | `Screens/LogoScreen` | `Fonts` | 1 | 1 | `logo` |  |
-| 381 | `Screens/MainScreen` | `DB/Zman` | 1 | 1 | `Zman` | צדדית |
-| 382 | `Screens/MainScreen` | `Display` | 1 | 1 | `display` |  |
-| 383 | `Screens/MenuScreen` | `DB/Zman` | 1 | 1 | `Zman` | צדדית |
-| 384 | `Screens/MenuScreen` | `Display` | 1 | 1 | `display` |  |
-| 385 | `Screens/RegsScreen` | `Display` | 1 | 1 | `display` |  |
-| 386 | `Screens/RegsScreen` | `Fonts` | 1 | 1 | `font6` |  |
-| 387 | `Screens/ResetScreen` | `Display` | 1 | 1 | `display` |  |
-| 388 | `Screens/SetClockScreen` | `DB/Strings` | 1 | 1 | `strings.kivunShaon` |  |
-| 389 | `Screens/SetClockScreen` | `Display` | 1 | 1 | `display` |  |
-| 390 | `Screens/TextScreen` | `Display` | 1 | 1 | `display` |  |
-| 391 | `Screens/VersionScreen` | `Display` | 1 | 1 | `display` |  |
-| 392 | `Screens/messageScreen` | `Display` | 1 | 1 | `display` |  |
-| 393 | `States/BrightnessState` | `Screens/BrightnessScreen` | 1 | 1 | `brightnessScreen.setBrightness` |  |
-| 394 | `States/BrightnessState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 395 | `States/ConfigState` | `Screens/AboutScreen` | 1 | 1 | `aboutScreen.printScreen` |  |
-| 396 | `States/ConfigState` | `Screens/RegsScreen` | 1 | 1 | `regsScreen.printScreen` |  |
-| 397 | `States/ConfigState` | `Screens/VersionScreen` | 1 | 1 | `versionScreen.printScreen` |  |
-| 398 | `States/FontState` | `Area` | 1 | 1 | `mainScreen.clockAll.addArrows` |  |
-| 399 | `States/FontState` | `Screens/MainScreen` | 1 | 1 | `mainScreen.printScreen` |  |
-| 400 | `States/FontState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 401 | `States/MainState` | `BLE/TextCommandHandler` | 1 | 1 | `getTextByIndex` | נגד הכיוון |
-| 402 | `States/MainState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
-| 403 | `States/MainState` | `Preferences/DataPrefs` | 1 | 1 | `dataPrefs.place.shaonKaiz` |  |
-| 404 | `States/MainState` | `Preferences/DisplayPrefs` | 1 | 1 | `displayPrefs.clockFont` |  |
-| 405 | `States/MainState` | `Preferences/LogicPrefs` | 1 | 1 | `logicPrefs.netzClk` |  |
-| 406 | `States/MainState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 407 | `States/MainStateTimeSets` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
-| 408 | `States/MainStateTimeSets` | `Preferences/PresentationPrefs` | 1 | 1 | `presentationPrefs.dateFormat` |  |
-| 409 | `States/MinhagState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.year` |  |
-| 410 | `States/SetClockState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
-| 411 | `States/ShitaState` | `DB/Strings` | 1 | 1 | `strings.shitaTitle` |  |
-| 412 | `States/ShitaState` | `Screens/MenuScreen` | 1 | 1 | `menuScreen.printMenu` |  |
-| 413 | `States/ShitaState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 414 | `main` | `BLE/Bluetooth` | 1 | 1 | `initBluetooth` |  |
-| 415 | `main` | `DB/Place` | 1 | 1 | `initPlace` |  |
-| 416 | `main` | `Preferences/SystemPrefs` | 1 | 1 | `systemPrefs.bt` |  |
-| 417 | `main` | `Preferences/UserPreferences` | 1 | 1 | `setupPreferences` |  |
-| 418 | `main` | `Screens/LogoScreen` | 1 | 1 | `logoScreen.printScreen` |  |
-| 419 | `main` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
-| 420 | `main` | `States/MainState` | 1 | 1 | `bl.mainState.setNewDay` |  |
+| 261 | `DB/Place` | `Preferences/UserPreferences` | 3 | 2 | `UserPreferences`×2, `userPreferences` |  |
+| 262 | `DB/Sun` | `DB/Place` | 3 | 1 | `Place`×3 |  |
+| 263 | `DB/Zman` | `Preferences/PresentationPrefs` | 3 | 2 | `presentationPrefs.timeFormat`×2, `presentationPrefs.clockFormat` |  |
+| 264 | `Screens/AboutScreen` | `Fonts` | 3 | 2 | `font6`×2, `logo` |  |
+| 265 | `Screens/BrightnessScreen` | `Screens/Screens.h` | 3 | 1 | `BrightnessScreen`×3 |  |
+| 266 | `Screens/BrightnessScreen` | `Text` | 3 | 2 | `Text`×2, `CENTER` |  |
+| 267 | `Screens/ColorScreen` | `Screens/Screens.h` | 3 | 1 | `ColorScreen`×3 |  |
+| 268 | `Screens/ColorScreen` | `Text` | 3 | 2 | `Text`×2, `CENTER` |  |
+| 269 | `Screens/MenuScreen` | `Fonts` | 3 | 1 | `font7`×3 |  |
+| 270 | `Screens/RegsScreen` | `Screens/Screens.h` | 3 | 1 | `RegsScreen`×3 |  |
+| 271 | `Screens/RegsScreen` | `Text` | 3 | 2 | `Text`×2, `CENTER` |  |
+| 272 | `Screens/ResetScreen` | `DB/Strings` | 3 | 3 | `strings.no`, `strings.resetTitle`, `strings.yes` |  |
+| 273 | `Screens/ResetScreen` | `Fonts` | 3 | 1 | `font7`×3 |  |
+| 274 | `Screens/Screens.h` | `Colors` | 3 | 3 | `GREEN`, `RED`, `YELLOW` |  |
+| 275 | `Screens/VersionScreen` | `Fonts` | 3 | 2 | `font7`×2, `font6` |  |
+| 276 | `Screens/VersionScreen` | `Metadata` | 3 | 1 | `Metadata`×3 |  |
+| 277 | `Screens/VersionScreen` | `Screens/Screens.h` | 3 | 1 | `VersionScreen`×3 |  |
+| 278 | `States/BrightnessState` | `Screens/Screens.h` | 3 | 2 | `messageScreen`×2, `brightnessScreen` |  |
+| 279 | `States/EdotState` | `Logic` | 3 | 3 | `Logic`, `bl`, `bl.mainState` |  |
+| 280 | `States/FontState` | `Preferences/DisplayPrefs` | 3 | 1 | `displayPrefs.clockFont`×3 |  |
+| 281 | `States/MainState` | `DB/Strings` | 3 | 3 | `strings.hazmanShenotar`, `strings.henetzHahama`, `strings.parashatShavua` |  |
+| 282 | `States/MainStateInfoSets` | `DB/Shita` | 3 | 3 | `ASHKENAZ`, `CHABAD`, `SFARAD` |  |
+| 283 | `States/MainStateTimeSets` | `Text` | 3 | 2 | `Text`×2, `CENTER` |  |
+| 284 | `States/SetInputText` | `Fonts` | 3 | 2 | `font6`×2, `font7` |  |
+| 285 | `States/SetInputText` | `Screens/MenuScreen` | 3 | 1 | `menuScreen.printMenu`×3 |  |
+| 286 | `States/ShitaState` | `Preferences/DataPrefs` | 3 | 1 | `dataPrefs.zmanim.shita`×3 |  |
+| 287 | `States/ShitaState` | `Screens/Screens.h` | 3 | 2 | `messageScreen`×2, `menuScreen` |  |
+| 288 | `main` | `DB/Strings` | 3 | 3 | `Strings`, `strings`, `strings.setStringsHeb` |  |
+| 289 | `main` | `Screens/Screens.h` | 3 | 2 | `messageScreen`×2, `logoScreen` |  |
+| 290 | `BLE/Bluetooth` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 291 | `BLE/Bluetooth` | `Screens/Screens.h` | 2 | 1 | `messageScreen`×2 |  |
+| 292 | `BLE/CoreService` | `BLE/Bluetooth` | 2 | 1 | `deviceConnected`×2 |  |
+| 293 | `BLE/CoreService` | `States/OfekState` | 2 | 2 | `bl.setCustomState.printUpdateSucc`, `bl.setOfekState.printUpdateSucc` |  |
+| 294 | `BLE/CoreService` | `States/SetClockState` | 2 | 2 | `bl.setClockState.commonMenuAction`, `bl.setClockState.validateAndSetTime` |  |
+| 295 | `DB/DB` | `DB/Place` | 2 | 1 | `Place`×2 |  |
+| 296 | `DB/DB` | `DataBase` | 2 | 2 | `Tucazinsky_db`, `common_db` |  |
+| 297 | `DB/DayInfo` | `DB/DafYomi` | 2 | 1 | `DafYomi`×2 |  |
+| 298 | `DB/DayInfo` | `DB/HebrewDate` | 2 | 1 | `HebrewDate`×2 |  |
+| 299 | `DB/DayInfo` | `Preferences/LogicPrefs` | 2 | 1 | `logicPrefs.showIsraeli`×2 |  |
+| 300 | `DB/DayInfo` | `Preferences/PresentationPrefs` | 2 | 1 | `presentationPrefs.leil`×2 |  |
+| 301 | `DB/DayInfo` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 302 | `DB/Zman` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 303 | `Logic` | `Preferences/PresentationPrefs` | 2 | 2 | `presentationPrefs.clockFormat`, `presentationPrefs.dateFormat` |  |
+| 304 | `Logic` | `States/State` | 2 | 1 | `State`×2 |  |
+| 305 | `Logic` | `Text` | 2 | 1 | `font_list`×2 |  |
+| 306 | `Screens/AboutScreen` | `Screens/Screens.h` | 2 | 1 | `AboutScreen`×2 |  |
+| 307 | `Screens/BrightnessScreen` | `Area` | 2 | 1 | `Area`×2 |  |
+| 308 | `Screens/ColorScreen` | `Area` | 2 | 1 | `Area`×2 |  |
+| 309 | `Screens/LogoScreen` | `Colors` | 2 | 2 | `BLACK`, `BLUE` |  |
+| 310 | `Screens/LogoScreen` | `Screens/Screens.h` | 2 | 1 | `LogoScreen`×2 |  |
+| 311 | `Screens/LogoScreen` | `Text` | 2 | 1 | `Text`×2 |  |
+| 312 | `Screens/RegsScreen` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 313 | `Screens/Screens.h` | `DB/Strings` | 2 | 2 | `Strings`, `strings` |  |
+| 314 | `Screens/Screens.h` | `DB/Zman` | 2 | 1 | `Zman`×2 | צדדית |
+| 315 | `Screens/Screens.h` | `Text` | 2 | 1 | `Text`×2 |  |
+| 316 | `Screens/TextScreen` | `DB/Strings` | 2 | 2 | `strings.TextsTitle`, `strings.mchak` |  |
+| 317 | `Screens/TextScreen` | `Fonts` | 2 | 2 | `font6`, `font7` |  |
+| 318 | `States/BrightnessState` | `Preferences/DisplayPrefs` | 2 | 1 | `displayPrefs.brightness`×2 |  |
+| 319 | `States/ConfigState` | `Area` | 2 | 2 | `menuScreen.bt.addArrows`, `menuScreen.bt.addRoundRectBorder` |  |
+| 320 | `States/ConfigState` | `BLE/Authmanager` | 2 | 1 | `authManager.factoryReset`×2 | נגד הכיוון |
+| 321 | `States/ConfigState` | `BLE/Bluetooth` | 2 | 1 | `bleApplyState`×2 | נגד הכיוון |
+| 322 | `States/ConfigState` | `Logic` | 2 | 2 | `Logic`, `bl` |  |
+| 323 | `States/FontState` | `States/MainState` | 2 | 2 | `bl.mainState.checkTimeChanged`, `bl.mainState.updateClockOnScreen` |  |
+| 324 | `States/MainState` | `Area` | 2 | 2 | `mainScreen.infoAll.clearArea`, `mainScreen.zmanAll.clearArea` |  |
+| 325 | `States/MainState` | `DB/HebrewDate` | 2 | 1 | `dayInfo.hebrewDate.toString`×2 |  |
+| 326 | `States/MainState` | `DB/Zman` | 2 | 1 | `Zman`×2 |  |
+| 327 | `States/MainStateInfoSets` | `DB/DafYomi` | 2 | 2 | `dayInfo.dafYomiBavli.toString`, `dayInfo.dafYomiYerushalmi.toString` |  |
+| 328 | `States/MainStateInfoSets` | `DB/HebrewDate` | 2 | 1 | `dayInfo.hebrewDate.toString`×2 |  |
+| 329 | `States/MainStateTimeSets` | `DB/Shita` | 2 | 1 | `CHABAD`×2 |  |
+| 330 | `States/MainStateTimeSets` | `Preferences/DataPrefs` | 2 | 1 | `dataPrefs.minhagim.eda`×2 |  |
+| 331 | `States/MinhagState` | `Colors` | 2 | 1 | `YELLOW`×2 |  |
+| 332 | `States/OfekState` | `Display` | 2 | 1 | `display`×2 |  |
+| 333 | `States/OfekState` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 334 | `States/OfekState` | `Screens/messageScreen` | 2 | 1 | `messageScreen.printMessages`×2 |  |
+| 335 | `States/SetClockState` | `DB/Zman` | 2 | 1 | `Zman`×2 |  |
+| 336 | `States/SetInputText` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 337 | `States/SetInputText` | `Screens/TextScreen` | 2 | 2 | `textScreen.printDelete`, `textScreen.printScreen` |  |
+| 338 | `States/SetInputText` | `States/MainState` | 2 | 2 | `bl.mainState.showStateScreen`, `bl.mainState.stateLoop` |  |
+| 339 | `States/SetTochenInfoState` | `Colors` | 2 | 1 | `YELLOW`×2 |  |
+| 340 | `States/SetTochenInfoState` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 341 | `States/SetTochenInfoState` | `States/MainState` | 2 | 2 | `bl.mainState.showStateScreen`, `bl.mainState.stateLoop` |  |
+| 342 | `States/SetTochenTimeState` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 343 | `States/SetTochenTimeState` | `States/MainState` | 2 | 2 | `bl.mainState.showStateScreen`, `bl.mainState.stateLoop` |  |
+| 344 | `States/ShitaState` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 345 | `States/States` | `Logic` | 2 | 2 | `Logic`, `bl` |  |
+| 346 | `States/States.h` | `DB/Zman` | 2 | 1 | `Zman`×2 |  |
+| 347 | `States/States.h` | `Preferences/UserPreferences` | 2 | 2 | `UserPreferences`, `userPreferences` |  |
+| 348 | `main` | `CLK/Clock` | 2 | 2 | `validate_rtc`, `validate_time` |  |
+| 349 | `main` | `DB/Place` | 2 | 2 | `initPlace`, `registerPlaceChecks` |  |
+| 350 | `main` | `Preferences/DisplayPrefs` | 2 | 1 | `displayPrefs.brightness`×2 |  |
+| 351 | `BLE/Bluetooth` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 352 | `BLE/CoreService` | `States/ShitaState` | 1 | 1 | `bl.shitaState.setShita` |  |
+| 353 | `BLE/TextCommandHandler` | `States/SetInputText` | 1 | 1 | `bl.setTohenIluyStateTextList.validateTextLen` |  |
+| 354 | `BTN/Button` | `BTN/ButtonDriver` | 1 | 1 | `IButtonDriver` |  |
+| 355 | `BTN/Button` | `BTN/ButtonLH0826` | 1 | 1 | `ButtonLH0826` |  |
+| 356 | `BTN/Button` | `BTN/ButtonLH1022` | 1 | 1 | `ButtonLH1022` |  |
+| 357 | `BTN/ButtonDriver` | `BLE/Commands` | 1 | 1 | `ButtonCommand` | נגד הכיוון |
+| 358 | `BTN/ButtonLH0826` | `BTN/ButtonDriver` | 1 | 1 | `IButtonDriver` |  |
+| 359 | `BTN/ButtonLH1022` | `BTN/ButtonDriver` | 1 | 1 | `IButtonDriver` |  |
+| 360 | `CLK/Clock` | `CLK/ClockDS3231` | 1 | 1 | `ClockDS3231` |  |
+| 361 | `CLK/Clock` | `CLK/ClockDriver` | 1 | 1 | `ClockDriver` |  |
+| 362 | `CLK/Clock` | `CLK/ClockRV3028` | 1 | 1 | `ClockRV3028` |  |
+| 363 | `CLK/ClockDS3231` | `CLK/ClockDriver` | 1 | 1 | `ClockDriver` |  |
+| 364 | `CLK/ClockRV3028` | `CLK/ClockDriver` | 1 | 1 | `ClockDriver` |  |
+| 365 | `DB/DayInfo` | `DB/Sun` | 1 | 1 | `Sun` |  |
+| 366 | `Logic` | `BLE/TextCommandHandler` | 1 | 1 | `handleGetTextCount` | נגד הכיוון |
+| 367 | `Preferences/UserPreferences` | `Preferences/SystemPrefs` | 1 | 1 | `systemPrefs.bt` |  |
+| 368 | `Screens/AboutScreen` | `Display` | 1 | 1 | `display` |  |
+| 369 | `Screens/AboutScreen` | `Metadata` | 1 | 1 | `Metadata` |  |
+| 370 | `Screens/BrightnessScreen` | `DB/Strings` | 1 | 1 | `strings.brightnessTitle` |  |
+| 371 | `Screens/BrightnessScreen` | `Display` | 1 | 1 | `display` |  |
+| 372 | `Screens/BrightnessScreen` | `Fonts` | 1 | 1 | `font7` |  |
+| 373 | `Screens/ColorScreen` | `DB/Strings` | 1 | 1 | `strings.colorsTitle` |  |
+| 374 | `Screens/ColorScreen` | `Display` | 1 | 1 | `display` |  |
+| 375 | `Screens/ColorScreen` | `Fonts` | 1 | 1 | `font7` |  |
+| 376 | `Screens/LogoScreen` | `Area` | 1 | 1 | `Area` |  |
+| 377 | `Screens/LogoScreen` | `Display` | 1 | 1 | `display` |  |
+| 378 | `Screens/LogoScreen` | `Fonts` | 1 | 1 | `logo` |  |
+| 379 | `Screens/MainScreen` | `DB/Zman` | 1 | 1 | `Zman` | צדדית |
+| 380 | `Screens/MainScreen` | `Display` | 1 | 1 | `display` |  |
+| 381 | `Screens/MenuScreen` | `DB/Zman` | 1 | 1 | `Zman` | צדדית |
+| 382 | `Screens/MenuScreen` | `Display` | 1 | 1 | `display` |  |
+| 383 | `Screens/RegsScreen` | `Display` | 1 | 1 | `display` |  |
+| 384 | `Screens/RegsScreen` | `Fonts` | 1 | 1 | `font6` |  |
+| 385 | `Screens/ResetScreen` | `Display` | 1 | 1 | `display` |  |
+| 386 | `Screens/SetClockScreen` | `DB/Strings` | 1 | 1 | `strings.kivunShaon` |  |
+| 387 | `Screens/SetClockScreen` | `Display` | 1 | 1 | `display` |  |
+| 388 | `Screens/TextScreen` | `Display` | 1 | 1 | `display` |  |
+| 389 | `Screens/VersionScreen` | `Display` | 1 | 1 | `display` |  |
+| 390 | `Screens/messageScreen` | `Display` | 1 | 1 | `display` |  |
+| 391 | `States/BrightnessState` | `Screens/BrightnessScreen` | 1 | 1 | `brightnessScreen.setBrightness` |  |
+| 392 | `States/BrightnessState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 393 | `States/ConfigState` | `Screens/AboutScreen` | 1 | 1 | `aboutScreen.printScreen` |  |
+| 394 | `States/ConfigState` | `Screens/RegsScreen` | 1 | 1 | `regsScreen.printScreen` |  |
+| 395 | `States/ConfigState` | `Screens/VersionScreen` | 1 | 1 | `versionScreen.printScreen` |  |
+| 396 | `States/FontState` | `Area` | 1 | 1 | `mainScreen.clockAll.addArrows` |  |
+| 397 | `States/FontState` | `Screens/MainScreen` | 1 | 1 | `mainScreen.printScreen` |  |
+| 398 | `States/FontState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 399 | `States/MainState` | `BLE/TextCommandHandler` | 1 | 1 | `getTextByIndex` | נגד הכיוון |
+| 400 | `States/MainState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
+| 401 | `States/MainState` | `Preferences/DataPrefs` | 1 | 1 | `dataPrefs.place.shaonKaiz` |  |
+| 402 | `States/MainState` | `Preferences/DisplayPrefs` | 1 | 1 | `displayPrefs.clockFont` |  |
+| 403 | `States/MainState` | `Preferences/LogicPrefs` | 1 | 1 | `logicPrefs.netzClk` |  |
+| 404 | `States/MainState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 405 | `States/MainStateTimeSets` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
+| 406 | `States/MainStateTimeSets` | `Preferences/PresentationPrefs` | 1 | 1 | `presentationPrefs.dateFormat` |  |
+| 407 | `States/MinhagState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.year` |  |
+| 408 | `States/SetClockState` | `DB/LoaziDate` | 1 | 1 | `dayInfo.loaziDate.toString` |  |
+| 409 | `States/ShitaState` | `DB/Strings` | 1 | 1 | `strings.shitaTitle` |  |
+| 410 | `States/ShitaState` | `Screens/MenuScreen` | 1 | 1 | `menuScreen.printMenu` |  |
+| 411 | `States/ShitaState` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 412 | `main` | `BLE/Bluetooth` | 1 | 1 | `initBluetooth` |  |
+| 413 | `main` | `DB/Shita` | 1 | 1 | `registerShitaChecks` |  |
+| 414 | `main` | `Preferences/SystemPrefs` | 1 | 1 | `systemPrefs.bt` |  |
+| 415 | `main` | `Preferences/UserPreferences` | 1 | 1 | `setupPreferences` |  |
+| 416 | `main` | `Screens/LogoScreen` | 1 | 1 | `logoScreen.printScreen` |  |
+| 417 | `main` | `Screens/messageScreen` | 1 | 1 | `messageScreen.printMessages` |  |
+| 418 | `main` | `States/MainState` | 1 | 1 | `bl.mainState.setNewDay` |  |
 
 <!-- generated:edges:end -->
 
 </div>
 
-סה"כ 420 קשתות, 7,444 הפניות.
+סה"כ 418 קשתות, 7,454 הפניות.
 
 ## 5. גרף לכל תיקייה (ג)
 
@@ -765,7 +762,7 @@ flowchart LR
 **הערות:**
 
 - `Authmanager → CoreService` (22) ו-`OtaProtocol → FirmwareService` (151) הן הפניות לקבועי הפרוטוקול שב-`CoreProtocol.h` וב-`FirmwareProtocol.h`, שמשויכים ליחידות האלה.
-- `CoreService → DB` (4): בדיקות הטווח ב-`PREF_OP_WRITE` (`numOfOfeks` 2, `numOfShitot` ו-`numOfZeetCochavin`). `CoreService → States` כולל את `bl.shitaState.setShita` (הטמעת `shita`) ואת `currentState` בבלוק ההטמעה.
+- `CoreService → DB`: הוסרה ב-2b.1 (עד אז 4, בדיקות הטווח ב-`PREF_OP_WRITE`; עכשיו בדיקות שהשכבה הבעלים רושמת ב-`Place.cpp` וב-`Shita.cpp`). `CoreService → States` כולל את `bl.shitaState.setShita` (הטמעת `shita`) ואת `currentState` בבלוק ההטמעה.
 
 ### 5.3 `BTN/`
 
@@ -882,8 +879,8 @@ flowchart LR
   - HebrewDate, LoaziDate ו-DafYomi 10
 - מ-Screens 42: RegsScreen→Place 18, Strings 20, Zman 4.
 - מ-Logic 22: Place 12, DayInfo 10.
-- מ-CLK 17 (Zman) ומ-main 4 (Strings 3, Place 1).
-- מ-BLE 4: `CoreService` → Place 2 (`numOfOfeks`), Shita 2 (`numOfShitot`, `numOfZeetCochavin`).
+- מ-CLK 17 (Zman) ומ-main 6 (Strings 3, Place 2, Shita 1; מהן רישום הבדיקות, 2b.1).
+- מ-BLE: אין, מ-2b.1 (עד אז 4: `CoreService` → Place 2 (`numOfOfeks`), Shita 2 (`numOfShitot`, `numOfZeetCochavin`), בדיקות הטווח שעברו לבדיקות רשומות).
 
 ### 5.6 `Preferences/`
 
@@ -1109,7 +1106,7 @@ flowchart LR
 - **חברים:** `DayInfo`, `DB`, `Shita`, `Sun`, `Zman`, `Place`, `LoaziDate`, `HebrewDate`, `DafYomi`, `Dict`, `DataBase`.
 - **קשתות פנימיות:**
   - `Shita→Zman` 348, `DayInfo→DB` 109, `DayInfo→Zman` 109, `Place→DataBase` 102, `Shita→Sun` 55.
-- **מה יוצא החוצה:** רק `Prefs` (221: `DataPrefs` 206, `UserPreferences` 8, `PresentationPrefs` 5, `LogicPrefs` 2). `Shita` 146 ו-`DayInfo` 52 מגיעות ממנהגים, שיטה ומקום.
+- **מה יוצא החוצה:** רק `Prefs` (233: `DataPrefs` 212, `UserPreferences` 14, `PresentationPrefs` 5, `LogicPrefs` 2; מ-2b.1 כולל רישום הבדיקות ב-`Place.cpp` וב-`Shita.cpp`, ‎+12). `Shita` 146 ו-`DayInfo` 52 מגיעות ממנהגים, שיטה ומקום.
 - **קשרים נוספים:** קשת צדדית אחת ל-`Strings` (`DayInfo` 15).
 - **מי משתמש בקבוצה:** בעיקר `States`, דרך `dayInfo`, `shitot` ו-`places`.
 
@@ -1140,9 +1137,9 @@ flowchart LR
   - `States/State` 28, דרך `currentState`
   - `Logic` 13
   - `Screens` 9, דרך `messageScreen`
-  - `Prefs` 9 (מהן `DataPrefs` 4, בדיקת צאת הכוכבים)
+  - `Prefs` 9, כולן `UserPreferences` (מ-2b.1 נקודת הכתיבה `writeBytes`; עד אז `DataPrefs` 4, בדיקת צאת הכוכבים)
   - `CLK` 7 (`now`)
-  - `DB` 4, בדיקות הטווח (`numOfOfeks`, `numOfShitot`, `numOfZeetCochavin`)
+  - `DB`: אין, מ-2b.1 (בדיקות הטווח נרשמות ב-DB)
   - `TextCommandHandler→Prefs` 23 (`UserContent` 7)
 
 **BLE OTA.**
@@ -1272,6 +1269,8 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 
 אחרי 2a.4 (נבדק בשלושת הדגמים): אותן 6 קשתות השתנו בשלושת הדגמים, כולן שכבה → `UserPreferences` (‎+313 הפניות), ואף קשת לא נוספה או הוסרה. קשתות / הפניות: JC6416 420 / 7,444; JC4020 391 / 7,404; JC6432 438 / 8,160. סכומי הצרכנים לא השתנו.
 
+אחרי 2b.1 (נבדק בשלושת הדגמים): אותו שינוי בשלושת הדגמים. הוסרו `CoreService → DB/Place` (2), `CoreService → DB/Shita` (2) ו-`CoreService → DataPrefs` (4); נוספה `main → DB/Shita` (1); `CoreService → UserPreferences` 5 → 9, `DB/Shita → DataPrefs` ‎+5 ו-`→ UserPreferences` ‎+5, `DB/Place → DataPrefs` ‎+1 ו-`→ UserPreferences` ‎+1, `main → DB/Place` 1 → 2. קשתות / הפניות: JC6416 418 / 7,454; JC4020 389 / 7,414; JC6432 436 / 8,170. סכומי הצרכנים: 784 / 820 / 847 → 796 / 832 / 859 (‎+12: השכבות ‎+2, `UserPreferences` ‎+10).
+
 ### JC4020
 
 - **יחידות שחסרות:** אין `States/SetInputText`, `States/SetTochenInfoState`, `States/SetTochenTimeState` ו-`Screens/TextScreen`. במקומן יש `States/SetTochenState.cpp`.
@@ -1321,14 +1320,14 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 
 | מ-\אל | main | BLE | BTN | Logic | States | Screens | Render | DB | Prefs | CLK | HW | Meta |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **main** | · | 12 | 31 | 9 | 30 | 5 |  | 4 | 4 | 2 | 8 | 4 |
-| **BLE** |  | · |  | 35 | 58 | 12 |  | 4 | 34 | 7 |  | 3 |
+| **main** | · | 12 | 31 | 9 | 30 | 5 |  | 6 | 4 | 2 | 8 | 4 |
+| **BLE** |  | · |  | 35 | 58 | 12 |  |  | 34 | 7 |  | 3 |
 | **BTN** |  | 28 | · |  |  |  |  |  |  |  |  |  |
 | **Logic** |  | 35 |  | · | 173 | 32 | 9 | 22 | 46 |  |  |  |
 | **States** |  | 11 |  | 143 | · | 1070 | 248 | 955 | 359 | 173 | 17 |  |
 | **Screens** |  |  |  |  |  | · | 723 | 42 | 120 |  | 12 | 4 |
 | **Render** |  |  |  |  |  |  | · |  |  |  | 28 |  |
-| **DB** |  |  |  |  |  |  |  | · | 221 |  |  |  |
+| **DB** |  |  |  |  |  |  |  | · | 233 |  |  |  |
 | **Prefs** |  |  |  |  |  |  |  |  | · |  |  |  |
 | **CLK** |  |  |  |  |  |  |  | 17 |  | · |  |  |
 | **HW** |  | inc | 4 |  |  |  |  |  |  | 4 | · | 4 |
@@ -1413,7 +1412,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 
 | יחידה | יעדים |
 | --- | --- |
-| main | BTN 31, States 30, BLE 12, Logic 9, HW 8, Screens 5, DB 4, Prefs 4, Metadata 4, CLK 2 |
+| main | BTN 31, States 30, BLE 12, Logic 9, HW 8, DB 6, Screens 5, Prefs 4, Metadata 4, CLK 2 |
 | Logic | States 173, Prefs 46, BLE 35, Screens 32, DB 22, Render 9 |
 | Hardware.h | BTN 4, CLK 4, Metadata 4, (include BLE) |
 | Display | — |
@@ -1421,7 +1420,7 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 | Text | (Render: Fonts 5) |
 | Colors, Fonts, Metadata | — |
 | BLE/Bluetooth | States 7, Logic 3, Screens 3, Metadata 3, Prefs 2, (BLE 15) |
-| BLE/CoreService | States 33, Logic 13, Screens 9, Prefs 9, CLK 7, DB 4, (BLE 45) |
+| BLE/CoreService | States 33, Logic 13, Screens 9, Prefs 9, CLK 7, (BLE 45) |
 | BLE/Authmanager | (BLE: CoreService 22) |
 | BLE/Commands | — |
 | BLE/TextCommandHandler | Prefs 23, States 10, Logic 9 |
@@ -1435,8 +1434,8 @@ includes שמביאות יחידה שאין אליה הפניה ישירה, אל
 | CLK/ClockDriver | — |
 | CLK/ClockDS3231, CLK/ClockRV3028 | (CLK: ClockDriver 1 כל אחת) |
 | DB/DayInfo | Prefs 52, (DB 302) |
-| DB/Shita | Prefs 146, (DB 407) |
-| DB/Place | Prefs 15, (DB: DataBase 102) |
+| DB/Shita | Prefs 156, (DB 407) |
+| DB/Place | Prefs 17, (DB: DataBase 102) |
 | DB/DB | Prefs 3, (DB 14) |
 | DB/Sun | (DB 34) |
 | DB/Zman | Prefs 5 |

@@ -213,7 +213,7 @@
 | מסלול | מה כותב | מה קורה אחרי הכתיבה |
 | --- | --- | --- |
 | מצב תפריט, `okAction` | `UserPref::setValue` → `save()` | תלוי במצב. פירוט בסעיף 6.3 |
-| BLE `PREF_OP_WRITE` (`handlePref`, [CoreService.cpp](../../JC6416/src/BLE/CoreService.cpp)) | בדיקת טווח ל-`shita`, ל-`ofek` ולארבעת מפתחות צאת הכוכבים, ואז `fromBytes()` → `save()`, ישירות, בלי `setValue` | רק אינדקס 6 (`ofek`) ואינדקס 4 (`shita`) מפעילים תגובה. פירוט בסעיף 6.4 |
+| BLE `PREF_OP_WRITE` (`handlePref`, [CoreService.cpp](../../JC6416/src/BLE/CoreService.cpp)) | `UserPreferences::writeBytes`: `decode`, הבדיקות הרשומות (`shita`, `ofek` וארבעת מפתחות צאת הכוכבים), ואז `setValue` → `save()` רק בשינוי (מ-2b.1; לפני כן `fromBytes()` → `save()` תמיד, בלי `setValue`) | רק אינדקס 6 (`ofek`) ואינדקס 4 (`shita`) מפעילים תגובה. פירוט בסעיף 6.4 |
 | BLE `PREF_OP_WRITE` עם המפתח `pin` | `authManager.setPin` | שמירה ב-`sec` בלבד |
 | BLE `TEXT_OP_WRITE/DELETE/SWAP` ([TextCommandHandler.cpp](../../JC6416/src/BLE/TextCommandHandler.cpp)) | `textPrefs[i] = …` | WRITE: מעדכן את `bl.mainState.numOfValidTexts`, `stateIndexNameSet` ו-`flagNameSetChanged`, כך שהטקסט מוצג מיד. DELETE: מעדכן את `numOfValidTexts`. SWAP: אין תגובה |
 | BLE `SYS_OP_SET_NAME` | `sys/dev_name` | `applyDeviceName`: שם ה-GAP וה-scan response מתעדכנים מיד |
@@ -255,8 +255,8 @@
 
 ### 6.4 אחרי כתיבה מ-BLE (`PREF_OP_WRITE`)
 
-- **בדיקת טווח** (`handlePref`, `case PREF_OP_WRITE`, [CoreService.cpp](../../JC6416/src/BLE/CoreService.cpp)): לפני `fromBytes`, `shita` ≥ `numOfShitot` ו-`ofek` ≥ `numOfOfeks` נדחים ב-`CORE_ERR_INVALID_VALUE`, ושום דבר לא נכתב. נבדקים גם `zeetCochavim`, `rabenuTam`, `zeetShabat` ו-`zeetZom`, לפי כתובת ההעדפה ולא לפי אינדקס: ערך > `numOfZeetCochavin` (28) נדחה באותו אופן. שאר המפתחות לא נבדקים.
-- **כל מפתח:** `pref->fromBytes()` ואז `pref->save()`. הערך בזיכרון וב-NVS מתעדכן. חוץ מ-`ofek` ו-`shita` אין קריאה ל-`configStates`, ל-`initPlace` או ל-`updateDayValues`. מתי השינוי משפיע תלוי במנגנון שמחזיק את ההעדפה (6.2):
+- **בדיקת טווח** (מ-2b.1: בדיקות שהשכבה הבעלים רושמת ברישום, `UserPreferences::registerCheck`; `ofekInRange` ב-[Place.cpp](../../JC6416/src/DB/Place.cpp), `shitaInRange` ו-`zeetInRange` ב-[Shita.cpp](../../JC6416/src/DB/Shita.cpp), נרשמות מ-`setup` לפני `initBluetooth`): `shita` ≥ `numOfShitot` ו-`ofek` ≥ `numOfOfeks` נדחים ב-`CORE_ERR_INVALID_VALUE`, ושום דבר לא נכתב. נבדקים גם `zeetCochavim`, `rabenuTam`, `zeetShabat` ו-`zeetZom`: ערך > `numOfZeetCochavin` (28) נדחה באותו אופן. שאר המפתחות לא נבדקים.
+- **כל מפתח:** `userPreferences.writeBytes(*pref, …)` (`handlePref`, `case PREF_OP_WRITE`, [CoreService.cpp](../../JC6416/src/BLE/CoreService.cpp)): `decode`, הבדיקות הרשומות, ואז `setValue`, שנשמר ל-NVS רק בשינוי (מ-2b.1; לפני כן `fromBytes()` ואז `save()` תמיד). אורך קצר מדי לטיפוס או דחייה של בדיקה: `CORE_ERR_INVALID_VALUE`. חוץ מ-`ofek` ו-`shita` אין קריאה ל-`configStates`, ל-`initPlace` או ל-`updateDayValues`. מתי השינוי משפיע תלוי במנגנון שמחזיק את ההעדפה (6.2):
   - נקראת בזמן שימוש: בציור הבא.
   - מוחזקת ב-`configStates`: בקריאה הבאה ל-`configStates`.
   - מוחזקת בחישוב היום: בחילוף היום הבא, או בפעם הבאה ש-`updateDayValues` נדלק.

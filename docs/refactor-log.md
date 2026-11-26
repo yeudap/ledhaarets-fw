@@ -1687,6 +1687,74 @@ recorded under **Findings** and is not fixed in code as part of a refactor step.
     NVS split is not affected (`write` uses the preference's own `prefs` instance).
 - **2b.0** (docs) — this plan; P5 note, P10–P15; F28; `preferences.md` §6.7 (`updateState`) and the §6.4
   and §9.9 pointers; `roadmap.md` 2b section; `CLAUDE.md` stage line. No code changed.
+- **2b.1** (all models) — one write entry in the registry, checks registered by the owning layer; BLE goes
+  through them. Commits: `d8b6bd6` (tool), `e395cf4` (JC6416), `39f0c95` (JC4020), `fbff5ed` (JC6432), then
+  this docs commit. The change is identical in the three models (the `+`/`-` lines of the three diffs are
+  byte-identical).
+  - **Registry** (`Preferences/UserPreferences.h/.cpp`): `UserPref<T>::decode(data, length, out)` replaces
+    `fromBytes` (same body, writes `out`, not `_value`). `PrefWriteResult` (`PW_CHANGED`, `PW_UNCHANGED`,
+    `PW_BAD_BYTES`, `PW_REJECTED`). `UserPreferences::registerCheck<T>(pref, fn)`, `write<T>(pref, value)`
+    (every registered check of the preference, then `setValue`; the value parameter is not deduced, so
+    `write(pref, 4)` compiles) and `writeBytes(UserPrefBase &, data, length)` (through the protected virtual
+    `decodeAndWrite`, which decodes and calls `write`). Check table: 8 entries (6 used), function pointers
+    stored type-erased and cast back to `bool (*)(const T &)` in `write<T>`; zero-initialized, filled at
+    init. No new include in `Preferences/`.
+  - **Checks**, moved as they were: `ofekInRange` (`DB/Place.cpp`, `value < numOfOfeks`), `shitaInRange`
+    (`value < numOfShitot`) and `zeetInRange` (`value <= numOfZeetCochavin`, 0 accepted, P8) for the four
+    zeet keys (`DB/Shita.cpp`). `registerPlaceChecks()` / `registerShitaChecks()` (declared in `Place.h` /
+    `Shita.h`), called from `setup` before `initBluetooth()`.
+  - **`handlePref`, `PREF_OP_WRITE`:** up to the type check unchanged; then `userPreferences.writeBytes`,
+    `PW_BAD_BYTES` / `PW_REJECTED` → `CORE_ERR_INVALID_VALUE` (the old range check and `fromBytes` failure
+    gave the same code, so the error order is kept). The `ofek` / `shita` apply (`getIndex() == 6 / 4`) stays
+    in the callback, unconditional. `#include "Preferences/DataPrefs.h"` and `extern int numOfOfeks` removed
+    from `CoreService.cpp` (they served only the old check).
+  - **Deviations from the plan text (form only):** the plan named `DB/Place.cpp`, `DB/Shita.cpp/.h` and "one
+    registration call" in `main.cpp`. Done: one declaration line in `DB/Place.h` as well, and two calls in
+    `main.cpp`, one per owning unit, so that each unit registers its own checks and neither needs the other.
+  - **Behavior:** identical, except decision 2 (a BLE write of the value in RAM does not save, so it no longer
+    creates a missing NVS key) and the serial lines of `setValue` on BLE writes ("Updating …" / "No change
+    for …"). `isModified` is now set on a BLE change (it has no reader).
+  - **Verification** (reference: builds of HEAD `68e8fc8` before editing; `SOURCE_DATE_EPOCH=1763337600` in
+    every build):
+
+    | Model | `firmware.bin` | RAM | Compiler warnings |
+    |---|---|---|---|
+    | JC6416 | 2,056,912 → 2,059,104 (+2,192) | 59,012 → 59,084 | 0 |
+    | JC4020 | 2,051,664 → 2,053,728 (+2,064) | 59,052 → 59,116 | 0 |
+    | JC6432 | 2,068,384 → 2,070,480 (+2,096) | 59,772 → 59,836 | 0 |
+
+    - The flash growth is the six `write<T>` / `decodeAndWrite` instantiations (each with an inlined
+      `setValue` and its serial prints). The image fits the OTA slot (31.3% / 31.2% / 31.5%).
+    - `prefs_contract.py check`: OK in all three (no preference, key, index, type, default or load-order
+      change).
+    - `prefs_write_test.py`: source check PASS and 49/49 cases PASS in all three (all 125 defaults written
+      back: `UNCHANGED`, no put; the six checks at their boundaries; short lengths per type; negative `I8` /
+      `I16`; `double`; String with and without `\0`, cut at `\0`, 70 bytes; a text slot). A mutation run of
+      the tool (a `setValue` that always saves, a zeet bound off by one, on a scratch copy) was not done: the
+      command was not approved in the session.
+    - `count_deps --compare` (tree of `68e8fc8`), the same in all three: removed `CoreService → DB/Place`
+      (2), `→ DB/Shita` (2), `→ DataPrefs` (4); added `main → DB/Shita` (1); `CoreService → UserPreferences`
+      5 → 9; `DB/Shita → DataPrefs` +5, `→ UserPreferences` +5; `DB/Place → DataPrefs` +1, `→ UserPreferences`
+      +1; `main → DB/Place` 1 → 2. Include edge removed: `CoreService → DataPrefs`. Totals: JC6416 418 /
+      7,454, JC4020 389 / 7,414, JC6432 436 / 8,170. Consumer sums 784 / 820 / 847 → 796 / 832 / 859 (+12:
+      layers +2, `UserPreferences` +10). `gen_deps_doc.py check` failed as expected (§3 `BLE → DB`); `write`
+      and the hand-written parts (§1 and §4 totals, §3 graph and threshold table, the notes on BLE and DB,
+      the per-model totals after 2b.1) in this commit, then OK.
+    - flash_check (information only; intended logic change): JC6416 15 size-changed functions (alignment 3,
+      same-effects 7, manual 5), JC4020 11 (3 / 3 / 5), JC6432 10 (3 / 2 / 5). Manual, in all three:
+      `CoreCallbacks::onWrite` (`handlePref`) and `setup()` (intended), and `Shita::alotMethods`,
+      `soztMgaMethods`, `zeetCochavimMethods`, whose only difference is the callee
+      `Shita::calcTimeZmaniot…$constprop$4` → `$constprop$5` (GCC clone numbering, shifted by the new
+      functions in `Shita.cpp`); the clone body is identical (32 instructions, call targets masked).
+      `nm`: removed `fromBytes` ×6 and the old clone name; added `write<T>` ×6, `decodeAndWrite` ×6,
+      `registerCheck<uint8_t>`, `checks`, `numChecks`, `ofekInRange`, `shitaInRange`, `zeetInRange`,
+      `registerPlaceChecks`, `registerShitaChecks`, the new clone name. Nothing else.
+    - Contract strings: no UUID, `LEDHAARETS`, namespace or `prefs.begin` line in any diff. `git ls-files
+      --eol`: the 24 edited files `w/crlf`; the new tool files LF, as the other tools.
+  - **Docs:** `dependencies.md` (above), `preferences.md` §6 table and §6.4, a pointer in `notes.md` (2a.3,
+    the order of the checks), `CLAUDE.md` stage line.
+  - **Clock test (2b.1.x):** by the owner, on the commit builds; the list was sent with the stop. Then the
+    detailed 2b.2 plan for approval.
 
 ### Decisions
 

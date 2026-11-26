@@ -65,7 +65,8 @@ but the content differs in many places.
 ## Stages
 
 **Current stage: 2b** — preference write and apply (plan and decisions in refactor-log, "2b — plan").
-2b.0 (docs) done; next 2b.1, then a stop for the owner's clock test and the detailed 2b.2 plan.
+2b.0 (docs) and 2b.1 done (all three models; test tool `tools/prefs_write_test.py`); now the stop for
+the owner's clock test of 2b.1 (2b.1.x) and the approval of the detailed 2b.2 plan.
 
 **Stage 2a (closed)** — split `userPreferences` into per-layer structs. 2a.1 and 2a.2 are done
 in all three models (verification rules in `refactor-log.md`); `count_deps.py` counts access
@@ -125,7 +126,7 @@ the owner and recorded in refactor-log. Otherwise behavior stays identical.
   0. Docs: plan, decisions, P10–P15, F28. (Done.)
   1. One write entry in the registry (`UserPreferences::write` / `writeBytes`) and checks registered by
      the owning layer; BLE goes through them and saves only on a change. Then a stop for the owner's
-     clock test.
+     clock test. (Done; clock test pending.)
   2. Registered derivations, apply in a fixed order in the writer's context, success screen from
      `loop`; `ofek` and `shita` only. Detailed plan approved after 2b.1.
   3. The enforcement matrix (roadmap (א), (ב)). A separate stage, planned after the clock test of 2b.2.
