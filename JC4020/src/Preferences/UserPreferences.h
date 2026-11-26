@@ -108,10 +108,34 @@ constexpr bool prefDefaultInRange(const PrefDef<T> &d)
 }
 
 // ---------------------------------------------------------------------------
+// כתיבה דרך הרישום (2b.1): UserPreferences::write / writeBytes
+// ---------------------------------------------------------------------------
+// התוצאה של כתיבה. PW_CHANGED / PW_UNCHANGED: הערך התקבל (נשמר ל-NVS רק ב-PW_CHANGED).
+// PW_BAD_BYTES: אי אפשר לפענח את הבתים לטיפוס (אורך קצר מדי). PW_REJECTED: בדיקה רשומה דחתה את הערך.
+enum PrefWriteResult : uint8_t
+{
+    PW_CHANGED,
+    PW_UNCHANGED,
+    PW_BAD_BYTES,
+    PW_REJECTED
+};
+
+// בדיקה שהשכבה הבעלים רושמת ברישום (UserPreferences::registerCheck): מקבלת את הערך המפוענח, true = תקין.
+// הקישור החוצה הוא מצביע לפונקציה, כך ש-Preferences לא תלוי בשכבות.
+template <typename T>
+struct PrefCheck
+{
+    using fn = bool (*)(const T &value);
+    using value_type = T; // לפרמטרים שלא מסיקים מהם את T
+};
+
+// ---------------------------------------------------------------------------
 // UserPrefBase: מחלקת בסיס לגישה גנרית לכל העדפות
 // ---------------------------------------------------------------------------
 class UserPrefBase
 {
+    friend class UserPreferences;
+
 protected:
     const PrefMeta *_meta;
     bool _isModified;
@@ -135,9 +159,10 @@ public:
     virtual void reset() = 0;
     virtual void print() = 0;
     virtual std::vector<uint8_t> toBytes() = 0;
-    virtual bool fromBytes(const uint8_t *data, size_t length) = 0;
 
 protected:
+    // פענוח בתים, הבדיקות הרשומות וכתיבה - רק דרך UserPreferences::writeBytes (2b.1, במקום fromBytes)
+    virtual PrefWriteResult decodeAndWrite(const uint8_t *data, size_t length) = 0;
     virtual bool _hasChangedFromDefault() const = 0;
     void setModified(bool modified) { _isModified = modified; }
 };
@@ -378,7 +403,10 @@ protected:
         return data;
     }
 
-    bool fromBytes(const uint8_t *data, size_t length) override
+public:
+    // פענוח בתים (BLE, little-endian) לערך (2b.1, במקום fromBytes). לא כותב ל-_value.
+    // false: האורך קצר מדי לטיפוס.
+    bool decode(const uint8_t *data, size_t length, T &out) const
     {
         if (length < 1)
             return false;
@@ -387,21 +415,21 @@ protected:
         {
             if constexpr (std::is_same<T, uint8_t>::value)
             {
-                _value = data[0];
+                out = data[0];
             }
             else if constexpr (std::is_same<T, int8_t>::value)
             {
-                _value = static_cast<int8_t>(data[0]);
+                out = static_cast<int8_t>(data[0]);
             }
             else if constexpr (std::is_same<T, uint16_t>::value)
             {
                 if (length < 2) return false;
-                _value = static_cast<uint16_t>(data[0] | (data[1] << 8));
+                out = static_cast<uint16_t>(data[0] | (data[1] << 8));
             }
             else if constexpr (std::is_same<T, int16_t>::value)
             {
                 if (length < 2) return false;
-                _value = static_cast<int16_t>(data[0] | (data[1] << 8));
+                out = static_cast<int16_t>(data[0] | (data[1] << 8));
             }
             else if constexpr (std::is_same<T, uint32_t>::value)
             {
@@ -411,7 +439,7 @@ protected:
                 {
                     val |= static_cast<uint32_t>(data[i]) << (8 * i);
                 }
-                _value = val;
+                out = val;
             }
             else if constexpr (std::is_same<T, int32_t>::value)
             {
@@ -421,29 +449,33 @@ protected:
                 {
                     val |= static_cast<int32_t>(data[i]) << (8 * i);
                 }
-                _value = val;
+                out = val;
             }
             else if constexpr (std::is_same<T, double>::value)
             {
                 if (length < sizeof(double)) return false;
                 double val;
                 memcpy(&val, &data[0], sizeof(double));
-                _value = val;
+                out = val;
             }
             else if constexpr (std::is_same<T, String>::value)
             {
                 const char *s = reinterpret_cast<const char *>(data);
-                _value = String(s, strnlen(s, length));
+                out = String(s, strnlen(s, length));
             }
 
             return true;
         }
         catch (...)
         {
-            Serial.println("Error in fromBytes conversion");
+            Serial.println("Error in decode conversion");
             return false;
         }
     }
+
+protected:
+    // מוגדר אחרי UserPreferences (קורא ל-UserPreferences::write)
+    PrefWriteResult decodeAndWrite(const uint8_t *data, size_t length) override;
 };
 
 // ---------------------------------------------------------------------------
@@ -535,6 +567,77 @@ public:
             pref->print();
         }
     }
+
+    // -----------------------------------------------------------------------
+    // נקודת הכתיבה (2b.1): הבדיקות הרשומות, ואז setValue (נשמר ל-NVS רק בשינוי).
+    // -----------------------------------------------------------------------
+    // רישום בדיקה להעדפה. השכבה הבעלים קוראת לזה באתחול, לפני initBluetooth. אפשר כמה בדיקות להעדפה אחת.
+    template <typename T>
+    static void registerCheck(const UserPref<T> &pref, typename PrefCheck<T>::fn check);
+
+    // כתיבת ערך: כל הבדיקות הרשומות להעדפה, ואז setValue.
+    template <typename T>
+    static PrefWriteResult write(UserPref<T> &pref, const typename PrefCheck<T>::value_type &value);
+
+    // כתיבה מבתים (BLE): פענוח לטיפוס של ההעדפה, ואז write.
+    static PrefWriteResult writeBytes(UserPrefBase &pref, const uint8_t *data, size_t length)
+    {
+        return pref.decodeAndWrite(data, length);
+    }
+
+private:
+    // טבלת הבדיקות: ההעדפה והפונקציה בטיפוס מחוק (מוחזרת ל-PrefCheck<T>::fn ב-write<T>).
+    // registerCheck<T> מוודא שהטיפוס של הפונקציה מתאים להעדפה.
+    struct CheckEntry
+    {
+        const UserPrefBase *pref;
+        void (*fn)();
+    };
+    static constexpr size_t maxChecks = 8;
+    static CheckEntry checks[maxChecks];
+    static size_t numChecks;
 };
+
+template <typename T>
+void UserPreferences::registerCheck(const UserPref<T> &pref, typename PrefCheck<T>::fn check)
+{
+    if (numChecks >= maxChecks)
+    {
+        Serial.print("Too many preference checks, not registered: ");
+        Serial.println(pref.getKey());
+        return;
+    }
+    checks[numChecks].pref = &pref;
+    checks[numChecks].fn = reinterpret_cast<void (*)()>(check);
+    numChecks++;
+}
+
+template <typename T>
+PrefWriteResult UserPreferences::write(UserPref<T> &pref, const typename PrefCheck<T>::value_type &value)
+{
+    for (size_t i = 0; i < numChecks; i++)
+    {
+        if (checks[i].pref == &pref &&
+            !reinterpret_cast<typename PrefCheck<T>::fn>(checks[i].fn)(value))
+        {
+            return PW_REJECTED;
+        }
+    }
+    bool changed = pref.getValue() != value;
+    pref.setValue(value);
+    return changed ? PW_CHANGED : PW_UNCHANGED;
+}
+
+template <typename T>
+PrefWriteResult UserPref<T>::decodeAndWrite(const uint8_t *data, size_t length)
+{
+    T value = T();
+    if (!decode(data, length, value))
+    {
+        return PW_BAD_BYTES;
+    }
+    return UserPreferences::write(*this, value);
+}
+
 void setupPreferences();
 #endif

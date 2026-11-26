@@ -27,6 +27,27 @@ Shita* shitot[numOfShitot] = {
     &_pozen,
 };
 
+// בדיקות שנרשמות ברישום ההעדפות (2b.1, הועברו כמו שהן מ-handlePref)
+// shita: אינדקס במערך shitot
+static bool shitaInRange(const uint8_t &value)
+{
+    return value < numOfShitot;
+}
+// מפתחות ה-zeet: עד numOfZeetCochavin. 0 מתקבל כמו היום (P8)
+static bool zeetInRange(const uint8_t &value)
+{
+    return value <= numOfZeetCochavin;
+}
+
+void registerShitaChecks()
+{
+    UserPreferences::registerCheck(dataPrefs.zmanim.shita, shitaInRange);
+    UserPreferences::registerCheck(dataPrefs.zmanim.zeetCochavim, zeetInRange);
+    UserPreferences::registerCheck(dataPrefs.zmanim.rabenuTam, zeetInRange);
+    UserPreferences::registerCheck(dataPrefs.zmanim.zeetShabat, zeetInRange);
+    UserPreferences::registerCheck(dataPrefs.zmanim.zeetZom, zeetInRange);
+}
+
 Zman Shita::calcTimeZmaniot(Zman base, Zman startDay, Zman EndDay, double dakot)
 {
     Zman dayLen = EndDay - startDay;
