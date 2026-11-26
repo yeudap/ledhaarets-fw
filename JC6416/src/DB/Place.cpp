@@ -152,3 +152,14 @@ double Place::getTimezone()
     if (this->kaiz) { return this->timezone+1; }
     return timezone;
 }
+
+// ofek is an index into places[] (2b.1: registered in the preference registry, moved from handlePref)
+static bool ofekInRange(const uint8_t &value)
+{
+    return value < numOfOfeks;
+}
+
+void registerPlaceChecks()
+{
+    UserPreferences::registerCheck(dataPrefs.place.ofek, ofekInRange);
+}

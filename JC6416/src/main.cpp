@@ -59,6 +59,8 @@ void setup()
   Serial.println("setup done.");
   Serial.print("SWversion: ");
   Serial.println(Metadata::SWversion);
+  registerPlaceChecks();
+  registerShitaChecks();
   if(systemPrefs.bt == 1) initBluetooth();
   // userPreferences.printAllValues();
   sleep(1);

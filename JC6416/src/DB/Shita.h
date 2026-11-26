@@ -245,4 +245,7 @@ public:
     void setDefault();
     pozen(const char* s, int i) : Shita(s,i) {}
 };
+
+// רישום הבדיקות של shita ושל ארבעת מפתחות ה-zeet ברישום ההעדפות (2b.1). נקרא מ-setup, לפני initBluetooth
+void registerShitaChecks();
 #endif

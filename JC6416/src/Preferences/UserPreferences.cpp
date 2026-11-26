@@ -18,6 +18,10 @@ UserPreferences::UserPreferences() : forceWrite(forceWriteDef)
 {
 }
 
+// טבלת הבדיקות הרשומות (2b.1). מאותחלת לאפס לפני כל בנאי, ונמלאת באתחול (registerCheck).
+UserPreferences::CheckEntry UserPreferences::checks[UserPreferences::maxChecks];
+size_t UserPreferences::numChecks = 0;
+
 // כל ההעדפות לגישה גנרית - מערך קבוע ב-flash (2a.4). הסדר: textPrefs ואחריהן simplePrefs (allPrefs).
 UserPrefBase *const UserPreferences::allPrefsArray[numTextPrefs + numSimplePrefs] = {
         // textPrefs
